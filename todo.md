@@ -58,11 +58,11 @@
 - [x] Correct Olaf's Siesta Village to be an ice cream shop (update description, category)
 
 ## Enhancement Round 5
-- [ ] Navbar: increase background darkness so logo/links are clearly visible over bright hero sky
-- [ ] Navbar: replace current links with Dining, Shopping, Activities, Nightlife, Accommodations (remove duplicate Add Listing)
-- [ ] Navbar: keep Claim Your Business and Add Listing CTA buttons (one each, no duplicates)
-- [ ] Navbar: add Admin link visible only to logged-in admin users
-- [ ] Featured businesses: find and add 2-3 real photos per business (CB's, The Hub, The Salty Dog, Palm Bay Club, Chamber, Olaf's)
+- [x] Navbar: increase background darkness so logo/links are clearly visible over bright hero sky
+- [x] Navbar: replace current links with Dining, Shopping, Activities, Nightlife, Accommodations (remove duplicate Add Listing)
+- [x] Navbar: keep Claim Your Business and Add Listing CTA buttons (one each, no duplicates)
+- [x] Navbar: add Admin link visible only to logged-in admin users (moved to footer, then removed per user request)
+- [x] Featured businesses: find and add 2-3 real photos per business (CB's, The Hub, The Salty Dog, Palm Bay Club, Chamber, Olaf's)
 
 ## Enhancement Round 7 — SEO
 - [x] Create reusable SEO/Head component (title, description, OG tags, canonical)
@@ -92,3 +92,12 @@
 - [x] Add stripe.createCheckout and stripe.subscriptionStatus tRPC procedures to routers.ts
 - [x] Wire Pricing page CTA buttons to Stripe checkout (auth-aware, loading state)
 - [x] Add Login button to Navbar (shows user first name + Sign Out dropdown when logged in)
+
+## Enhancement Round 10 — User Dashboard
+- [x] Backend: add dashboard.getMyListing and dashboard.updateMyListing tRPC procedures
+- [x] Backend: add dashboard.getMyProfile procedure (subscription plan, status)
+- [x] Frontend: /dashboard page — plan status card with upgrade CTA for free users
+- [x] Frontend: business listing edit form (name, description, phone, website, hours, address, social links)
+- [ ] Frontend: photo gallery management (view current photos, add/remove) — deferred
+- [x] Add /dashboard route to App.tsx
+- [x] Add Dashboard link to navbar for logged-in users

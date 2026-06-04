@@ -253,6 +253,44 @@ export async function markSubmissionWebhookSent(id: number): Promise<void> {
     .where(eq(listingSubmissions.id, id));
 }
 
+// ─── Dashboard / User-owned listing ──────────────────────────────────────────
+export async function getBusinessByUserId(userId: number): Promise<Business | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(businesses)
+    .where(eq(businesses.claimedByUserId, userId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateBusinessByUserId(
+  userId: number,
+  data: {
+    name?: string;
+    shortDescription?: string;
+    description?: string;
+    phone?: string;
+    website?: string;
+    email?: string;
+    address?: string;
+    area?: string;
+    hours?: Record<string, string>;
+    photos?: string[];
+    socialLinks?: Record<string, string>;
+    lat?: string;
+    lng?: string;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(businesses)
+    .set(data)
+    .where(eq(businesses.claimedByUserId, userId));
+}
+
 // ─── Admin Helpers ─────────────────────────────────────────────────────────────
 export async function getAllBusinessesAdmin(): Promise<Business[]> {
   const db = await getDb();

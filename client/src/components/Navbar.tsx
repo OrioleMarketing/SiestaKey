@@ -109,6 +109,13 @@ export default function Navbar() {
                   <span className="max-w-[100px] truncate">{user.name?.split(" ")[0]}</span>
                 </button>
                 <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-[var(--color-border)] py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                  <Link
+                    href="/dashboard"
+                    className="block px-4 py-2.5 text-sm text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors"
+                  >
+                    My Dashboard
+                  </Link>
+                  <div className="my-1 border-t border-[var(--color-border)]" />
                   <button
                     onClick={() => logout()}
                     className="w-full text-left px-4 py-2.5 text-sm text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors"
@@ -182,12 +189,21 @@ export default function Navbar() {
                 Add Listing
               </Link>
               {user ? (
-                <button
-                  onClick={() => { logout(); setMobileOpen(false); }}
-                  className="border border-[var(--color-border)] text-[var(--color-foreground)] text-sm text-center py-2.5 rounded-lg font-semibold hover:bg-[var(--color-muted)] transition-colors"
-                >
-                  Sign Out ({user.name?.split(" ")[0]})
-                </button>
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="border border-[var(--color-ocean)] text-[var(--color-ocean)] text-sm text-center py-2.5 rounded-lg font-semibold hover:bg-[var(--color-ocean-pale)] transition-colors"
+                  >
+                    My Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { logout(); setMobileOpen(false); }}
+                    className="border border-[var(--color-border)] text-[var(--color-foreground)] text-sm text-center py-2.5 rounded-lg font-semibold hover:bg-[var(--color-muted)] transition-colors"
+                  >
+                    Sign Out ({user.name?.split(" ")[0]})
+                  </button>
+                </>
               ) : (
                 <a
                   href={getLoginUrl()}

@@ -330,7 +330,14 @@ function SubmissionsTab() {
 
 // ─── Claims Tab ─────────────────────────────────────────────────────────────────
 function ClaimsTab() {
+  const utils = trpc.useUtils();
   const { data: claims, isLoading } = trpc.admin.listClaims.useQuery();
+  const approveMutation = trpc.admin.approveClaim.useMutation({
+    onSuccess: () => utils.admin.listClaims.invalidate(),
+  });
+  const rejectMutation = trpc.admin.rejectClaim.useMutation({
+    onSuccess: () => utils.admin.listClaims.invalidate(),
+  });
 
   if (isLoading) {
     return (
@@ -372,12 +379,36 @@ function ClaimsTab() {
                   </div>
                 </div>
               </div>
-              <a
-                href={`mailto:${c.email}`}
-                className="inline-flex items-center gap-1 text-xs text-ocean hover:underline flex-shrink-0"
-              >
-                Reply <ExternalLink className="w-3 h-3" />
-              </a>
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                <a
+                  href={`mailto:${c.email}`}
+                  className="inline-flex items-center gap-1 text-xs text-ocean hover:underline"
+                >
+                  Reply <ExternalLink className="w-3 h-3" />
+                </a>
+                <button
+                  onClick={() =>
+                    approveMutation.mutate({
+                      claimId: c.id,
+                      businessId: c.businessId ?? undefined,
+                      claimEmail: c.email,
+                    })
+                  }
+                  disabled={approveMutation.isPending}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  <CheckCircle2 className="w-3 h-3" /> Approve
+                </button>
+                <button
+                  onClick={() =>
+                    rejectMutation.mutate({ claimId: c.id })
+                  }
+                  disabled={rejectMutation.isPending}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
+                >
+                  Reject
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -66,6 +66,9 @@ export const businesses = mysqlTable("businesses", {
   isSponsored: boolean("isSponsored").default(false).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   isClaimed: boolean("isClaimed").default(false).notNull(),
+  claimedByUserId: int("claimedByUserId"),
+  // JSON object: { facebook, instagram, twitter, yelp, tripadvisor }
+  socialLinks: json("socialLinks").$type<Record<string, string>>().default({}),
   // Ratings
   rating: varchar("rating", { length: 5 }).default("4.5"),
   reviewCount: int("reviewCount").default(0),

@@ -13,13 +13,18 @@ import {
   getAllSubmissions,
   getBusinessBySlug,
   getBusinesses,
+  getBusinessByUserId,
+  updateBusinessByUserId,
   getFeaturedBusinesses,
   getRelatedBusinesses,
   markClaimLeadWebhookSent,
   markSubmissionWebhookSent,
   updateBusinessFlags,
   updateSubmissionStatus,
+  getDb,
 } from "./db";
+import { businesses, users } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 import {
   GHL_WORKFLOWS,
   ghlAddTags,
@@ -77,8 +82,25 @@ export const appRouter = router({
 
     // Approve/reject a claim and trigger the appropriate GHL workflow
     approveClaim: adminProcedure
-      .input(z.object({ claimId: z.number(), contactId: z.string().optional() }))
+      .input(z.object({ claimId: z.number(), businessId: z.number().optional(), claimEmail: z.string().email().optional(), contactId: z.string().optional() }))
       .mutation(async ({ input }) => {
+        // Link the business to the user who submitted the claim (by email match)
+        if (input.businessId && input.claimEmail) {
+          const db = await getDb();
+          if (db) {
+            const matchedUsers = await db
+              .select({ id: users.id })
+              .from(users)
+              .where(eq(users.email, input.claimEmail))
+              .limit(1);
+            const userId = matchedUsers[0]?.id ?? null;
+            await db
+              .update(businesses)
+              .set({ isClaimed: true, claimedByUserId: userId })
+              .where(eq(businesses.id, input.businessId));
+          }
+        }
+        // Trigger GHL workflow
         if (input.contactId) {
           await ghlAddTags(input.contactId, ["Claim Approved"]);
           await ghlTriggerWorkflow(input.contactId, GHL_WORKFLOWS.CLAIM_REQUEST_APPROVED);
@@ -348,6 +370,52 @@ export const appRouter = router({
   }),
 
   // ─── User hooks (trigger GHL on new user) ────────────────────────────────────
+
+  // ─── User Dashboard ─────────────────────────────────────────────────────────
+  dashboard: router({
+    getMyProfile: protectedProcedure.query(async ({ ctx }) => {
+      return {
+        name: ctx.user.name,
+        email: ctx.user.email,
+        plan: ctx.user.subscriptionPlan ?? "free",
+        subscriptionStatus: ctx.user.subscriptionStatus ?? "inactive",
+        stripeCustomerId: ctx.user.stripeCustomerId,
+        stripeSubscriptionId: ctx.user.stripeSubscriptionId,
+      };
+    }),
+
+    getMyListing: protectedProcedure.query(async ({ ctx }) => {
+      return getBusinessByUserId(ctx.user.id);
+    }),
+
+    updateMyListing: protectedProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).max(200).optional(),
+          shortDescription: z.string().max(300).optional(),
+          description: z.string().max(5000).optional(),
+          phone: z.string().max(30).optional(),
+          website: z.string().url().optional().or(z.literal("")),
+          email: z.string().email().optional().or(z.literal("")),
+          address: z.string().max(300).optional(),
+          area: z.string().max(100).optional(),
+          hours: z.record(z.string(), z.string()).optional(),
+          photos: z.array(z.string().url()).optional(),
+          socialLinks: z.record(z.string(), z.string()).optional(),
+          lat: z.string().optional(),
+          lng: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getBusinessByUserId(ctx.user.id);
+        if (!existing) {
+          throw new Error("No claimed listing found for this account.");
+        }
+        await updateBusinessByUserId(ctx.user.id, input as Parameters<typeof updateBusinessByUserId>[1]);
+        return { success: true };
+      }),
+  }),
+
   users: router({
     onboardNewUser: protectedProcedure.mutation(async ({ ctx }) => {
       const user = ctx.user;
