@@ -108,11 +108,18 @@ export default function Footer() {
           <div className="flex flex-wrap items-center justify-center gap-8 mb-8">
             {/* Siesta Key Chamber of Commerce */}
             <div className="flex flex-col items-center gap-2">
-              <img
-                src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
-                alt="Siesta Key Chamber of Commerce"
-                className="h-12 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
-              />
+              <a
+                href="https://www.siestakey.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="opacity-70 hover:opacity-100 transition-opacity"
+              >
+                <img
+                  src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                  alt="Siesta Key Chamber of Commerce"
+                  className="h-12 w-auto object-contain"
+                />
+              </a>
               <span className="text-[10px] text-white/40">Siesta Key Chamber of Commerce</span>
             </div>
             {/* BBB Seal */}

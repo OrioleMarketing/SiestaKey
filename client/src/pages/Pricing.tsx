@@ -578,6 +578,61 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Trust / Powered By Section */}
+      <section className="py-8 bg-[var(--color-white-sand)] border-t border-border">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-5">
+            Powered by a verified, accredited local marketing agency
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8">
+            <a
+              href="https://oriolemarketing.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <span className="text-sm font-semibold text-[var(--color-ocean)] group-hover:underline">
+                Oriole Marketing
+              </span>
+              <span className="text-xs text-muted-foreground">Local Directory Partner</span>
+            </a>
+            <span className="text-border text-lg hidden sm:block">|</span>
+            <a
+              href="https://www.siestakey.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 group opacity-70 hover:opacity-100 transition-opacity"
+            >
+              <img
+                src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                alt="Siesta Key Chamber of Commerce"
+                className="h-8 w-auto object-contain"
+              />
+              <span className="text-xs text-muted-foreground group-hover:text-[var(--color-ocean)] transition-colors leading-tight text-left">
+                Siesta Key Chamber<br />of Commerce
+              </span>
+            </a>
+            <span className="text-border text-lg hidden sm:block">|</span>
+            <a
+              href="https://www.bbb.org/us/in/plainfield/profile/digital-marketing/oriole-marketing-llc-0382-90038569/#sealclick"
+              target="_blank"
+              rel="nofollow"
+              className="flex items-center gap-2 group opacity-70 hover:opacity-100 transition-opacity"
+            >
+              <img
+                src="https://seal-indy.bbb.org/seals/blue-seal-200-42-bbb-90038569.png"
+                alt="Oriole Marketing LLC BBB Business Review"
+                style={{ border: 0 }}
+                className="h-8 w-auto object-contain"
+              />
+              <span className="text-xs text-muted-foreground group-hover:text-[var(--color-ocean)] transition-colors leading-tight text-left">
+                BBB Accredited<br />Business
+              </span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

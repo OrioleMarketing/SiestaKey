@@ -109,6 +109,44 @@ export default function Contact() {
                   Bruce A Mayo · bruce@oriolemarketing.com
                 </p>
               </div>
+
+              {/* Trust / Membership Badges */}
+              <div className="border-t border-border pt-5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Proud Member Of</p>
+                <div className="flex flex-col gap-4">
+                  <a
+                    href="https://www.siestakey.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 group"
+                  >
+                    <img
+                      src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                      alt="Siesta Key Chamber of Commerce"
+                      className="h-8 w-auto object-contain opacity-70 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span className="text-xs text-muted-foreground group-hover:text-ocean transition-colors leading-tight">
+                      Siesta Key Chamber<br />of Commerce
+                    </span>
+                  </a>
+                  <a
+                    href="https://www.bbb.org/us/in/plainfield/profile/digital-marketing/oriole-marketing-llc-0382-90038569/#sealclick"
+                    target="_blank"
+                    rel="nofollow"
+                    className="flex items-center gap-3 group"
+                  >
+                    <img
+                      src="https://seal-indy.bbb.org/seals/blue-seal-200-42-bbb-90038569.png"
+                      alt="Oriole Marketing LLC BBB Business Review"
+                      style={{ border: 0 }}
+                      className="h-8 w-auto object-contain opacity-70 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span className="text-xs text-muted-foreground group-hover:text-ocean transition-colors leading-tight">
+                      Better Business<br />Bureau Accredited
+                    </span>
+                  </a>
+                </div>
+              </div>
             </div>
 
             {/* ── Contact Form ── */}

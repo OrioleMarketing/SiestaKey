@@ -156,3 +156,8 @@
 - [x] Admin Submissions tab: "Resend Payment Link" button on pending unpaid paid-tier submissions
 - [x] Admin Businesses tab: manual tier change dropdown — updates DB only, no Stripe charge; labelled "Admin override" with "(no charge)" suffix on each option
 - [x] ghl.ts: added LISTING_REJECTED workflow constant (currently maps to CLAIM_REQUEST_REJECTED — update ID when a dedicated GHL workflow is created)
+
+## Enhancement Round 16 — Trust Badges Expansion
+- [x] Footer: link Chamber of Commerce logo to https://www.siestakey.com
+- [x] Contact page: add Chamber + BBB trust badges alongside address/phone in sidebar
+- [x] Pricing page: add "Powered by Oriole Marketing" trust section with Chamber + BBB badges above Footer
