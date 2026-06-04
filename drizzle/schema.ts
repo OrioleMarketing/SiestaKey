@@ -69,6 +69,8 @@ export const businesses = mysqlTable("businesses", {
   claimedByUserId: int("claimedByUserId"),
   // JSON object: { facebook, instagram, twitter, yelp, tripadvisor }
   socialLinks: json("socialLinks").$type<Record<string, string>>().default({}),
+  // Google Review embed code (HTML snippet) — shown on Gulf Breeze & Island Premier tiers
+  googleReviewEmbedCode: text("googleReviewEmbedCode"),
   // Ratings
   rating: varchar("rating", { length: 5 }).default("4.5"),
   reviewCount: int("reviewCount").default(0),

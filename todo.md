@@ -111,7 +111,20 @@
 - [x] Stripe webhook audit: confirmed correctly registered before express.json()
 
 ## Enhancement Round 12 — Admin Listing Management
-- [ ] Backend: admin.createBusiness tRPC procedure (name, category, address, phone, website, description, area)
-- [ ] Backend: admin.deleteBusiness tRPC procedure (by id, admin-only)
-- [ ] Admin UI: "Add Listing" button + dialog form on the Businesses tab
-- [ ] Admin UI: Delete button with confirmation dialog on each listing row
+- [x] Backend: admin.createBusiness tRPC procedure (name, category, address, phone, website, description, area)
+- [x] Backend: admin.deleteBusiness tRPC procedure (by id, admin-only)
+- [x] Admin UI: "Add Listing" button + dialog form on the Businesses tab
+- [x] Admin UI: Delete button with confirmation dialog on each listing row
+
+## Enhancement Round 13 — Contact Us + Google Reviews
+- [x] Create /contact page: name, email, phone (optional), message form
+- [x] Wire Contact form → GHL "Contact Form Submitted" workflow (CONTACT_FORM_SUBMITTED)
+- [x] Add /contact route to App.tsx
+- [x] Add Contact Us link to Footer (Contact column + legal links row)
+- [x] Schema: add googleReviewEmbedCode text column to businesses table
+- [x] DB migration: ALTER TABLE businesses ADD googleReviewEmbedCode text
+- [x] Backend: admin.updateGoogleReview tRPC procedure (by business id, admin-only)
+- [x] Backend: dashboard.updateMyListing accepts googleReviewEmbedCode field
+- [x] Admin UI: Google Review (chat bubble) icon button on featured/sponsored rows → embed code dialog
+- [x] Dashboard UI: Google Reviews Widget section (Gulf Breeze + Island Premier only) with textarea for embed code
+- [x] BusinessProfile: render googleReviewEmbedCode via dangerouslySetInnerHTML for featured/sponsored tiers only

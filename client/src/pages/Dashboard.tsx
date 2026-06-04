@@ -42,6 +42,7 @@ import {
   ImagePlus,
   Trash2,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import { useRef } from "react";
 
@@ -158,6 +159,7 @@ export default function Dashboard() {
   });
   const [hours, setHours] = useState<Record<string, string>>({});
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
+  const [googleReviewEmbedCode, setGoogleReviewEmbedCode] = useState("");
 
   // Populate form when listing loads
   useEffect(() => {
@@ -176,6 +178,7 @@ export default function Dashboard() {
       });
       setHours((listing.hours as Record<string, string>) ?? {});
       setSocialLinks((listing.socialLinks as Record<string, string>) ?? {});
+      setGoogleReviewEmbedCode(listing.googleReviewEmbedCode ?? "");
     }
   }, [listing]);
 
@@ -184,6 +187,7 @@ export default function Dashboard() {
       ...form,
       hours,
       socialLinks,
+      googleReviewEmbedCode: googleReviewEmbedCode || null,
     });
   };
 
@@ -602,6 +606,35 @@ export default function Dashboard() {
                     </>
                   )}
                 </div>
+
+                {/* Google Review Embed — Gulf Breeze & Island Premier only */}
+                {(planKey === "gulf_breeze" || planKey === "island_premier") && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-sky-500" /> Google Reviews Widget
+                      </h3>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Paste your Google Review widget embed code below. It will appear on your public business profile page. Supported providers: Elfsight, EmbedSocial, Google Places widget, or any custom HTML snippet.
+                      </p>
+                      <Textarea
+                        id="googleReviewEmbedCode"
+                        value={googleReviewEmbedCode}
+                        onChange={(e) => setGoogleReviewEmbedCode(e.target.value)}
+                        placeholder={`Paste your Google Review widget embed code here...\n\nExample:\n<script src="https://..." async defer></script>\n<div class="google-reviews-widget" data-place-id="..."></div>`}
+                        rows={6}
+                        className="font-mono text-xs"
+                      />
+                      {googleReviewEmbedCode && (
+                        <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
+                          <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                          Embed code saved — visible on your public profile.
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 {/* Save Button */}
                 <div className="flex justify-end pt-2">

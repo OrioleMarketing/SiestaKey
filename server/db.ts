@@ -281,6 +281,7 @@ export async function updateBusinessByUserId(
     socialLinks?: Record<string, string>;
     lat?: string;
     lng?: string;
+    googleReviewEmbedCode?: string | null;
   }
 ): Promise<void> {
   const db = await getDb();

@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Lock,
   LogIn,
+  MessageSquare,
   Plus,
   Star,
   Trash2,
@@ -223,6 +224,8 @@ function BusinessesTab() {
   const { data: businesses, isLoading, refetch } = trpc.admin.listBusinesses.useQuery();
   const [showAdd, setShowAdd] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ id: number; name: string; tier: string; embedCode: string | null } | null>(null);
+  const [reviewEmbed, setReviewEmbed] = useState("");
 
   const updateBusiness = trpc.admin.updateBusiness.useMutation({
     onSuccess: () => { toast.success("Listing updated"); refetch(); },
@@ -233,6 +236,16 @@ function BusinessesTab() {
     onSuccess: () => { toast.success("Listing deleted"); refetch(); setDeleteTarget(null); },
     onError: () => toast.error("Delete failed"),
   });
+
+  const updateGoogleReview = trpc.admin.updateGoogleReview.useMutation({
+    onSuccess: () => { toast.success("Google Review embed saved"); refetch(); setReviewTarget(null); },
+    onError: () => toast.error("Failed to save embed code"),
+  });
+
+  const openReviewDialog = (b: { id: number; name: string; tier: string; googleReviewEmbedCode?: string | null }) => {
+    setReviewTarget({ id: b.id, name: b.name, tier: b.tier, embedCode: b.googleReviewEmbedCode ?? null });
+    setReviewEmbed(b.googleReviewEmbedCode ?? "");
+  };
 
   const toggle = (id: number, field: "isFeatured" | "isSponsored" | "isActive", current: boolean) => {
     updateBusiness.mutate({ id, [field]: !current });
@@ -352,6 +365,19 @@ function BusinessesTab() {
                     >
                       View <ExternalLink className="w-3 h-3" />
                     </a>
+                    {(b.tier === "featured" || b.tier === "sponsored") && (
+                      <button
+                        onClick={() => openReviewDialog(b)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                          b.googleReviewEmbedCode
+                            ? "bg-green-100 text-green-600 hover:bg-green-200"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        title={b.googleReviewEmbedCode ? "Edit Google Review embed" : "Add Google Review embed"}
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setDeleteTarget({ id: b.id, name: b.name })}
                       className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -398,6 +424,64 @@ function BusinessesTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Google Review Embed Dialog */}
+      <Dialog open={!!reviewTarget} onOpenChange={(v) => !v && setReviewTarget(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-ocean" />
+              Google Review Embed
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg bg-ocean/5 border border-ocean/20 p-3 text-sm text-ocean-dark">
+              <p className="font-semibold mb-1">For: {reviewTarget?.name}</p>
+              <p className="text-xs text-muted-foreground">
+                Tier: <span className="capitalize font-medium">{reviewTarget?.tier}</span> — Google Review widgets are available for Gulf Breeze and Island Premier listings.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="gr-embed" className="text-sm font-medium">
+                Embed Code or Widget HTML
+              </Label>
+              <Textarea
+                id="gr-embed"
+                value={reviewEmbed}
+                onChange={(e) => setReviewEmbed(e.target.value)}
+                placeholder={`Paste your Google Review widget embed code here...\n\nExample:\n<script src="https://..." async defer></script>\n<div class="google-reviews-widget" data-place-id="..."></div>`}
+                rows={8}
+                className="mt-1 font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Paste any Google Review widget embed code (Elfsight, EmbedSocial, Places API widget, etc.). Leave blank to remove.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReviewTarget(null)} disabled={updateGoogleReview.isPending}>
+              Cancel
+            </Button>
+            {reviewEmbed && (
+              <Button
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50"
+                onClick={() => reviewTarget && updateGoogleReview.mutate({ id: reviewTarget.id, googleReviewEmbedCode: null })}
+                disabled={updateGoogleReview.isPending}
+              >
+                Remove Embed
+              </Button>
+            )}
+            <Button
+              className="btn-ocean"
+              onClick={() => reviewTarget && updateGoogleReview.mutate({ id: reviewTarget.id, googleReviewEmbedCode: reviewEmbed || null })}
+              disabled={updateGoogleReview.isPending}
+            >
+              {updateGoogleReview.isPending ? "Saving…" : "Save Embed"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

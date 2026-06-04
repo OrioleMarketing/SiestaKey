@@ -89,7 +89,12 @@ export default function Footer() {
                 info@shopinsiestakey.com
               </li>
             </ul>
-            <div className="mt-6">
+            <div className="mt-4">
+              <Link href="/contact" className="text-sm text-white/70 hover:text-white transition-colors">
+                Contact Us
+              </Link>
+            </div>
+            <div className="mt-4">
               <Link href="/submit-listing" className="btn-coral text-sm px-4 py-2">
                 Get Listed Today
               </Link>
@@ -101,6 +106,13 @@ export default function Footer() {
           {/* Legal links row */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4">
 
+            <a
+              href="/contact"
+              className="text-xs text-white/50 hover:text-white transition-colors underline-offset-2 hover:underline"
+            >
+              Contact Us
+            </a>
+            <span className="text-white/20 text-xs">|</span>
             <a
               href="/privacy"
               target="_blank"

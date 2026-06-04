@@ -181,6 +181,23 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    updateGoogleReview: adminProcedure
+      .input(
+        z.object({
+          id: z.number().int().positive(),
+          googleReviewEmbedCode: z.string().max(5000).nullable(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+        await db
+          .update(businesses)
+          .set({ googleReviewEmbedCode: input.googleReviewEmbedCode })
+          .where(eq(businesses.id, input.id));
+        return { success: true };
+      }),
+
     stats: adminProcedure.query(async () => {
       const [businesses, claims, submissions] = await Promise.all([
         getAllBusinessesAdmin(),
@@ -467,6 +484,7 @@ export const appRouter = router({
           socialLinks: z.record(z.string(), z.string()).optional(),
           lat: z.string().optional(),
           lng: z.string().optional(),
+          googleReviewEmbedCode: z.string().max(5000).nullable().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
