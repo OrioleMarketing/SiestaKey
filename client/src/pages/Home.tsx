@@ -346,7 +346,7 @@ export default function Home() {
       {/* ── CTA Strip ─────────────────────────────────────────────────────────── */}
       <section className="py-12 bg-ocean-gradient text-white">
         <div className="container text-center">
-          <h3 className="font-serif text-2xl md:text-3xl font-bold mb-3">
+          <h3 className="font-serif text-2xl md:text-3xl font-bold mb-3 text-white">
             Own a Business on Siesta Key?
           </h3>
           <p className="text-white/75 mb-6 max-w-xl mx-auto">
