@@ -23,7 +23,7 @@ import {
   updateSubmissionStatus,
   getDb,
 } from "./db";
-import { businesses, users } from "../drizzle/schema";
+import { businesses, listingSubmissions, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import {
   GHL_WORKFLOWS,
@@ -78,6 +78,53 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         await updateSubmissionStatus(input.id, input.status);
+
+        // When approving, auto-create a business listing from the submission data
+        if (input.status === "approved") {
+          const db = await getDb();
+          if (db) {
+            // Fetch the submission
+            const rows = await db
+              .select()
+              .from(listingSubmissions)
+              .where(eq(listingSubmissions.id, input.id))
+              .limit(1);
+            const sub = rows[0];
+
+            if (sub) {
+              // Generate a unique slug from the business name
+              const baseSlug = sub.businessName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "");
+              const existing = await db
+                .select({ slug: businesses.slug })
+                .from(businesses)
+                .where(eq(businesses.slug, baseSlug))
+                .limit(1);
+              const slug = existing.length > 0 ? `${baseSlug}-${Date.now()}` : baseSlug;
+
+              await db.insert(businesses).values({
+                slug,
+                name: sub.businessName,
+                categoryId: sub.categoryId ?? 1, // default to first category if not set
+                description: sub.description ?? null,
+                shortDescription: null,
+                address: sub.address ?? null,
+                area: "Siesta Key Village",
+                phone: sub.phone ?? null,
+                website: sub.website ?? null,
+                email: sub.email ?? null,
+                isActive: true,
+                isFeatured: false,
+                isSponsored: false,
+                isClaimed: false,
+                tier: "free",
+              });
+            }
+          }
+        }
+
         return { success: true };
       }),
 

@@ -128,3 +128,8 @@
 - [x] Admin UI: Google Review (chat bubble) icon button on featured/sponsored rows → embed code dialog
 - [x] Dashboard UI: Google Reviews Widget section (Gulf Breeze + Island Premier only) with textarea for embed code
 - [x] BusinessProfile: render googleReviewEmbedCode via dangerouslySetInnerHTML for featured/sponsored tiers only
+
+## Bug Fix — Submission Approval Auto-Creates Listing
+- [x] Bug: approving a submission only updated its status but never created a business listing
+- [x] Fix: updateSubmission procedure now fetches the submission row and inserts a new business when status === "approved"
+- [x] Fix: Admin SubmissionsTab shows a descriptive toast on approval and invalidates the businesses list cache

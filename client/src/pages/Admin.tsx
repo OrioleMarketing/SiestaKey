@@ -488,10 +488,19 @@ function BusinessesTab() {
 
 // ─── Submissions Tab ────────────────────────────────────────────────────────────
 function SubmissionsTab() {
+  const utils = trpc.useUtils();
   const { data: submissions, isLoading, refetch } = trpc.admin.listSubmissions.useQuery();
   const updateStatus = trpc.admin.updateSubmission.useMutation({
-    onSuccess: () => {
-      toast.success("Status updated");
+    onSuccess: (_data, variables) => {
+      if (variables.status === "approved") {
+        toast.success("Submission approved — business listing created and added to the directory!");
+        // Invalidate the businesses list so it reflects the new listing immediately
+        utils.admin.listBusinesses.invalidate();
+      } else if (variables.status === "rejected") {
+        toast.success("Submission rejected.");
+      } else {
+        toast.success("Status updated.");
+      }
       refetch();
     },
     onError: () => toast.error("Update failed"),
