@@ -70,3 +70,10 @@
 - [x] Add SEO tags to Directory and category pages
 - [x] Add SEO tags to Business Profile page (dynamic per business)
 - [x] Add SEO tags to Claim Business, Submit Listing, Privacy, Terms pages
+
+## Enhancement Round 8 — Pricing Page
+- [x] Create /pricing page with 3 tiers: Free, Featured ($149/yr), Premium ($299/yr)
+- [x] Premium tier includes AI Search Audit ($299 value) as bonus
+- [x] Feature comparison rows with checkmarks/X marks like Hawaii Thrive
+- [x] Add /pricing route to App.tsx
+- [x] Add Pricing link to footer

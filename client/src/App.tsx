@@ -12,6 +12,7 @@ import SubmitListing from "./pages/SubmitListing";
 import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Pricing from "./pages/Pricing";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/claim" component={ClaimBusiness} />
       <Route path="/submit-listing" component={SubmitListing} />
       <Route path="/admin" component={Admin} />
+      <Route path="/pricing" component={Pricing} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/404" component={NotFound} />

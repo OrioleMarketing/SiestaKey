@@ -63,7 +63,8 @@ export default function Footer() {
               {[
                 { href: "/submit-listing", label: "Submit Your Listing" },
                 { href: "/claim", label: "Claim Your Business" },
-                { href: "/submit-listing", label: "Premium Listings" },
+                { href: "/pricing", label: "View Plans & Pricing" },
+                { href: "/pricing", label: "Premium Listings" },
                 { href: "/submit-listing", label: "Advertise With Us" },
               ].map((link) => (
                 <li key={link.label}>
