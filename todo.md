@@ -161,3 +161,10 @@
 - [x] Footer: link Chamber of Commerce logo to https://www.siestakey.com
 - [x] Contact page: add Chamber + BBB trust badges alongside address/phone in sidebar
 - [x] Pricing page: add "Powered by Oriole Marketing" trust section with Chamber + BBB badges above Footer
+
+## Enhancement Round 17 — Category Fix + Full Admin Edit
+- [x] Fix ADMIN_CATEGORIES constants to match actual DB order (Services=4, Nightlife=5, Wellness=6, Accommodations=7, Real Estate=8)
+- [x] Fix Oriole Marketing LLC categoryId from 6 (Wellness) to 4 (Services) in DB
+- [x] Backend: expand admin.updateBusiness to accept all business fields (name, slug, categoryId, descriptions, address, area, phone, website, email, lat, lng, rating, reviewCount, tags, hours, socialLinks, googleReviewEmbedCode)
+- [x] Admin Businesses tab: add Pencil (Edit) button per row that opens a full-edit dialog
+- [x] EditListingDialog: scrollable modal with all DB fields — core info, descriptions, tags, hours (per day), social links, ratings, Google Review embed

@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import type { Business } from "../../../drizzle/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import {
   Lock,
   LogIn,
   MessageSquare,
+  Pencil,
   Plus,
   Star,
   Trash2,
@@ -99,11 +101,11 @@ const ADMIN_CATEGORIES = [
   { id: 1, name: "Dining" },
   { id: 2, name: "Shopping" },
   { id: 3, name: "Activities" },
-  { id: 4, name: "Nightlife" },
-  { id: 5, name: "Accommodations" },
-  { id: 6, name: "Services" },
-  { id: 7, name: "Arts & Culture" },
-  { id: 8, name: "Health & Wellness" },
+  { id: 4, name: "Services" },
+  { id: 5, name: "Nightlife" },
+  { id: 6, name: "Wellness" },
+  { id: 7, name: "Accommodations" },
+  { id: 8, name: "Real Estate" },
 ];
 
 const ADMIN_AREAS = [
@@ -220,9 +222,232 @@ function AddListingDialog({ open, onClose, onCreated }: { open: boolean; onClose
 }
 
 // ─── Businesses Tab ─────────────────────────────────────────────────────────────
+type BusinessRow = Business;
+
+const DAYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+
+function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    name: biz.name ?? "",
+    slug: biz.slug ?? "",
+    categoryId: biz.categoryId ?? 1,
+    shortDescription: biz.shortDescription ?? "",
+    description: biz.description ?? "",
+    address: biz.address ?? "",
+    area: biz.area ?? "Siesta Key Village",
+    phone: biz.phone ?? "",
+    website: biz.website ?? "",
+    email: biz.email ?? "",
+    lat: biz.lat ?? "",
+    lng: biz.lng ?? "",
+    rating: biz.rating ?? "4.5",
+    reviewCount: biz.reviewCount ?? 0,
+    tags: (biz.tags ?? []).join(", "),
+    hours: DAYS.reduce((acc, d) => ({ ...acc, [d]: (biz.hours as Record<string,string>)?.[d] ?? "" }), {} as Record<string,string>),
+    socialLinks: {
+      facebook: (biz.socialLinks as Record<string,string>)?.facebook ?? "",
+      instagram: (biz.socialLinks as Record<string,string>)?.instagram ?? "",
+      twitter: (biz.socialLinks as Record<string,string>)?.twitter ?? "",
+      yelp: (biz.socialLinks as Record<string,string>)?.yelp ?? "",
+      tripadvisor: (biz.socialLinks as Record<string,string>)?.tripadvisor ?? "",
+    },
+    googleReviewEmbedCode: biz.googleReviewEmbedCode ?? "",
+  });
+
+  const updateBusiness = trpc.admin.updateBusiness.useMutation({
+    onSuccess: () => { toast.success("Listing saved"); onSaved(); onClose(); },
+    onError: () => toast.error("Save failed"),
+  });
+
+  const set = (field: string, value: unknown) => setForm(f => ({ ...f, [field]: value }));
+  const setHour = (day: string, val: string) => setForm(f => ({ ...f, hours: { ...f.hours, [day]: val } }));
+  const setSocial = (key: string, val: string) => setForm(f => ({ ...f, socialLinks: { ...f.socialLinks, [key]: val } }));
+
+  const handleSave = () => {
+    const hours: Record<string,string> = {};
+    for (const d of DAYS) { if (form.hours[d]) hours[d] = form.hours[d]; }
+    const socialLinks: Record<string,string> = {};
+    for (const [k,v] of Object.entries(form.socialLinks)) { if (v) socialLinks[k] = v; }
+    const tags = form.tags.split(",").map((t: string) => t.trim()).filter(Boolean);
+    updateBusiness.mutate({
+      id: biz.id,
+      name: form.name || undefined,
+      slug: form.slug || undefined,
+      categoryId: form.categoryId,
+      shortDescription: form.shortDescription || null,
+      description: form.description || null,
+      address: form.address || null,
+      area: form.area || null,
+      phone: form.phone || null,
+      website: form.website || null,
+      email: form.email || null,
+      lat: form.lat || null,
+      lng: form.lng || null,
+      rating: form.rating || null,
+      reviewCount: form.reviewCount || 0,
+      tags,
+      hours: Object.keys(hours).length ? hours : null,
+      socialLinks: Object.keys(socialLinks).length ? socialLinks : null,
+      googleReviewEmbedCode: form.googleReviewEmbedCode || null,
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-lg">Edit Listing — {biz.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 py-2">
+          {/* Core */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Label>Business Name</Label>
+              <Input value={form.name} onChange={e => set("name", e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label>URL Slug</Label>
+              <Input value={form.slug} onChange={e => set("slug", e.target.value)} className="mt-1 font-mono text-xs" />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Select value={String(form.categoryId)} onValueChange={v => set("categoryId", Number(v))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ADMIN_CATEGORIES.map(c => (
+                    <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Area</Label>
+              <Select value={form.area} onValueChange={v => set("area", v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ADMIN_AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input value={form.phone} onChange={e => set("phone", e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" value={form.email} onChange={e => set("email", e.target.value)} className="mt-1" />
+            </div>
+            <div className="col-span-2">
+              <Label>Website</Label>
+              <Input value={form.website} onChange={e => set("website", e.target.value)} className="mt-1" placeholder="https://" />
+            </div>
+            <div className="col-span-2">
+              <Label>Address</Label>
+              <Input value={form.address} onChange={e => set("address", e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label>Latitude</Label>
+              <Input value={form.lat} onChange={e => set("lat", e.target.value)} className="mt-1 font-mono text-xs" />
+            </div>
+            <div>
+              <Label>Longitude</Label>
+              <Input value={form.lng} onChange={e => set("lng", e.target.value)} className="mt-1 font-mono text-xs" />
+            </div>
+          </div>
+
+          {/* Descriptions */}
+          <div className="space-y-3">
+            <div>
+              <Label>Short Description <span className="text-muted-foreground text-xs">(max 300 chars)</span></Label>
+              <Input value={form.shortDescription} onChange={e => set("shortDescription", e.target.value)} maxLength={300} className="mt-1" />
+            </div>
+            <div>
+              <Label>Full Description</Label>
+              <Textarea value={form.description} onChange={e => set("description", e.target.value)} rows={4} className="mt-1" />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <Label>Tags <span className="text-muted-foreground text-xs">(comma-separated)</span></Label>
+            <Input value={form.tags} onChange={e => set("tags", e.target.value)} className="mt-1" placeholder="beach, family-friendly, outdoor" />
+          </div>
+
+          {/* Hours */}
+          <div>
+            <Label className="mb-2 block">Hours of Operation</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {DAYS.map(d => (
+                <div key={d} className="flex items-center gap-2">
+                  <span className="w-24 text-xs capitalize text-muted-foreground">{d}</span>
+                  <Input
+                    value={form.hours[d]}
+                    onChange={e => setHour(d, e.target.value)}
+                    placeholder="9am–5pm or Closed"
+                    className="h-7 text-xs"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Social Links */}
+          <div>
+            <Label className="mb-2 block">Social Links</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {["facebook","instagram","twitter","yelp","tripadvisor"].map(k => (
+                <div key={k}>
+                  <Label className="text-xs capitalize">{k}</Label>
+                  <Input
+                    value={(form.socialLinks as Record<string,string>)[k]}
+                    onChange={e => setSocial(k, e.target.value)}
+                    placeholder={`https://${k}.com/...`}
+                    className="mt-0.5 h-7 text-xs"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Ratings */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Rating <span className="text-muted-foreground text-xs">(e.g. 4.5)</span></Label>
+              <Input value={form.rating} onChange={e => set("rating", e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label>Review Count</Label>
+              <Input type="number" value={form.reviewCount} onChange={e => set("reviewCount", Number(e.target.value))} className="mt-1" />
+            </div>
+          </div>
+
+          {/* Google Review Embed */}
+          <div>
+            <Label>Google Review Embed Code <span className="text-muted-foreground text-xs">(Gulf Breeze &amp; Island Premier only)</span></Label>
+            <Textarea
+              value={form.googleReviewEmbedCode}
+              onChange={e => set("googleReviewEmbedCode", e.target.value)}
+              rows={4}
+              className="mt-1 font-mono text-xs"
+              placeholder="Paste widget HTML here..."
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} disabled={updateBusiness.isPending}>Cancel</Button>
+          <Button className="btn-ocean" onClick={handleSave} disabled={updateBusiness.isPending}>
+            {updateBusiness.isPending ? "Saving…" : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function BusinessesTab() {
   const { data: businesses, isLoading, refetch } = trpc.admin.listBusinesses.useQuery();
   const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<BusinessRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const [reviewTarget, setReviewTarget] = useState<{ id: number; name: string; tier: string; embedCode: string | null } | null>(null);
   const [reviewEmbed, setReviewEmbed] = useState("");
@@ -368,6 +593,13 @@ function BusinessesTab() {
                     >
                       View <ExternalLink className="w-3 h-3" />
                     </a>
+                    <button
+                      onClick={() => setEditTarget(b)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-ocean hover:bg-ocean/10 transition-colors"
+                      title="Edit all fields"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                     {(b.tier === "featured" || b.tier === "sponsored") && (
                       <button
                         onClick={() => openReviewDialog(b)}
@@ -405,6 +637,15 @@ function BusinessesTab() {
         onClose={() => setShowAdd(false)}
         onCreated={refetch}
       />
+
+      {/* Full Edit Dialog */}
+      {editTarget && (
+        <EditListingDialog
+          biz={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={refetch}
+        />
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>

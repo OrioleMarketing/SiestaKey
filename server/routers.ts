@@ -49,16 +49,45 @@ export const appRouter = router({
       .input(
         z.object({
           id: z.number(),
+          // Flags
           isFeatured: z.boolean().optional(),
           isSponsored: z.boolean().optional(),
           isActive: z.boolean().optional(),
           isClaimed: z.boolean().optional(),
           tier: z.enum(["free", "featured", "sponsored"]).optional(),
+          // Core fields
+          name: z.string().min(1).max(200).optional(),
+          slug: z.string().min(1).max(150).optional(),
+          categoryId: z.number().int().positive().optional(),
+          shortDescription: z.string().max(300).nullish(),
+          description: z.string().max(5000).nullish(),
+          address: z.string().max(300).nullish(),
+          area: z.string().max(100).nullish(),
+          phone: z.string().max(30).nullish(),
+          website: z.string().max(300).nullish(),
+          email: z.string().max(200).nullish(),
+          lat: z.string().max(30).nullish(),
+          lng: z.string().max(30).nullish(),
+          rating: z.string().max(5).nullish(),
+          reviewCount: z.number().int().nullish(),
+          googleReviewEmbedCode: z.string().nullish(),
+          hours: z.record(z.string(), z.string()).nullish(),
+          socialLinks: z.record(z.string(), z.string()).nullish(),
+          tags: z.array(z.string()).nullish(),
         })
       )
       .mutation(async ({ input }) => {
-        const { id, ...flags } = input;
-        await updateBusinessFlags(id, flags);
+        const { id, ...fields } = input;
+        const db = await getDb();
+        if (!db) return { success: false };
+        // Build update object — only include defined keys
+        const update: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(fields)) {
+          if (v !== undefined) update[k] = v === null ? null : v;
+        }
+        if (Object.keys(update).length > 0) {
+          await db.update(businesses).set(update).where(eq(businesses.id, id));
+        }
         return { success: true };
       }),
 
