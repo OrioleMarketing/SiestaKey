@@ -32,6 +32,7 @@ import {
   ghlUpsertContact,
 } from "./ghl";
 import { createCheckoutSession } from "./stripeWebhook";
+import { storagePut } from "./storage";
 import { type PlanKey, type BillingInterval } from "./stripeProducts";
 
 export const appRouter = router({
@@ -400,7 +401,7 @@ export const appRouter = router({
           address: z.string().max(300).optional(),
           area: z.string().max(100).optional(),
           hours: z.record(z.string(), z.string()).optional(),
-          photos: z.array(z.string().url()).optional(),
+          photos: z.array(z.string()).optional(),
           socialLinks: z.record(z.string(), z.string()).optional(),
           lat: z.string().optional(),
           lng: z.string().optional(),
@@ -413,6 +414,51 @@ export const appRouter = router({
         }
         await updateBusinessByUserId(ctx.user.id, input as Parameters<typeof updateBusinessByUserId>[1]);
         return { success: true };
+      }),
+
+    // Upload a new photo to S3 and append its URL to the listing's photos array
+    uploadPhoto: protectedProcedure
+      .input(
+        z.object({
+          // base64-encoded image data (without data URI prefix)
+          base64Data: z.string(),
+          mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]),
+          fileName: z.string().max(200),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getBusinessByUserId(ctx.user.id);
+        if (!existing) {
+          throw new Error("No claimed listing found for this account.");
+        }
+        // Validate base64 size (~10MB limit)
+        const byteSize = Math.ceil((input.base64Data.length * 3) / 4);
+        if (byteSize > 10 * 1024 * 1024) {
+          throw new Error("Image must be under 10MB.");
+        }
+        const buffer = Buffer.from(input.base64Data, "base64");
+        const ext = input.mimeType.split("/")[1] ?? "jpg";
+        const key = `business-photos/${ctx.user.id}/${Date.now()}-${input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}.${ext}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        // Append new photo URL to existing photos
+        const currentPhotos: string[] = Array.isArray(existing.photos) ? (existing.photos as string[]) : [];
+        const updatedPhotos = [...currentPhotos, url];
+        await updateBusinessByUserId(ctx.user.id, { photos: updatedPhotos });
+        return { url, photos: updatedPhotos };
+      }),
+
+    // Remove a photo URL from the listing's photos array
+    removePhoto: protectedProcedure
+      .input(z.object({ photoUrl: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getBusinessByUserId(ctx.user.id);
+        if (!existing) {
+          throw new Error("No claimed listing found for this account.");
+        }
+        const currentPhotos: string[] = Array.isArray(existing.photos) ? (existing.photos as string[]) : [];
+        const updatedPhotos = currentPhotos.filter((p) => p !== input.photoUrl);
+        await updateBusinessByUserId(ctx.user.id, { photos: updatedPhotos });
+        return { photos: updatedPhotos };
       }),
   }),
 

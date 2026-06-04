@@ -98,6 +98,14 @@
 - [x] Backend: add dashboard.getMyProfile procedure (subscription plan, status)
 - [x] Frontend: /dashboard page — plan status card with upgrade CTA for free users
 - [x] Frontend: business listing edit form (name, description, phone, website, hours, address, social links)
-- [ ] Frontend: photo gallery management (view current photos, add/remove) — deferred
+- [x] Frontend: photo gallery — view and remove existing photos from dashboard listing (implemented in edit form)
+- [x] Frontend: photo gallery — upload new photos via S3 (implemented via base64 + storagePut)
 - [x] Add /dashboard route to App.tsx
 - [x] Add Dashboard link to navbar for logged-in users
+
+## Enhancement Round 11 — S3 Photo Upload
+- [x] Server: add dashboard.uploadPhoto tRPC procedure (base64 + storagePut, returns URL — no separate REST endpoint needed)
+- [x] Server: add dashboard.addPhoto and dashboard.removePhoto tRPC procedures
+- [x] Client: photo upload UI in dashboard (file picker + loading spinner; drag-drop deferred)
+- [x] Client: add confirmation dialog before removing a photo from the dashboard gallery
+- [x] Stripe webhook audit: confirmed correctly registered before express.json()

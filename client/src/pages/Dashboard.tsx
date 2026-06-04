@@ -10,6 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
@@ -29,7 +39,11 @@ import {
   AlertCircle,
   LogIn,
   ExternalLink,
+  ImagePlus,
+  Trash2,
+  Loader2,
 } from "lucide-react";
+import { useRef } from "react";
 
 const PLAN_CONFIG = {
   free: {
@@ -69,6 +83,55 @@ export default function Dashboard() {
     undefined,
     { enabled: !!user }
   );
+
+  const uploadPhotoMutation = trpc.dashboard.uploadPhoto.useMutation({
+    onSuccess: () => {
+      toast.success("Photo uploaded!");
+      refetch();
+    },
+    onError: (err) => toast.error(err.message || "Upload failed."),
+  });
+
+  const removePhotoMutation = trpc.dashboard.removePhoto.useMutation({
+    onSuccess: () => {
+      toast.success("Photo removed.");
+      refetch();
+    },
+    onError: (err) => toast.error(err.message || "Remove failed."),
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [confirmRemoveUrl, setConfirmRemoveUrl] = useState<string | null>(null);
+
+  const handleConfirmRemove = () => {
+    if (!confirmRemoveUrl) return;
+    removePhotoMutation.mutate({ photoUrl: confirmRemoveUrl });
+    setConfirmRemoveUrl(null);
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // Strip the data URI prefix to get raw base64
+      const base64Data = dataUrl.split(",")[1];
+      if (!base64Data) return;
+      uploadPhotoMutation.mutate({
+        base64Data,
+        mimeType: file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+        fileName: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
 
   const updateMutation = trpc.dashboard.updateMyListing.useMutation({
     onSuccess: () => {
@@ -470,6 +533,76 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                <Separator />
+
+                {/* Photo Gallery */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <ImagePlus className="h-4 w-4 text-sky-500" /> Photo Gallery
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Upload up to 10 photos (JPEG, PNG, WebP — max 10MB each). Photos appear on your public business profile.
+                  </p>
+
+                  {/* Existing photos */}
+                  {Array.isArray(listing.photos) && (listing.photos as string[]).length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+                      {(listing.photos as string[]).map((url, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square bg-gray-100">
+                          <img
+                            src={url}
+                            alt={`Business photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            onClick={() => setConfirmRemoveUrl(url)}
+                            disabled={removePhotoMutation.isPending}
+                            className="absolute top-1.5 right-1.5 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-700 disabled:opacity-50"
+                            title="Remove photo"
+                          >
+                            {removePhotoMutation.isPending ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center mb-4">
+                      <ImagePlus className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No photos yet — add your first one below.</p>
+                    </div>
+                  )}
+
+                  {/* Upload button */}
+                  {(!Array.isArray(listing.photos) || (listing.photos as string[]).length < 10) && (
+                    <>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadPhotoMutation.isPending}
+                        className="border-sky-300 text-sky-700 hover:bg-sky-50"
+                      >
+                        {uploadPhotoMutation.isPending ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</>
+                        ) : (
+                          <><ImagePlus className="h-4 w-4 mr-2" /> Add Photo</>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
                 {/* Save Button */}
                 <div className="flex justify-end pt-2">
                   <Button
@@ -487,6 +620,27 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      {/* Photo removal confirmation dialog */}
+      <AlertDialog open={!!confirmRemoveUrl} onOpenChange={(open) => !open && setConfirmRemoveUrl(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this photo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This photo will be permanently removed from your listing. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmRemove}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Remove Photo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
