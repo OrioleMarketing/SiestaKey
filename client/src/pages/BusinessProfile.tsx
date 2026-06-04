@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BusinessCard from "@/components/BusinessCard";
 import { MapView } from "@/components/Map";
+import PageHero from "@/components/PageHero";
 
 function StarRating({ rating, count }: { rating: string; count: number }) {
   const r = parseFloat(rating);
@@ -104,14 +105,17 @@ export default function BusinessProfile() {
       <Navbar />
 
       {/* ── Header Band ─────────────────────────────────────────────────────── */}
-      <div
-        className={`pt-20 pb-8 text-white ${
-          business.isSponsored
-            ? "bg-gradient-to-r from-[var(--color-ocean-deep)] via-[var(--color-ocean)] to-[var(--color-ocean-mid)]"
-            : "bg-ocean-gradient"
-        }`}
+      <section
+        className="relative pt-24 pb-10 flex items-end overflow-hidden"
+        style={{
+          backgroundImage: `url(/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 40%",
+          minHeight: "240px",
+        }}
       >
-        <div className="container max-w-5xl">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/65" />
+        <div className="relative z-10 container max-w-5xl">
           <Link href="/directory" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-sm mb-4 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Directory
           </Link>
@@ -132,7 +136,7 @@ export default function BusinessProfile() {
                 )}
               </div>
 
-              <h1 className="font-serif text-3xl md:text-4xl font-bold mb-3">{business.name}</h1>
+              <h1 className="font-serif text-3xl md:text-4xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] mb-3">{business.name}</h1>
 
               {business.rating && business.reviewCount != null && business.reviewCount > 0 && (
                 <div className="mb-3">
@@ -159,21 +163,21 @@ export default function BusinessProfile() {
                   href={business.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-sm font-medium transition-colors text-white"
                 >
                   <Globe className="w-4 h-4" /> Website
                 </a>
               )}
               <button
                 onClick={() => navigator.share?.({ title: business.name, url: window.location.href })}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-sm font-medium transition-colors text-white"
               >
                 <Share2 className="w-4 h-4" /> Share
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
       <main className="flex-1 py-10 bg-[var(--color-white-sand)]">

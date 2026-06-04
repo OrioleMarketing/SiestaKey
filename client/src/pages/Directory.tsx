@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BusinessCard from "@/components/BusinessCard";
 import { MapView } from "@/components/Map";
+import PageHero from "@/components/PageHero";
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   dining: <UtensilsCrossed className="w-4 h-4" />,
@@ -117,16 +118,11 @@ export default function Directory() {
       <Navbar />
 
       {/* ── Page Header ─────────────────────────────────────────────────────── */}
-      <div className="bg-ocean-gradient pt-24 pb-10 text-white">
-        <div className="container">
-          <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">
-            {currentCatName ? `${currentCatName} on Siesta Key` : "Siesta Key Business Directory"}
-          </h1>
-          <p className="text-white/75 text-sm">
-            {total > 0 ? `${total} business${total !== 1 ? "es" : ""} found` : "Discover local businesses"}
-          </p>
-        </div>
-      </div>
+      <PageHero
+        title={currentCatName ? `${currentCatName} on Siesta Key` : "Siesta Key Business Directory"}
+        subtitle={total > 0 ? `${total} business${total !== 1 ? "es" : ""} found` : "Discover local businesses, dining, activities, and more"}
+        breadcrumb={currentCatName ? `Directory / ${currentCatName}` : "Directory"}
+      />
 
       {/* ── Search & Filters ─────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[var(--color-border)] sticky top-16 z-30 shadow-sm">

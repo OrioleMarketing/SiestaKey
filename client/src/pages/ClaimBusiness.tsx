@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { CheckCircle, MapPin, Shield, Zap, BarChart3, Crown } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
+import PageHero from "@/components/PageHero";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 
@@ -83,18 +84,11 @@ export default function ClaimBusiness() {
       <Navbar />
 
       {/* Header */}
-      <div className="bg-ocean-gradient pt-24 pb-10 text-white">
-        <div className="container max-w-4xl">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-white/70" />
-            <span className="text-sm text-white/70">Siesta Key Directory</span>
-          </div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">Claim Your Business</h1>
-          <p className="text-white/75 max-w-xl">
-            Take control of your listing, keep your information accurate, and connect with more customers on Siesta Key.
-          </p>
-        </div>
-      </div>
+      <PageHero
+        title="Claim Your Business"
+        subtitle="Take control of your listing, keep your information accurate, and connect with more customers on Siesta Key."
+        breadcrumb="Directory / Claim Your Business"
+      />
 
       <main className="flex-1 py-12 bg-[var(--color-white-sand)]">
         <div className="container max-w-4xl">

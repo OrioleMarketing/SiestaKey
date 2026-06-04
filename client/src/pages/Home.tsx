@@ -174,7 +174,10 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {(categories ?? []).map((cat, i) => (
+            {(categories ?? []).slice().sort((a, b) => {
+              const ORDER = ["dining","shopping","activities","nightlife","accommodations","wellness","services","real-estate"]; // Row 1: Dining, Shopping, Activities, Nightlife | Row 2: Accommodations, Wellness, Services, Real Estate
+              return (ORDER.indexOf(a.slug) ?? 99) - (ORDER.indexOf(b.slug) ?? 99);
+            }).map((cat, i) => (
               <a
                 key={cat.id}
                 href={`/directory/${cat.slug}`}
@@ -272,7 +275,7 @@ export default function Home() {
                     Premium Listing
                   </span>
                 </div>
-                <h3 className="font-serif text-2xl md:text-3xl font-bold mb-2">
+                <h3 className="font-serif text-2xl md:text-3xl font-bold mb-2 text-white">
                   Get Your Business Featured
                 </h3>
                 <p className="text-white/75 max-w-lg text-sm leading-relaxed">

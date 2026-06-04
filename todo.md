@@ -41,3 +41,10 @@
 
 ## Enhancement Round 2 — Follow-up
 - [x] Audit public pages for coral accent consistency (CTA buttons, badges, hover states)
+
+## Enhancement Round 3
+- [ ] Fix navbar blending into bright sky — add always-visible semi-transparent background on transparent state
+- [ ] "Get Your Business Featured" heading — change to white text
+- [ ] Reorder category grid: Row 1: Dining, Shopping, Activities, Nightlife | Row 2: Accommodations, Wellness, Services, Real Estate
+- [ ] Update featured businesses: CB's, The HUB, The Salty Dog, Palm Bay Club, Chamber of Commerce, Olaf's Siesta Village
+- [ ] Use SiestaKey beach image as consistent header banner on all directory/inner pages

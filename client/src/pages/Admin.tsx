@@ -21,6 +21,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import PageHero from "@/components/PageHero";
 
 // ─── Stat Card ──────────────────────────────────────────────────────────────────
 function StatCard({
@@ -450,25 +451,18 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-muted/20">
       {/* Header */}
-      <div className="bg-ocean-gradient text-white py-8 px-4">
-        <div className="container">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="font-serif text-2xl md:text-3xl font-bold">Admin Dashboard</h1>
-              <p className="text-white/70 text-sm mt-1">
-                Shop in Siesta Key — Directory Management
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-white/80 text-sm">
-                Signed in as <span className="font-semibold text-white">{user.name ?? user.email}</span>
-              </span>
-              <a href="/" className="text-white/70 hover:text-white text-sm underline underline-offset-2">
-                ← Back to Site
-              </a>
-            </div>
-          </div>
-        </div>
+      <div className="relative">
+        <PageHero
+          title="Admin Dashboard"
+          subtitle={`Shop in Siesta Key — Directory Management · Signed in as ${user.name ?? user.email}`}
+          breadcrumb="Admin"
+        />
+        <a
+          href="/"
+          className="absolute top-6 right-4 md:right-8 z-20 text-white/80 hover:text-white text-sm underline underline-offset-2"
+        >
+          ← Back to Site
+        </a>
       </div>
 
       <div className="container py-8">

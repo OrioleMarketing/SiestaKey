@@ -28,7 +28,7 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         transparent
-          ? "bg-transparent"
+          ? "bg-gradient-to-b from-black/40 via-black/20 to-transparent"
           : "bg-white/95 backdrop-blur-md shadow-sm border-b border-[var(--color-border)]"
       }`}
     >

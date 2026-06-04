@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle, MapPin, Star, Zap, Crown, Building2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
+import PageHero from "@/components/PageHero";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 
@@ -123,18 +124,11 @@ export default function SubmitListing() {
       <Navbar />
 
       {/* Header */}
-      <div className="bg-ocean-gradient pt-24 pb-10 text-white">
-        <div className="container max-w-5xl">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-white/70" />
-            <span className="text-sm text-white/70">Siesta Key Directory</span>
-          </div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">Submit Your Business</h1>
-          <p className="text-white/75 max-w-xl">
-            Get your business in front of thousands of Siesta Key visitors and residents. Choose a plan that works for you.
-          </p>
-        </div>
-      </div>
+      <PageHero
+        title="Submit Your Business"
+        subtitle="Get your business in front of thousands of Siesta Key visitors and residents. Choose a plan that works for you."
+        breadcrumb="Directory / Submit Your Business"
+      />
 
       <main className="flex-1 py-12 bg-[var(--color-white-sand)]">
         <div className="container max-w-5xl">
