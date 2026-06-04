@@ -48,3 +48,11 @@
 - [x] Reorder category grid: Row 1: Dining, Shopping, Activities, Nightlife | Row 2: Accommodations, Wellness, Services, Real Estate
 - [x] Update featured businesses: CB's, The HUB, The Salty Dog, Palm Bay Club, Chamber of Commerce, Olaf's Siesta Village
 - [x] Use SiestaKey beach image as consistent header banner on all directory/inner pages
+
+## Enhancement Round 4
+- [x] Create Privacy Policy page (opens in new tab from footer)
+- [x] Create Terms & Conditions page with SMS consent language (opens in new tab from footer)
+- [x] Update footer copyright line: "Copyright © 2026 Shop In Siesta Key | An Oriole Marketing Local Directory"
+- [x] Add /privacy and /terms routes to App.tsx
+- [x] Update footer links to open Privacy and T&C in new tab
+- [x] Correct Olaf's Siesta Village to be an ice cream shop (update description, category)

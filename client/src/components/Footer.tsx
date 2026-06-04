@@ -96,13 +96,45 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Shop in Siesta Key. All rights reserved.
-          </p>
-          <p className="text-xs text-white/40">
-            Siesta Key, Sarasota, Florida — America's #1 Beach
-          </p>
+        <div className="mt-10 pt-6 border-t border-white/10">
+          {/* Legal links row */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4">
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-white/50 hover:text-white transition-colors underline-offset-2 hover:underline"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-white/20 text-xs">|</span>
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-white/50 hover:text-white transition-colors underline-offset-2 hover:underline"
+            >
+              Terms &amp; Conditions
+            </a>
+          </div>
+          {/* Copyright row */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-white/40 text-center md:text-left">
+              Copyright &copy; {new Date().getFullYear()} Shop In Siesta Key &nbsp;|&nbsp; An{" "}
+              <a
+                href="https://oriolemarketing.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                Oriole Marketing
+              </a>{" "}
+              Local Directory
+            </p>
+            <p className="text-xs text-white/30">
+              Siesta Key, Sarasota, Florida &mdash; America&rsquo;s #1 Beach
+            </p>
+          </div>
         </div>
       </div>
     </footer>
