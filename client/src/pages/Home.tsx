@@ -92,9 +92,17 @@ export default function Home() {
             className="font-serif text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
           >
-            Discover the Best of
+            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">Discover the Best of</span>
             <br />
-            <span className="italic text-[var(--color-seafoam)]">Siesta Key</span>
+            <span
+              className="italic"
+              style={{
+                color: "#F5A623",
+                textShadow: "0 2px 16px rgba(0,0,0,0.55), 0 0 40px rgba(245,166,35,0.35)",
+              }}
+            >
+              Siesta Key
+            </span>
           </h1>
 
           <p

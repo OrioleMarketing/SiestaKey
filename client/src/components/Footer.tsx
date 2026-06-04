@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { MapPin, Phone, Mail, Instagram, Facebook } from "lucide-react";
+import { MapPin, Mail, Instagram, Facebook } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -15,14 +15,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <MapPin className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <div className="font-serif font-bold text-base">Shop in Siesta Key</div>
-                <div className="text-[10px] text-white/60 uppercase tracking-widest">Business Directory</div>
-              </div>
+            <div className="mb-4">
+              <img
+                src="/manus-storage/Shopfooterlogo_5bc6bc84.png"
+                alt="Shop in Siesta Key"
+                className="h-14 w-auto object-contain"
+              />
             </div>
             <p className="text-sm text-white/70 leading-relaxed">
               Your premier guide to discovering the best businesses, dining, shopping, and activities on Florida's most beautiful island.

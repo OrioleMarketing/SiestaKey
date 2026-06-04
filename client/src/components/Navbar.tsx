@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, MapPin, Search } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,26 +35,14 @@ export default function Navbar() {
       <div className="container">
         <nav className="flex items-center justify-between h-16 md:h-18">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-full bg-ocean-gradient flex items-center justify-center shadow-sm">
-              <MapPin className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <span
-                className={`font-serif font-bold text-base tracking-tight transition-colors ${
-                  transparent ? "text-white" : "text-[var(--color-ocean-deep)]"
-                }`}
-              >
-                Shop in Siesta Key
-              </span>
-              <span
-                className={`text-[10px] font-medium tracking-widest uppercase transition-colors ${
-                  transparent ? "text-white/70" : "text-[var(--color-ocean-light)]"
-                }`}
-              >
-                Business Directory
-              </span>
-            </div>
+          <Link href="/" className="flex items-center group">
+            <img
+              src="/manus-storage/ShopinSiestaKeyLogo_1f645988.png"
+              alt="Shop in Siesta Key"
+              className={`h-10 md:h-12 w-auto object-contain transition-all duration-300 ${
+                transparent ? "brightness-0 invert" : ""
+              }`}
+            />
           </Link>
 
           {/* Desktop nav */}
