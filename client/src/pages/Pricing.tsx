@@ -1,17 +1,17 @@
+import { useState } from "react";
 import { Link } from "wouter";
-import { Check, X, Crown, Star, Sparkles, Phone, Mail } from "lucide-react";
+import { Check, X, Crown, Star, Sparkles, Phone, Mail, Zap, Shield, BarChart3, MapPin } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
 // ── Feature rows ──────────────────────────────────────────────────────────────
-// Each row: label, whether Free / Featured / Premium includes it, and optional note
 type FeatureRow = {
   label: string;
   free: boolean | string;
   featured: boolean | string;
   premium: boolean | string;
-  highlight?: boolean; // golden highlight row
+  highlight?: boolean;
 };
 
 const FEATURES: FeatureRow[] = [
@@ -37,7 +37,7 @@ const FEATURES: FeatureRow[] = [
   { label: "Sponsored Badge",          free: false, featured: false, premium: true  },
   { label: "Priority Customer Support",free: false, featured: false, premium: true  },
   {
-    label: "AI Search Audit ($299 Value)",
+    label: "AI Visibility Report ($299 Value)",
     free: false,
     featured: false,
     premium: true,
@@ -49,10 +49,11 @@ const FEATURES: FeatureRow[] = [
 const PLANS = [
   {
     id: "free",
-    name: "Free Listing",
+    name: "Sandy Shores",
     tagline: "Get your business on the map at no cost",
-    price: "$0",
-    period: "forever",
+    monthlyPrice: "$0",
+    annualPrice: "$0",
+    annualNote: "forever free",
     cta: "Add Your Business",
     ctaHref: "/submit-listing",
     ctaStyle: "outline",
@@ -60,34 +61,39 @@ const PLANS = [
     accentClass: "border-[var(--color-border)]",
     headerClass: "bg-[var(--color-white-sand)]",
     priceClass: "text-[var(--color-charcoal)]",
+    periodClass: "text-[var(--color-muted-foreground)]",
   },
   {
     id: "featured",
-    name: "Featured Listing",
+    name: "Gulf Breeze",
     tagline: "Stand out with top placement and a complete profile",
-    price: "$149",
-    period: "per year",
-    cta: "Get Featured",
+    monthlyPrice: "$49",
+    annualPrice: "$490",
+    annualNote: "2 months free",
+    cta: "Get Gulf Breeze",
     ctaHref: "/submit-listing",
     ctaStyle: "ocean",
     badge: "Most Popular",
     accentClass: "border-[var(--color-ocean)] ring-2 ring-[var(--color-ocean)]/20",
     headerClass: "bg-[var(--color-ocean)]",
     priceClass: "text-white",
+    periodClass: "text-white/60",
   },
   {
     id: "premium",
-    name: "Premium Listing",
-    tagline: "Maximum visibility — homepage spotlight + AI Search Audit",
-    price: "$299",
-    period: "per year",
-    cta: "Go Premium",
+    name: "Island Premier",
+    tagline: "Maximum visibility + AI Visibility Report included free",
+    monthlyPrice: "$79",
+    annualPrice: "$790",
+    annualNote: "2 months free",
+    cta: "Go Island Premier",
     ctaHref: "/submit-listing",
     ctaStyle: "coral",
     badge: "Best Value",
     accentClass: "border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]/20",
     headerClass: "bg-gradient-to-br from-[var(--color-ocean-deep)] to-[#1a4a6b]",
     priceClass: "text-white",
+    periodClass: "text-white/60",
   },
 ];
 
@@ -115,11 +121,13 @@ function FeatureCell({ value }: { value: boolean | string }) {
 }
 
 export default function Pricing() {
+  const [billing, setBilling] = useState<"monthly" | "annual">("annual");
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Listing Plans & Pricing — Shop in Siesta Key"
-        description="Choose a free, featured, or premium listing plan for your Siesta Key business. Premium includes an AI Search Audit ($299 value) to boost your online visibility."
+        description="Choose Sandy Shores (free), Gulf Breeze ($49/mo), or Island Premier ($79/mo) for your Siesta Key business listing. Island Premier includes a $299 AI Visibility Report at no extra cost."
         canonical="/pricing"
       />
       <Navbar />
@@ -143,120 +151,288 @@ export default function Pricing() {
             Choose Your Perfect Plan
           </h1>
           <p className="text-white/75 text-lg max-w-xl mx-auto">
-            From a free basic listing to a premium spotlight with an AI Search Audit — find the plan that fits your business.
+            From a free listing to a premium spotlight with a complimentary AI Visibility Report — find the plan that fits your business.
           </p>
         </div>
       </section>
 
+      {/* ── Billing Toggle ────────────────────────────────────────────────────── */}
+      <section className="bg-[var(--color-white-sand)] pt-12 pb-2 px-4">
+        <div className="max-w-5xl mx-auto flex flex-col items-center gap-3">
+          <div className="flex items-center gap-1 bg-white border border-[var(--color-border)] rounded-full p-1 shadow-sm">
+            <button
+              onClick={() => setBilling("monthly")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                billing === "monthly"
+                  ? "bg-[var(--color-ocean)] text-white shadow-sm"
+                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-charcoal)]"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBilling("annual")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                billing === "annual"
+                  ? "bg-[var(--color-ocean)] text-white shadow-sm"
+                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-charcoal)]"
+              }`}
+            >
+              Annual
+            </button>
+          </div>
+          {billing === "annual" && (
+            <p className="text-sm text-emerald-600 font-semibold">
+              🎉 Pay for 10 months, get 2 free — save up to $158/year
+            </p>
+          )}
+        </div>
+      </section>
+
       {/* ── Plan Cards ────────────────────────────────────────────────────────── */}
-      <section className="bg-[var(--color-white-sand)] py-16 px-4">
+      <section className="bg-[var(--color-white-sand)] py-8 px-4 pb-16">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative flex flex-col rounded-2xl border-2 overflow-hidden shadow-sm ${plan.accentClass} bg-white`}
-              >
-                {/* Badge */}
-                {plan.badge && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      plan.id === "featured"
-                        ? "bg-[var(--color-ocean)] text-white"
-                        : "bg-[var(--color-gold)] text-[var(--color-charcoal)]"
-                    }`}>
-                      {plan.badge}
-                    </span>
-                  </div>
-                )}
+            {PLANS.map((plan) => {
+              const displayPrice = billing === "monthly" ? plan.monthlyPrice : plan.annualPrice;
+              const displayPeriod = billing === "monthly" ? "per month" : "per year";
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative flex flex-col rounded-2xl border-2 overflow-hidden shadow-sm ${plan.accentClass} bg-white`}
+                >
+                  {/* Badge */}
+                  {plan.badge && (
+                    <div className="absolute top-4 right-4 z-10">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        plan.id === "featured"
+                          ? "bg-[var(--color-ocean)] text-white"
+                          : "bg-[var(--color-gold)] text-[var(--color-charcoal)]"
+                      }`}>
+                        {plan.badge}
+                      </span>
+                    </div>
+                  )}
 
-                {/* Header */}
-                <div className={`${plan.headerClass} px-6 pt-8 pb-6`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    {plan.id === "free" && <Star className="w-4 h-4 text-[var(--color-ocean)]" />}
-                    {plan.id === "featured" && <Star className="w-4 h-4 text-white" />}
-                    {plan.id === "premium" && <Crown className="w-4 h-4 text-[var(--color-gold)]" />}
-                    <h2 className={`font-serif font-bold text-xl ${
-                      plan.id === "free" ? "text-[var(--color-charcoal)]" : "text-white"
+                  {/* Header */}
+                  <div className={`${plan.headerClass} px-6 pt-8 pb-6`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      {plan.id === "free" && <Star className="w-4 h-4 text-[var(--color-ocean)]" />}
+                      {plan.id === "featured" && <Star className="w-4 h-4 text-white" />}
+                      {plan.id === "premium" && <Crown className="w-4 h-4 text-[var(--color-gold)]" />}
+                      <h2 className={`font-serif font-bold text-xl ${
+                        plan.id === "free" ? "text-[var(--color-charcoal)]" : "text-white"
+                      }`}>
+                        {plan.name}
+                      </h2>
+                    </div>
+                    <p className={`text-sm mb-5 ${
+                      plan.id === "free" ? "text-[var(--color-muted-foreground)]" : "text-white/75"
                     }`}>
-                      {plan.name}
-                    </h2>
+                      {plan.tagline}
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <span className={`font-serif font-bold text-4xl ${plan.priceClass}`}>{displayPrice}</span>
+                      {plan.id !== "free" && (
+                        <span className={`text-sm ${plan.periodClass}`}>/{displayPeriod}</span>
+                      )}
+                    </div>
+                    {plan.id !== "free" && billing === "annual" && (
+                      <p className={`text-xs mt-1 ${plan.id === "free" ? "text-[var(--color-muted-foreground)]" : "text-white/60"}`}>
+                        {plan.annualNote} · billed annually
+                      </p>
+                    )}
+                    {plan.id !== "free" && billing === "monthly" && (
+                      <p className={`text-xs mt-1 ${plan.periodClass}`}>
+                        or {plan.annualPrice}/yr — save 2 months
+                      </p>
+                    )}
                   </div>
-                  <p className={`text-sm mb-5 ${
-                    plan.id === "free" ? "text-[var(--color-muted-foreground)]" : "text-white/75"
-                  }`}>
-                    {plan.tagline}
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className={`font-serif font-bold text-4xl ${plan.priceClass}`}>{plan.price}</span>
-                    <span className={`text-sm ${
-                      plan.id === "free" ? "text-[var(--color-muted-foreground)]" : "text-white/60"
-                    }`}>
-                      /{plan.period}
-                    </span>
+
+                  {/* Feature list */}
+                  <div className="flex-1 px-6 py-5">
+                    <ul className="space-y-3">
+                      {FEATURES.map((feature) => {
+                        const val = plan.id === "free" ? feature.free : plan.id === "featured" ? feature.featured : feature.premium;
+                        const included = val !== false;
+                        return (
+                          <li
+                            key={feature.label}
+                            className={`flex items-center gap-3 text-sm ${
+                              feature.highlight && included
+                                ? "font-semibold text-[var(--color-charcoal)]"
+                                : included
+                                ? "text-[var(--color-charcoal)]"
+                                : "text-gray-400"
+                            } ${feature.highlight && included ? "bg-[var(--color-gold)]/10 -mx-2 px-2 py-1 rounded-lg" : ""}`}
+                          >
+                            {included ? (
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                                feature.highlight ? "bg-[var(--color-gold)]/20" : "bg-emerald-100"
+                              }`}>
+                                <Check className={`w-3 h-3 stroke-[2.5] ${
+                                  feature.highlight ? "text-[var(--color-gold)]" : "text-emerald-600"
+                                }`} />
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                                <X className="w-3 h-3 text-gray-400 stroke-[2.5]" />
+                              </div>
+                            )}
+                            <span>{feature.label}</span>
+                            {feature.highlight && included && (
+                              <span className="ml-auto text-xs font-normal text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-1.5 py-0.5 rounded">
+                                Included
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="px-6 pb-7 pt-2">
+                    <Link
+                      href={plan.ctaHref}
+                      className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-[0.97] ${
+                        plan.ctaStyle === "outline"
+                          ? "border-2 border-[var(--color-ocean)] text-[var(--color-ocean)] hover:bg-[var(--color-ocean)] hover:text-white"
+                          : plan.ctaStyle === "ocean"
+                          ? "bg-[var(--color-ocean)] text-white hover:bg-[var(--color-ocean-deep)]"
+                          : "bg-[var(--color-coral)] text-white hover:bg-[var(--color-coral-dark,#c94a34)]"
+                      }`}
+                    >
+                      {plan.id === "premium" && <Crown className="w-4 h-4" />}
+                      {plan.cta}
+                    </Link>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-                {/* Feature list */}
-                <div className="flex-1 px-6 py-5">
-                  <ul className="space-y-3">
-                    {FEATURES.map((feature) => {
-                      const val = plan.id === "free" ? feature.free : plan.id === "featured" ? feature.featured : feature.premium;
-                      const included = val !== false;
-                      return (
-                        <li
-                          key={feature.label}
-                          className={`flex items-center gap-3 text-sm ${
-                            feature.highlight && included
-                              ? "font-semibold text-[var(--color-charcoal)]"
-                              : included
-                              ? "text-[var(--color-charcoal)]"
-                              : "text-gray-400"
-                          } ${feature.highlight && included ? "bg-[var(--color-gold)]/10 -mx-2 px-2 py-1 rounded-lg" : ""}`}
-                        >
-                          {included ? (
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                              feature.highlight ? "bg-[var(--color-gold)]/20" : "bg-emerald-100"
-                            }`}>
-                              <Check className={`w-3 h-3 stroke-[2.5] ${
-                                feature.highlight ? "text-[var(--color-gold)]" : "text-emerald-600"
-                              }`} />
-                            </div>
-                          ) : (
-                            <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                              <X className="w-3 h-3 text-gray-400 stroke-[2.5]" />
-                            </div>
-                          )}
-                          <span>{feature.label}</span>
-                          {feature.highlight && included && (
-                            <span className="ml-auto text-xs font-normal text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-1.5 py-0.5 rounded">
-                              Included
-                            </span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+      {/* ── AI Visibility Report Feature Section ──────────────────────────────── */}
+      <section className="bg-gradient-to-br from-[var(--color-ocean-deep)] to-[#0d2f45] py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-[var(--color-gold)]/20 border border-[var(--color-gold)]/30 rounded-full px-4 py-1.5 text-[var(--color-gold)] text-sm font-semibold mb-5">
+              <Sparkles className="w-3.5 h-3.5" />
+              Exclusive Island Premier Bonus — $299 Value, Included Free
+            </div>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-white mb-4">
+              AI Search Is Replacing Google.<br />
+              <span className="text-[var(--color-gold)]">Is Your Business Invisible?</span>
+            </h2>
+            <p className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed">
+              When a customer asks ChatGPT, Google Gemini, or Perplexity for a recommendation in Siesta Key, your business either shows up — or it doesn't. Our AI Visibility Report tells you exactly where you stand and what to fix.
+            </p>
+          </div>
 
-                {/* CTA */}
-                <div className="px-6 pb-7 pt-2">
-                  <Link
-                    href={plan.ctaHref}
-                    className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-[0.97] ${
-                      plan.ctaStyle === "outline"
-                        ? "border-2 border-[var(--color-ocean)] text-[var(--color-ocean)] hover:bg-[var(--color-ocean)] hover:text-white"
-                        : plan.ctaStyle === "ocean"
-                        ? "bg-[var(--color-ocean)] text-white hover:bg-[var(--color-ocean-deep)]"
-                        : "bg-[var(--color-coral)] text-white hover:bg-[var(--color-coral-dark,#c94a34)]"
-                    }`}
-                  >
-                    {plan.id === "premium" && <Crown className="w-4 h-4" />}
-                    {plan.cta}
-                  </Link>
-                </div>
+          {/* Stat row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+            {[
+              { stat: "1 in 3", label: "local searches now go through AI assistants", sub: "Growing 40%+ year over year" },
+              { stat: "87%", label: "of local businesses have zero AI optimization", sub: "Invisible to ChatGPT & Perplexity" },
+              { stat: "1", label: "business gets recommended — everyone else loses", sub: "AI has no page 2" },
+            ].map((item) => (
+              <div key={item.stat} className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                <div className="font-serif text-4xl font-bold text-[var(--color-gold)] mb-2">{item.stat}</div>
+                <p className="text-white text-sm font-medium mb-1">{item.label}</p>
+                <p className="text-white/50 text-xs">{item.sub}</p>
               </div>
             ))}
+          </div>
+
+          {/* 4-Pillar audit */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-10">
+            <h3 className="font-serif text-xl font-bold text-white mb-2 text-center">
+              The 4-Pillar AI Readiness Audit
+            </h3>
+            <p className="text-white/60 text-sm text-center mb-8">
+              We analyze the four critical signals that ChatGPT, Gemini, and Perplexity use to decide which businesses to recommend. Most businesses score below 50.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  icon: <Zap className="w-5 h-5 text-[var(--color-gold)]" />,
+                  title: "AI Data Signals",
+                  weight: "30%",
+                  desc: "Structured schema markup that helps AI engines understand and recommend your business.",
+                },
+                {
+                  icon: <Shield className="w-5 h-5 text-[var(--color-gold)]" />,
+                  title: "AI Access & Indexing",
+                  weight: "25%",
+                  desc: "Can AI bots access, read, and index your website content?",
+                },
+                {
+                  icon: <BarChart3 className="w-5 h-5 text-[var(--color-gold)]" />,
+                  title: "Reputation Strength",
+                  weight: "25%",
+                  desc: "Review quality and trust signals that AI engines use to rank local businesses.",
+                },
+                {
+                  icon: <MapPin className="w-5 h-5 text-[var(--color-gold)]" />,
+                  title: "Business Info Accuracy",
+                  weight: "20%",
+                  desc: "Name, address, and phone number consistency across the web.",
+                },
+              ].map((pillar) => (
+                <div key={pillar.title} className="flex gap-4 bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--color-gold)]/15 flex items-center justify-center shrink-0">
+                    {pillar.icon}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-white font-semibold text-sm">{pillar.title}</h4>
+                      <span className="text-xs text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-1.5 py-0.5 rounded font-medium">{pillar.weight}</span>
+                    </div>
+                    <p className="text-white/55 text-xs leading-relaxed">{pillar.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* What you get */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+            {[
+              { title: "AI Visibility Score", desc: "See exactly how your business ranks in AI-generated answers across ChatGPT, Gemini, and Perplexity." },
+              { title: "Competitor Gap Analysis", desc: "Find out which competitors AI is recommending instead of you — and why." },
+              { title: "Prioritized Action Plan", desc: "Get a step-by-step list of fixes to become the AI-recommended business in Siesta Key." },
+            ].map((item) => (
+              <div key={item.title} className="bg-white/8 rounded-xl p-5 border border-white/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-[var(--color-gold)]/20 flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 text-[var(--color-gold)] stroke-[2.5]" />
+                  </div>
+                  <h3 className="font-semibold text-white text-sm">{item.title}</h3>
+                </div>
+                <p className="text-white/55 text-xs leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <p className="text-white/60 text-sm mb-5">
+              Powered by{" "}
+              <a href="https://mybizreport.com/OrioleMarketing/aeo" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:underline">
+                Oriole Marketing's AI Visibility Report
+              </a>{" "}
+              — normally $299, included free with Island Premier.
+            </p>
+            <Link
+              href="/submit-listing"
+              className="inline-flex items-center gap-2 bg-[var(--color-gold)] text-[var(--color-charcoal)] font-bold px-8 py-3.5 rounded-xl hover:bg-yellow-400 transition-all duration-200 active:scale-[0.97]"
+            >
+              <Crown className="w-4 h-4" />
+              Get Island Premier — {billing === "annual" ? "$790/yr" : "$79/mo"}
+            </Link>
           </div>
         </div>
       </section>
@@ -281,15 +457,16 @@ export default function Pricing() {
                     Feature
                   </th>
                   <th className="px-4 py-4 text-center font-semibold text-[var(--color-charcoal)] bg-[var(--color-white-sand)]">
-                    Free
+                    Sandy Shores
+                    <div className="text-xs font-normal text-[var(--color-muted-foreground)] mt-0.5">Free</div>
                   </th>
                   <th className="px-4 py-4 text-center font-semibold text-white bg-[var(--color-ocean)]">
-                    Featured
-                    <div className="text-xs font-normal text-white/70 mt-0.5">$149/yr</div>
+                    Gulf Breeze
+                    <div className="text-xs font-normal text-white/70 mt-0.5">$49/mo · $490/yr</div>
                   </th>
                   <th className="px-4 py-4 text-center font-semibold text-white bg-[var(--color-ocean-deep)] rounded-tr-2xl">
-                    Premium
-                    <div className="text-xs font-normal text-white/70 mt-0.5">$299/yr</div>
+                    Island Premier
+                    <div className="text-xs font-normal text-white/70 mt-0.5">$79/mo · $790/yr</div>
                   </th>
                 </tr>
               </thead>
@@ -327,46 +504,6 @@ export default function Pricing() {
               </tbody>
             </table>
           </div>
-        </div>
-      </section>
-
-      {/* ── AI Search Audit Callout ───────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-[var(--color-ocean-deep)] to-[#1a4a6b] py-16 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-[var(--color-gold)]/20 border border-[var(--color-gold)]/30 rounded-full px-4 py-1.5 text-[var(--color-gold)] text-sm font-semibold mb-5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Exclusive Premium Bonus
-          </div>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-white mb-4">
-            AI Search Audit — Included Free
-          </h2>
-          <p className="text-white/75 text-lg leading-relaxed mb-6">
-            Normally priced at <span className="text-white font-semibold line-through">$299</span>, our AI Search Audit analyzes how your business appears across AI-powered search platforms like ChatGPT, Google AI Overviews, and Perplexity — and delivers a detailed report with actionable recommendations to improve your visibility where modern customers are searching.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-left">
-            {[
-              { title: "AI Visibility Score", desc: "See how your business ranks in AI-generated answers and recommendations." },
-              { title: "Competitor Gap Analysis", desc: "Discover what your competitors are doing that you're not — and how to close the gap." },
-              { title: "Action Plan", desc: "Receive a prioritized list of improvements to boost your AI search presence." },
-            ].map((item) => (
-              <div key={item.title} className="bg-white/10 rounded-xl p-4 border border-white/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-[var(--color-gold)]/20 flex items-center justify-center">
-                    <Check className="w-3 h-3 text-[var(--color-gold)] stroke-[2.5]" />
-                  </div>
-                  <h3 className="font-semibold text-white text-sm">{item.title}</h3>
-                </div>
-                <p className="text-white/60 text-xs leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-          <Link
-            href="/submit-listing"
-            className="inline-flex items-center gap-2 bg-[var(--color-gold)] text-[var(--color-charcoal)] font-bold px-8 py-3.5 rounded-xl hover:bg-yellow-400 transition-all duration-200 active:scale-[0.97]"
-          >
-            <Crown className="w-4 h-4" />
-            Get Premium — $299/yr
-          </Link>
         </div>
       </section>
 
