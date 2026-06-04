@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import BusinessCard from "@/components/BusinessCard";
 import { MapView } from "@/components/Map";
 import PageHero from "@/components/PageHero";
+import SEO from "@/components/SEO";
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   dining: <UtensilsCrossed className="w-4 h-4" />,
@@ -113,8 +114,19 @@ export default function Directory() {
 
   const currentCatName = categories?.find((c) => c.slug === selectedCategory)?.name;
 
+  const seoTitle = currentCatName
+    ? `${currentCatName} on Siesta Key — Restaurants, Shops & More`
+    : "Siesta Key Business Directory — All Categories";
+  const seoDesc = currentCatName
+    ? `Browse the best ${currentCatName.toLowerCase()} on Siesta Key, Florida. Find top-rated local businesses, hours, locations, and more.`
+    : "Browse 200+ local businesses on Siesta Key, Florida. Find dining, shopping, activities, nightlife, accommodations, and more.";
+  const seoCanonical = selectedCategory && selectedCategory !== "all"
+    ? `/directory/${selectedCategory}`
+    : "/directory";
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title={seoTitle} description={seoDesc} canonical={seoCanonical} />
       <Navbar />
 
       {/* ── Page Header ─────────────────────────────────────────────────────── */}

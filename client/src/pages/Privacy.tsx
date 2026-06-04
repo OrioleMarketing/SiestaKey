@@ -1,10 +1,17 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
+import SEO from "@/components/SEO";
 
 export default function Privacy() {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Privacy Policy"
+        description="Read the Shop in Siesta Key privacy policy to understand how we collect, use, and protect your personal information."
+        canonical="/privacy"
+        noIndex={true}
+      />
       <Navbar />
       <PageHero title="Privacy Policy" subtitle="Last updated: June 2026" />
 

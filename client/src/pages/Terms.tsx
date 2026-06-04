@@ -1,10 +1,17 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
+import SEO from "@/components/SEO";
 
 export default function Terms() {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Terms & Conditions"
+        description="Review the terms and conditions governing your use of the Shop in Siesta Key business directory, including SMS consent and listing policies."
+        canonical="/terms"
+        noIndex={true}
+      />
       <Navbar />
       <PageHero title="Terms & Conditions" subtitle="Last updated: June 2026" />
 

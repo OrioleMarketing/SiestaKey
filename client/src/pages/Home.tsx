@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BusinessCard from "@/components/BusinessCard";
+import SEO from "@/components/SEO";
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   dining: <UtensilsCrossed className="w-6 h-6" />,
@@ -49,6 +50,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Siesta Key Business Directory — Dining, Shopping & More"
+        description="Discover the best restaurants, shops, activities, nightlife, and accommodations on Siesta Key, Florida's #1 beach. Browse 200+ local businesses."
+        canonical="/"
+      />
       <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}

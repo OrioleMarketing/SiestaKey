@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import BusinessCard from "@/components/BusinessCard";
 import { MapView } from "@/components/Map";
 import PageHero from "@/components/PageHero";
+import SEO from "@/components/SEO";
 
 function StarRating({ rating, count }: { rating: string; count: number }) {
   const r = parseFloat(rating);
@@ -100,8 +101,20 @@ export default function BusinessProfile() {
     );
   }
 
+  const seoDesc = business.description
+    ? `${business.description.slice(0, 145).trimEnd()}…`
+    : `Visit ${business.name} on Siesta Key, Florida. Find hours, location, contact info, and more.`;
+  const seoImage = photos.length > 0 ? photos[0] : undefined;
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={`${business.name} — Siesta Key`}
+        description={seoDesc}
+        canonical={`/business/${business.slug}`}
+        image={seoImage}
+        type="article"
+      />
       <Navbar />
 
       {/* ── Header Band ─────────────────────────────────────────────────────── */}

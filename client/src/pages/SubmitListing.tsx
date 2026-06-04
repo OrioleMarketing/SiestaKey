@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import PageHero from "@/components/PageHero";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { toast } from "sonner";
 
 const PLANS = [
@@ -121,6 +122,11 @@ export default function SubmitListing() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Add Your Business Listing — Siesta Key Directory"
+        description="List your Siesta Key business for free or upgrade to a featured placement for maximum visibility. Reach thousands of visitors every month."
+        canonical="/submit-listing"
+      />
       <Navbar />
 
       {/* Header */}

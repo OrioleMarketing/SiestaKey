@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import PageHero from "@/components/PageHero";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { toast } from "sonner";
 
 const BENEFITS = [
@@ -81,6 +82,11 @@ export default function ClaimBusiness() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Claim Your Business on Siesta Key"
+        description="Own a business on Siesta Key? Claim your free listing to update your hours, photos, and contact info. Verified businesses attract more customers."
+        canonical="/claim"
+      />
       <Navbar />
 
       {/* Header */}

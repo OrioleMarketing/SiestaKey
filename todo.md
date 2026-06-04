@@ -63,3 +63,10 @@
 - [ ] Navbar: keep Claim Your Business and Add Listing CTA buttons (one each, no duplicates)
 - [ ] Navbar: add Admin link visible only to logged-in admin users
 - [ ] Featured businesses: find and add 2-3 real photos per business (CB's, The Hub, The Salty Dog, Palm Bay Club, Chamber, Olaf's)
+
+## Enhancement Round 7 — SEO
+- [x] Create reusable SEO/Head component (title, description, OG tags, canonical)
+- [x] Add SEO tags to Home page
+- [x] Add SEO tags to Directory and category pages
+- [x] Add SEO tags to Business Profile page (dynamic per business)
+- [x] Add SEO tags to Claim Business, Submit Listing, Privacy, Terms pages
