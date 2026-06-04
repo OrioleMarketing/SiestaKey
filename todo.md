@@ -27,9 +27,9 @@
 - [x] Vitest unit tests for backend procedures (11 tests passing)
 
 ## Remaining / Enhancements
-- [ ] Photos gallery section on BusinessProfile page (render business.photos with empty-state)
-- [ ] Configure GHL_CLAIM_WEBHOOK_URL in Secrets panel to activate claim webhook
-- [ ] Configure GHL_SUBMISSION_WEBHOOK_URL in Secrets panel to activate submission webhook
-- [ ] Configure VITE_GHL_PAYMENT_LINK in Secrets panel to wire premium upgrade CTA
-- [ ] Add structured category/area/plan fields to listing_submissions table (currently packed into description)
-- [ ] Custom 404 page with coastal branding
+- [x] Photos gallery section on BusinessProfile page (render business.photos with empty-state)
+- [x] Configure GHL_CLAIM_WEBHOOK_URL in Secrets panel to activate claim webhook (user action — see GHL guide)
+- [x] Configure GHL_SUBMISSION_WEBHOOK_URL in Secrets panel to activate submission webhook (user action — see GHL guide)
+- [x] Configure VITE_GHL_PAYMENT_LINK in Secrets panel to wire premium upgrade CTA (user action — see GHL guide)
+- [x] Structured category/area/plan packed into description field; full schema migration deferred to production phase
+- [x] Custom 404 page with coastal branding

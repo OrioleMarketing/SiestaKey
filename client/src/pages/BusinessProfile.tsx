@@ -190,11 +190,11 @@ export default function BusinessProfile() {
               </div>
 
               {/* Photos Gallery */}
-              {photos.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm">
-                  <h2 className="font-serif text-xl font-semibold mb-4 text-[var(--color-charcoal)]">Photos</h2>
+              <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <h2 className="font-serif text-xl font-semibold mb-4 text-[var(--color-charcoal)]">Photos</h2>
+                {photos.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {photos.map((url, i) => (
+                    {photos.map((url: string, i: number) => (
                       <a
                         key={i}
                         href={url}
@@ -211,8 +211,18 @@ export default function BusinessProfile() {
                       </a>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center rounded-xl bg-[var(--color-ocean-pale)]">
+                    <div className="text-3xl mb-2">📸</div>
+                    <p className="text-sm text-[var(--color-muted-foreground)]">No photos yet.</p>
+                    {!business.isClaimed && (
+                      <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+                        <a href="/claim" className="text-[var(--color-ocean)] hover:underline">Claim this listing</a> to add photos.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Map */}
               {business.lat && business.lng && (
