@@ -217,7 +217,7 @@ export default function ClaimBusiness() {
                   <button
                     type="submit"
                     disabled={claimMutation.isPending}
-                    className="btn-ocean w-full justify-center py-3 text-base"
+                    className="btn-coral w-full justify-center py-3 text-base"
                   >
                     {claimMutation.isPending ? "Submitting…" : "Submit Claim"}
                   </button>

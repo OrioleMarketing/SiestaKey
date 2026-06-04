@@ -3,17 +3,22 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createClaimLead,
   createListingSubmission,
+  getAllBusinessesAdmin,
   getAllCategories,
+  getAllClaimLeads,
+  getAllSubmissions,
   getBusinessBySlug,
   getBusinesses,
   getFeaturedBusinesses,
   getRelatedBusinesses,
   markClaimLeadWebhookSent,
   markSubmissionWebhookSent,
+  updateBusinessFlags,
+  updateSubmissionStatus,
 } from "./db";
 import { ENV } from "./_core/env";
 
@@ -35,6 +40,72 @@ async function sendGHLWebhook(webhookUrl: string, payload: Record<string, unknow
 
 export const appRouter = router({
   system: systemRouter,
+
+  // ─── Admin Panel ─────────────────────────────────────────────────────────────
+  admin: router({
+    // Listings
+    listBusinesses: adminProcedure.query(async () => {
+      return getAllBusinessesAdmin();
+    }),
+
+    updateBusiness: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          isFeatured: z.boolean().optional(),
+          isSponsored: z.boolean().optional(),
+          isActive: z.boolean().optional(),
+          isClaimed: z.boolean().optional(),
+          tier: z.enum(["free", "featured", "sponsored"]).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...flags } = input;
+        await updateBusinessFlags(id, flags);
+        return { success: true };
+      }),
+
+    // Claim Leads
+    listClaims: adminProcedure.query(async () => {
+      return getAllClaimLeads();
+    }),
+
+    // Listing Submissions
+    listSubmissions: adminProcedure.query(async () => {
+      return getAllSubmissions();
+    }),
+
+    updateSubmission: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          status: z.enum(["pending", "approved", "rejected"]),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await updateSubmissionStatus(input.id, input.status);
+        return { success: true };
+      }),
+
+    // Stats overview
+    stats: adminProcedure.query(async () => {
+      const [businesses, claims, submissions] = await Promise.all([
+        getAllBusinessesAdmin(),
+        getAllClaimLeads(),
+        getAllSubmissions(),
+      ]);
+      return {
+        totalBusinesses: businesses.length,
+        activeBusinesses: businesses.filter((b) => b.isActive).length,
+        featuredBusinesses: businesses.filter((b) => b.isFeatured).length,
+        sponsoredBusinesses: businesses.filter((b) => b.isSponsored).length,
+        totalClaims: claims.length,
+        pendingSubmissions: submissions.filter((s) => s.status === "pending").length,
+        approvedSubmissions: submissions.filter((s) => s.status === "approved").length,
+        rejectedSubmissions: submissions.filter((s) => s.status === "rejected").length,
+      };
+    }),
+  }),
 
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),

@@ -9,6 +9,7 @@ import Directory from "./pages/Directory";
 import BusinessProfile from "./pages/BusinessProfile";
 import ClaimBusiness from "./pages/ClaimBusiness";
 import SubmitListing from "./pages/SubmitListing";
+import Admin from "./pages/Admin";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/business/:slug" component={BusinessProfile} />
       <Route path="/claim" component={ClaimBusiness} />
       <Route path="/submit-listing" component={SubmitListing} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

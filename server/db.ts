@@ -252,3 +252,46 @@ export async function markSubmissionWebhookSent(id: number): Promise<void> {
     .set({ ghlWebhookSent: true })
     .where(eq(listingSubmissions.id, id));
 }
+
+// ─── Admin Helpers ─────────────────────────────────────────────────────────────
+export async function getAllBusinessesAdmin(): Promise<Business[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(businesses).orderBy(desc(businesses.createdAt));
+}
+
+export async function updateBusinessFlags(
+  id: number,
+  flags: {
+    isFeatured?: boolean;
+    isSponsored?: boolean;
+    isActive?: boolean;
+    isClaimed?: boolean;
+    tier?: "free" | "featured" | "sponsored";
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(businesses).set(flags).where(eq(businesses.id, id));
+}
+
+export async function getAllClaimLeads(): Promise<ClaimLead[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(claimLeads).orderBy(desc(claimLeads.createdAt));
+}
+
+export async function getAllSubmissions(): Promise<ListingSubmission[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(listingSubmissions).orderBy(desc(listingSubmissions.createdAt));
+}
+
+export async function updateSubmissionStatus(
+  id: number,
+  status: "pending" | "approved" | "rejected"
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(listingSubmissions).set({ status }).where(eq(listingSubmissions.id, id));
+}

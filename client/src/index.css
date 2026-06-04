@@ -13,8 +13,9 @@
   --color-ocean-pale:    oklch(0.92 0.04 210);
   --color-sand:          oklch(0.94 0.04 85);
   --color-sand-dark:     oklch(0.82 0.06 80);
-  --color-coral:         oklch(0.70 0.16 30);
-  --color-coral-light:   oklch(0.88 0.08 30);
+  --color-coral:         oklch(0.61 0.20 28);   /* #E8614A brand coral */
+  --color-coral-light:   oklch(0.88 0.08 28);   /* light tint */
+  --color-coral-dark:    oklch(0.50 0.20 28);   /* hover/pressed state */
   --color-seafoam:       oklch(0.78 0.08 175);
   --color-seafoam-light: oklch(0.93 0.04 175);
   --color-gold:          oklch(0.78 0.14 75);
@@ -131,9 +132,9 @@
   .bg-hero-gradient {
     background: linear-gradient(
       to bottom,
-      oklch(0.28 0.08 240 / 0.65) 0%,
-      oklch(0.28 0.08 240 / 0.40) 50%,
-      oklch(0.28 0.08 240 / 0.70) 100%
+      oklch(0.15 0.06 240 / 0.30) 0%,
+      oklch(0.15 0.06 240 / 0.15) 45%,
+      oklch(0.15 0.06 240 / 0.45) 100%
     );
   }
 
@@ -196,7 +197,7 @@
   .btn-ocean:active { transform: scale(0.97); }
 
   .btn-coral {
-    background: linear-gradient(135deg, var(--color-coral) 0%, oklch(0.62 0.20 25) 100%);
+    background: linear-gradient(135deg, var(--color-coral) 0%, var(--color-coral-dark) 100%);
     color: white;
     border: none;
     border-radius: var(--radius);
@@ -211,7 +212,7 @@
     gap: 0.5rem;
   }
   .btn-coral:hover {
-    box-shadow: 0 4px 20px oklch(0.70 0.16 30 / 0.35);
+    box-shadow: 0 4px 20px oklch(0.61 0.20 28 / 0.40);
     transform: translateY(-1px);
   }
   .btn-coral:active { transform: scale(0.97); }

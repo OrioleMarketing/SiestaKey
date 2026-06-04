@@ -55,7 +55,7 @@ export default function Home() {
       <section
         className="relative min-h-[92vh] flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: `url(/manus-storage/siesta-key-hero_9fab06e2.jpg)`,
+          backgroundImage: `url(/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
           backgroundSize: "cover",
           backgroundPosition: "center 30%",
         }}
@@ -92,13 +92,13 @@ export default function Home() {
             className="font-serif text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
           >
-            <span className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">Discover the Best of</span>
+            <span className="text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)]">Discover the Best of</span>
             <br />
             <span
               className="italic"
               style={{
                 color: "#F5A623",
-                textShadow: "0 2px 16px rgba(0,0,0,0.55), 0 0 40px rgba(245,166,35,0.35)",
+                textShadow: "0 2px 20px rgba(0,0,0,0.75), 0 0 40px rgba(245,166,35,0.4), 0 1px 0 rgba(0,0,0,0.5)",
               }}
             >
               Siesta Key
@@ -106,7 +106,7 @@ export default function Home() {
           </h1>
 
           <p
-            className="text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up"
+            className="text-lg md:text-xl text-white max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up [text-shadow:0_1px_8px_rgba(0,0,0,0.6)]"
             style={{ animationDelay: "0.3s" }}
           >
             Your premier guide to dining, shopping, activities, and services on Florida's most beautiful island.

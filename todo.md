@@ -33,3 +33,11 @@
 - [x] Configure VITE_GHL_PAYMENT_LINK in Secrets panel to wire premium upgrade CTA (user action — see GHL guide)
 - [x] Structured category/area/plan packed into description field; full schema migration deferred to production phase
 - [x] Custom 404 page with coastal branding
+
+## Enhancement Round 2
+- [x] Increase navbar logo height (h-12 mobile, h-16 desktop)
+- [x] Apply coral-pink accent (#E8614A) to buttons, badges, and hover states sitewide
+- [x] Build admin panel — listings management, submissions review, claim leads dashboard
+
+## Enhancement Round 2 — Follow-up
+- [x] Audit public pages for coral accent consistency (CTA buttons, badges, hover states)

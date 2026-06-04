@@ -341,7 +341,7 @@ export default function SubmitListing() {
               <button
                 type="submit"
                 disabled={submitMutation.isPending}
-                className="btn-ocean w-full justify-center py-3.5 text-base"
+                className="btn-coral w-full justify-center py-3.5 text-base"
               >
                 {submitMutation.isPending
                   ? "Submitting…"
