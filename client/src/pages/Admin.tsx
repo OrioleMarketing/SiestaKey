@@ -300,20 +300,23 @@ function BusinessesTab() {
                   <div className="font-medium text-foreground">{b.name}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{b.area}</div>
                 </td>
-                <td className="px-4 py-3">
-                  <Select
-                    value={b.tier}
-                    onValueChange={(v) => setTier(b.id, v as "free" | "featured" | "sponsored")}
-                  >
-                    <SelectTrigger className="w-32 h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="featured">Featured</SelectItem>
-                      <SelectItem value="sponsored">Sponsored</SelectItem>
-                    </SelectContent>
-                  </Select>
+<td className="px-4 py-3">
+                  <div title="Admin override — changes tier in DB only, no payment triggered">
+                    <Select
+                      value={b.tier}
+                      onValueChange={(v) => setTier(b.id, v as "free" | "featured" | "sponsored")}
+                    >
+                      <SelectTrigger className="w-36 h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free (no charge)</SelectItem>
+                        <SelectItem value="featured">Gulf Breeze (no charge)</SelectItem>
+                        <SelectItem value="sponsored">Island Premier (no charge)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Admin override</p>
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button
@@ -496,13 +499,21 @@ function SubmissionsTab() {
         toast.success("Submission approved — business listing created and added to the directory!");
         utils.admin.listBusinesses.invalidate();
       } else if (variables.status === "rejected") {
-        toast.success("Submission rejected. Stripe refund initiated if payment was collected.");
+        toast.success("Submission rejected. Stripe refund initiated and rejection email sent.");
       } else {
         toast.success("Status updated.");
       }
       refetch();
     },
     onError: () => toast.error("Update failed"),
+  });
+
+  const resendPayment = trpc.admin.resendPaymentLink.useMutation({
+    onSuccess: (data) => {
+      window.open(data.checkoutUrl, "_blank");
+      toast.success("Fresh payment link opened — copy it and send to the submitter.");
+    },
+    onError: (err) => toast.error(`Resend failed: ${err.message}`),
   });
 
   const TIER_LABELS: Record<string, string> = {
@@ -535,6 +546,11 @@ function SubmissionsTab() {
                     <Badge variant="outline" className="text-xs border-ocean/30 text-ocean">
                       {TIER_LABELS[s.tier] ?? s.tier}
                     </Badge>
+                  )}
+                  {s.tier && s.tier !== "free" && (
+                    s.stripeSubscriptionId
+                      ? <Badge className="text-xs bg-green-100 text-green-800 border-green-200">Paid</Badge>
+                      : <Badge className="text-xs bg-amber-100 text-amber-800 border-amber-200">Unpaid</Badge>
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
@@ -580,6 +596,19 @@ function SubmissionsTab() {
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                {/* Resend Payment Link — only for pending paid-tier submissions without confirmed payment */}
+                {s.status === "pending" && s.tier && s.tier !== "free" && !s.stripeSubscriptionId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1 text-amber-700 border-amber-200 hover:bg-amber-50"
+                    disabled={resendPayment.isPending}
+                    onClick={() => resendPayment.mutate({ submissionId: s.id, origin: window.location.origin })}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Resend Payment Link
+                  </Button>
+                )}
                 {s.status === "approved" && s.createdBusinessSlug && (
                   <a
                     href={`/business/${s.createdBusinessSlug}`}

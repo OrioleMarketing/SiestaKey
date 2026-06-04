@@ -142,6 +142,7 @@ export const GHL_WORKFLOWS = {
   SAAS_PUSH:               "c0e61628-e798-4c93-a600-da6db86f954e",
   CLAIM_REQUEST_APPROVED:  "9987c8ad-003e-47b3-9a74-ee6ed7c16431",
   CLAIM_REQUEST_REJECTED:  "7ca68420-b384-43e4-b2be-04b2f661538b",
+  LISTING_REJECTED:         "7ca68420-b384-43e4-b2be-04b2f661538b", // same rejection workflow — update ID when a dedicated one is created in GHL
   CONTACT_FORM_SUBMITTED:  "8f9f2422-3524-4d92-b5bd-669ede0fb974",
   FORGOTTEN_PASSWORD:      "934486ef-8bdb-4067-82ae-04849977683a",
   LISTING_UPGRADED_PREMIUM:"52042d6a-cbf3-4913-b22d-8c5a44c49286",

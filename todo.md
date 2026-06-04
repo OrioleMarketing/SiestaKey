@@ -148,3 +148,11 @@
 - [x] SubmitListing.tsx: payment=success and payment=cancelled redirect states handled with clear messaging
 - [x] stripeWebhook.ts: createCheckoutSession supports submissionId and redirects back to /submit-listing
 - [x] stripeWebhook.ts: cancelAndRefundSubmission helper added
+
+## Enhancement Round 15 — Submission UX + Admin Tier Control
+- [x] Backend: trigger GHL LISTING_REJECTED workflow on rejection (upsert contact + fire workflow)
+- [x] Backend: admin.resendPaymentLink procedure — re-create Stripe checkout for a pending submission and return the URL
+- [x] Admin Submissions tab: Paid/Unpaid badge on each card (green "Paid" if stripeSubscriptionId present, amber "Unpaid" otherwise for paid-tier submissions)
+- [x] Admin Submissions tab: "Resend Payment Link" button on pending unpaid paid-tier submissions
+- [x] Admin Businesses tab: manual tier change dropdown — updates DB only, no Stripe charge; labelled "Admin override" with "(no charge)" suffix on each option
+- [x] ghl.ts: added LISTING_REJECTED workflow constant (currently maps to CLAIM_REQUEST_REJECTED — update ID when a dedicated GHL workflow is created)

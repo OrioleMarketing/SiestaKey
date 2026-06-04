@@ -171,7 +171,7 @@ export const appRouter = router({
           }
         }
 
-        // When rejecting, cancel Stripe subscription and issue refund if payment exists
+        // When rejecting, cancel Stripe subscription, issue refund, and fire GHL rejection workflow
         if (input.status === "rejected" && db) {
           const rows = await db
             .select()
@@ -180,18 +180,38 @@ export const appRouter = router({
             .limit(1);
           const sub = rows[0];
 
-          if (sub?.stripeSubscriptionId || sub?.stripePaymentIntentId) {
-            const result = await cancelAndRefundSubmission({
-              stripeSubscriptionId: sub.stripeSubscriptionId,
-              stripePaymentIntentId: sub.stripePaymentIntentId,
-            });
-            console.log(`[Stripe] Rejection refund for submission ${input.id}:`, result.message);
+          if (sub) {
+            // Refund if payment exists
+            if (sub.stripeSubscriptionId || sub.stripePaymentIntentId) {
+              const result = await cancelAndRefundSubmission({
+                stripeSubscriptionId: sub.stripeSubscriptionId,
+                stripePaymentIntentId: sub.stripePaymentIntentId,
+              });
+              console.log(`[Stripe] Rejection refund for submission ${input.id}:`, result.message);
 
-            // Notify owner of refund outcome
-            await notifyOwner({
-              title: `Submission Rejected + Refund: ${sub.businessName}`,
-              content: `Submission #${input.id} rejected. Refund status: ${result.message}`,
-            });
+              await notifyOwner({
+                title: `Submission Rejected + Refund: ${sub.businessName}`,
+                content: `Submission #${input.id} rejected. Refund status: ${result.message}`,
+              });
+            }
+
+            // Fire GHL "Listing Rejected" workflow
+            try {
+              const nameParts = sub.contactName.trim().split(" ");
+              const contactId = await ghlUpsertContact({
+                firstName: nameParts[0] ?? sub.contactName,
+                lastName: nameParts.slice(1).join(" ") || undefined,
+                email: sub.email,
+                phone: sub.phone ?? undefined,
+                companyName: sub.businessName,
+                tags: ["Listing Rejected", "Siesta Key Directory"],
+              });
+              if (contactId) {
+                await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.LISTING_REJECTED);
+              }
+            } catch (ghlErr) {
+              console.error("[GHL] rejection workflow error:", ghlErr);
+            }
           }
         }
 
@@ -313,6 +333,44 @@ export const appRouter = router({
           .set({ googleReviewEmbedCode: input.googleReviewEmbedCode })
           .where(eq(businesses.id, input.id));
         return { success: true };
+      }),
+
+    // Re-create a Stripe checkout link for a pending submission that hasn't paid yet
+    resendPaymentLink: adminProcedure
+      .input(
+        z.object({
+          submissionId: z.number().int().positive(),
+          origin: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+        const rows = await db
+          .select()
+          .from(listingSubmissions)
+          .where(eq(listingSubmissions.id, input.submissionId))
+          .limit(1);
+        const sub = rows[0];
+        if (!sub) throw new Error("Submission not found");
+        if (sub.status !== "pending") throw new Error("Submission is not pending");
+        if (sub.tier === "free") throw new Error("Free tier submissions do not require payment");
+
+        // Map submission tier to plan key
+        const planKey: PlanKey = sub.tier === "island_premier" ? "island_premier" : "gulf_breeze";
+
+        // Create a fresh checkout session (no userId required for admin resend — use 0)
+        const checkoutUrl = await createCheckoutSession({
+          planKey,
+          interval: "monthly",
+          userId: 0,
+          userEmail: sub.email,
+          userName: sub.contactName,
+          origin: input.origin,
+          submissionId: sub.id,
+        });
+
+        return { checkoutUrl };
       }),
 
     stats: adminProcedure.query(async () => {
