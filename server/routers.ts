@@ -119,6 +119,68 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    createBusiness: adminProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).max(200),
+          categoryId: z.number().int().positive(),
+          shortDescription: z.string().max(300).optional(),
+          description: z.string().max(5000).optional(),
+          address: z.string().max(300).optional(),
+          area: z.string().max(100).optional().default("Siesta Key Village"),
+          phone: z.string().max(30).optional(),
+          website: z.string().max(300).optional(),
+          email: z.string().max(200).optional(),
+          lat: z.string().optional(),
+          lng: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+        // Generate a unique slug from the name
+        const baseSlug = input.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+        // Check for slug collision and append a timestamp if needed
+        const existing = await db
+          .select({ slug: businesses.slug })
+          .from(businesses)
+          .where(eq(businesses.slug, baseSlug))
+          .limit(1);
+        const slug = existing.length > 0 ? `${baseSlug}-${Date.now()}` : baseSlug;
+        await db.insert(businesses).values({
+          slug,
+          name: input.name,
+          categoryId: input.categoryId,
+          shortDescription: input.shortDescription ?? null,
+          description: input.description ?? null,
+          address: input.address ?? null,
+          area: input.area ?? "Siesta Key Village",
+          phone: input.phone ?? null,
+          website: input.website ?? null,
+          email: input.email ?? null,
+          lat: input.lat ?? null,
+          lng: input.lng ?? null,
+          isActive: true,
+          isFeatured: false,
+          isSponsored: false,
+          isClaimed: false,
+          tier: "free",
+        });
+        return { success: true, slug };
+      }),
+
+    deleteBusiness: adminProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+        await db.delete(businesses).where(eq(businesses.id, input.id));
+        return { success: true };
+      }),
+
     stats: adminProcedure.query(async () => {
       const [businesses, claims, submissions] = await Promise.all([
         getAllBusinessesAdmin(),

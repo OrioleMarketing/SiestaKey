@@ -109,3 +109,9 @@
 - [x] Client: photo upload UI in dashboard (file picker + loading spinner; drag-drop deferred)
 - [x] Client: add confirmation dialog before removing a photo from the dashboard gallery
 - [x] Stripe webhook audit: confirmed correctly registered before express.json()
+
+## Enhancement Round 12 — Admin Listing Management
+- [ ] Backend: admin.createBusiness tRPC procedure (name, category, address, phone, website, description, area)
+- [ ] Backend: admin.deleteBusiness tRPC procedure (by id, admin-only)
+- [ ] Admin UI: "Add Listing" button + dialog form on the Businesses tab
+- [ ] Admin UI: Delete button with confirmation dialog on each listing row

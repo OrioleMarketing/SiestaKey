@@ -5,6 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import {
@@ -16,10 +21,13 @@ import {
   ExternalLink,
   Lock,
   LogIn,
+  Plus,
   Star,
+  Trash2,
   Users,
   XCircle,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import PageHero from "@/components/PageHero";
 
@@ -85,15 +93,145 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// ─── Add Listing Dialog ─────────────────────────────────────────────────────────
+const ADMIN_CATEGORIES = [
+  { id: 1, name: "Dining" },
+  { id: 2, name: "Shopping" },
+  { id: 3, name: "Activities" },
+  { id: 4, name: "Nightlife" },
+  { id: 5, name: "Accommodations" },
+  { id: 6, name: "Services" },
+  { id: 7, name: "Arts & Culture" },
+  { id: 8, name: "Health & Wellness" },
+];
+
+const ADMIN_AREAS = [
+  "Siesta Key Village",
+  "Crescent Beach",
+  "Midnight Pass",
+];
+
+function AddListingDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+  const [form, setForm] = useState({
+    name: "",
+    categoryId: 1,
+    area: "Siesta Key Village",
+    address: "",
+    phone: "",
+    website: "",
+    email: "",
+    shortDescription: "",
+    description: "",
+  });
+
+  const createBusiness = trpc.admin.createBusiness.useMutation({
+    onSuccess: () => {
+      toast.success("Listing created successfully");
+      onCreated();
+      onClose();
+      setForm({ name: "", categoryId: 1, area: "Siesta Key Village", address: "", phone: "", website: "", email: "", shortDescription: "", description: "" });
+    },
+    onError: (e) => toast.error(`Failed to create listing: ${e.message}`),
+  });
+
+  const set = (field: string, value: string | number) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-lg">Add New Listing</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div>
+            <Label htmlFor="al-name">Business Name *</Label>
+            <Input id="al-name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Siesta Key Oyster Bar" className="mt-1" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="al-cat">Category *</Label>
+              <Select value={String(form.categoryId)} onValueChange={(v) => set("categoryId", Number(v))}>
+                <SelectTrigger id="al-cat" className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADMIN_CATEGORIES.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="al-area">Area</Label>
+              <Select value={form.area} onValueChange={(v) => set("area", v)}>
+                <SelectTrigger id="al-area" className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADMIN_AREAS.map((a) => (
+                    <SelectItem key={a} value={a}>{a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="al-addr">Address</Label>
+            <Input id="al-addr" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="123 Ocean Blvd, Siesta Key, FL" className="mt-1" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="al-phone">Phone</Label>
+              <Input id="al-phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(941) 555-0000" className="mt-1" />
+            </div>
+            <div>
+              <Label htmlFor="al-email">Email</Label>
+              <Input id="al-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="info@business.com" className="mt-1" />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="al-web">Website</Label>
+            <Input id="al-web" value={form.website} onChange={(e) => set("website", e.target.value)} placeholder="https://" className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="al-short">Short Description</Label>
+            <Input id="al-short" value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} placeholder="One-line summary (max 300 chars)" maxLength={300} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="al-desc">Full Description</Label>
+            <Textarea id="al-desc" value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Detailed description..." rows={4} className="mt-1" />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} disabled={createBusiness.isPending}>Cancel</Button>
+          <Button
+            className="btn-ocean"
+            onClick={() => createBusiness.mutate({ ...form, categoryId: Number(form.categoryId) })}
+            disabled={!form.name.trim() || createBusiness.isPending}
+          >
+            {createBusiness.isPending ? "Creating…" : "Create Listing"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Businesses Tab ─────────────────────────────────────────────────────────────
 function BusinessesTab() {
   const { data: businesses, isLoading, refetch } = trpc.admin.listBusinesses.useQuery();
+  const [showAdd, setShowAdd] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+
   const updateBusiness = trpc.admin.updateBusiness.useMutation({
-    onSuccess: () => {
-      toast.success("Listing updated");
-      refetch();
-    },
+    onSuccess: () => { toast.success("Listing updated"); refetch(); },
     onError: () => toast.error("Update failed"),
+  });
+
+  const deleteBusiness = trpc.admin.deleteBusiness.useMutation({
+    onSuccess: () => { toast.success("Listing deleted"); refetch(); setDeleteTarget(null); },
+    onError: () => toast.error("Delete failed"),
   });
 
   const toggle = (id: number, field: "isFeatured" | "isSponsored" | "isActive", current: boolean) => {
@@ -115,118 +253,152 @@ function BusinessesTab() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-muted/50 border-b border-border">
-            <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Business</th>
-            <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Tier</th>
-            <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Featured</th>
-            <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Sponsored</th>
-            <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Active</th>
-            <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Claimed</th>
-            <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {businesses?.map((b, i) => (
-            <tr
-              key={b.id}
-              className={`border-b border-border last:border-0 transition-colors hover:bg-muted/30 ${
-                i % 2 === 0 ? "bg-white" : "bg-muted/10"
-              }`}
-            >
-              <td className="px-4 py-3">
-                <div className="font-medium text-foreground">{b.name}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{b.area}</div>
-              </td>
-              <td className="px-4 py-3">
-                <Select
-                  value={b.tier}
-                  onValueChange={(v) => setTier(b.id, v as "free" | "featured" | "sponsored")}
-                >
-                  <SelectTrigger className="w-32 h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="featured">Featured</SelectItem>
-                    <SelectItem value="sponsored">Sponsored</SelectItem>
-                  </SelectContent>
-                </Select>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <button
-                  onClick={() => toggle(b.id, "isFeatured", b.isFeatured)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
-                    b.isFeatured
-                      ? "bg-ocean text-white"
-                      : "bg-muted text-muted-foreground hover:bg-ocean/20"
-                  }`}
-                  title={b.isFeatured ? "Remove featured" : "Set featured"}
-                >
-                  <Star className="w-4 h-4" />
-                </button>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <button
-                  onClick={() => toggle(b.id, "isSponsored", b.isSponsored)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
-                    b.isSponsored
-                      ? "bg-amber-500 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-amber-100"
-                  }`}
-                  title={b.isSponsored ? "Remove sponsored" : "Set sponsored"}
-                >
-                  <BarChart3 className="w-4 h-4" />
-                </button>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <button
-                  onClick={() => toggle(b.id, "isActive", b.isActive)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
-                    b.isActive
-                      ? "bg-green-500 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-green-100"
-                  }`}
-                  title={b.isActive ? "Deactivate" : "Activate"}
-                >
-                  {b.isActive ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    <XCircle className="w-4 h-4" />
-                  )}
-                </button>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    b.isClaimed
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {b.isClaimed ? "Claimed" : "Unclaimed"}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <a
-                  href={`/business/${b.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-ocean hover:underline"
-                >
-                  View <ExternalLink className="w-3 h-3" />
-                </a>
-              </td>
+    <>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">{businesses?.length ?? 0} listings</p>
+        <Button className="btn-ocean h-8 text-xs gap-1" onClick={() => setShowAdd(true)}>
+          <Plus className="w-3.5 h-3.5" /> Add Listing
+        </Button>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/50 border-b border-border">
+              <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Business</th>
+              <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Tier</th>
+              <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Featured</th>
+              <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Sponsored</th>
+              <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Active</th>
+              <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Claimed</th>
+              <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {businesses?.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">No businesses found.</div>
-      )}
-    </div>
+          </thead>
+          <tbody>
+            {businesses?.map((b, i) => (
+              <tr
+                key={b.id}
+                className={`border-b border-border last:border-0 transition-colors hover:bg-muted/30 ${
+                  i % 2 === 0 ? "bg-white" : "bg-muted/10"
+                }`}
+              >
+                <td className="px-4 py-3">
+                  <div className="font-medium text-foreground">{b.name}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{b.area}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <Select
+                    value={b.tier}
+                    onValueChange={(v) => setTier(b.id, v as "free" | "featured" | "sponsored")}
+                  >
+                    <SelectTrigger className="w-32 h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="featured">Featured</SelectItem>
+                      <SelectItem value="sponsored">Sponsored</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => toggle(b.id, "isFeatured", b.isFeatured)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
+                      b.isFeatured ? "bg-ocean text-white" : "bg-muted text-muted-foreground hover:bg-ocean/20"
+                    }`}
+                    title={b.isFeatured ? "Remove featured" : "Set featured"}
+                  >
+                    <Star className="w-4 h-4" />
+                  </button>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => toggle(b.id, "isSponsored", b.isSponsored)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
+                      b.isSponsored ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground hover:bg-amber-100"
+                    }`}
+                    title={b.isSponsored ? "Remove sponsored" : "Set sponsored"}
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                  </button>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => toggle(b.id, "isActive", b.isActive)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
+                      b.isActive ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:bg-green-100"
+                    }`}
+                    title={b.isActive ? "Deactivate" : "Activate"}
+                  >
+                    {b.isActive ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  </button>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    b.isClaimed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    {b.isClaimed ? "Claimed" : "Unclaimed"}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`/business/${b.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-ocean hover:underline"
+                    >
+                      View <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <button
+                      onClick={() => setDeleteTarget({ id: b.id, name: b.name })}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      title="Delete listing"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {businesses?.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">No businesses found.</div>
+        )}
+      </div>
+
+      {/* Add Listing Dialog */}
+      <AddListingDialog
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        onCreated={refetch}
+      />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete <strong>{deleteTarget?.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => deleteTarget && deleteBusiness.mutate({ id: deleteTarget.id })}
+              disabled={deleteBusiness.isPending}
+            >
+              {deleteBusiness.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
