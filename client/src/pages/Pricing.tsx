@@ -32,7 +32,7 @@ const FEATURES: FeatureRow[] = [
   { label: "Customer Reviews",         free: false, featured: true,  premium: true  },
   { label: "Google Reviews Display",   free: false, featured: true,  premium: true  },
   { label: "Featured Badge",           free: false, featured: true,  premium: true  },
-  { label: "Top Search Placement",     free: false, featured: true,  premium: true  },
+  { label: "Top Search Placement",     free: false, featured: false, premium: true  },
   { label: "Homepage Featured Spot",   free: false, featured: false, premium: true  },
   { label: "Sponsored Badge",          free: false, featured: false, premium: true  },
   { label: "Priority Customer Support",free: false, featured: false, premium: true  },
@@ -74,7 +74,7 @@ const PLANS = [
     ctaHref: "/submit-listing",
     ctaStyle: "ocean",
     badge: "Most Popular",
-    accentClass: "border-[var(--color-ocean)] ring-2 ring-[var(--color-ocean)]/20",
+    accentClass: "border-[var(--color-ocean)] ring-2 ring-[var(--color-ocean)]/20 shadow-sm",
     headerClass: "bg-[var(--color-ocean)]",
     priceClass: "text-white",
     periodClass: "text-white/60",
@@ -89,8 +89,8 @@ const PLANS = [
     cta: "Go Island Premier",
     ctaHref: "/submit-listing",
     ctaStyle: "coral",
-    badge: "Best Value",
-    accentClass: "border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]/20",
+    badge: "⭐ Recommended",
+    accentClass: "border-[var(--color-gold)] ring-4 ring-[var(--color-gold)]/40 scale-[1.03] shadow-2xl",
     headerClass: "bg-gradient-to-br from-[var(--color-ocean-deep)] to-[#1a4a6b]",
     priceClass: "text-white",
     periodClass: "text-white/60",
@@ -204,11 +204,11 @@ export default function Pricing() {
                   {/* Badge */}
                   {plan.badge && (
                     <div className="absolute top-4 right-4 z-10">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        plan.id === "featured"
-                          ? "bg-[var(--color-ocean)] text-white"
-                          : "bg-[var(--color-gold)] text-[var(--color-charcoal)]"
-                      }`}>
+                  <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${
+                      plan.id === "featured"
+                        ? "bg-[var(--color-ocean)] text-white"
+                        : "bg-[var(--color-gold)] text-[var(--color-charcoal)] shadow-md"
+                    }`}>
                         {plan.badge}
                       </span>
                     </div>
@@ -518,7 +518,7 @@ export default function Pricing() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="tel:+19415551234"
+              href="tel:+19419572639"
               className="flex items-center gap-2 bg-[var(--color-ocean)] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[var(--color-ocean-deep)] transition-all duration-200 active:scale-[0.97]"
             >
               <Phone className="w-4 h-4" />
