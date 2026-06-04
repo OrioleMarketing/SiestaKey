@@ -41,11 +41,11 @@ export default function Navbar() {
             <img
               src={
                 transparent
-                  ? "/manus-storage/Shop-Logo-White_a2daf85e.png"
+                  ? "/manus-storage/Shop-Logo-White-Transparent_c745ca81.png"
                   : "/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
               }
               alt="Shop in Siesta Key"
-              className="h-12 md:h-16 w-auto object-contain transition-all duration-300"
+              className="h-14 md:h-20 w-auto object-contain transition-all duration-300"
             />
           </Link>
 
