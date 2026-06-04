@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CheckCircle, MapPin, Star, Zap, Crown, Building2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle, Crown, Building2, CreditCard, AlertCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import PageHero from "@/components/PageHero";
@@ -7,33 +7,56 @@ import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { toast } from "sonner";
 
+// Tier keys must match the backend enum: free | gulf_breeze | island_premier
 const PLANS = [
   {
     id: "free",
     name: "Free Listing",
     price: "$0",
     period: "forever",
-    features: ["Basic business profile", "Contact info & hours", "Category listing", "Google Maps pin"],
-    cta: "Submit Free",
+    features: [
+      "Basic business profile",
+      "Contact info & hours",
+      "Category listing",
+      "Google Maps pin",
+    ],
+    cta: "Submit Free Listing",
     highlight: false,
+    color: "border-[var(--color-border)]",
   },
   {
-    id: "featured",
-    name: "Featured",
+    id: "gulf_breeze",
+    name: "Gulf Breeze",
     price: "$49",
     period: "per month",
-    features: ["Everything in Free", "Featured badge & top placement", "Priority in search results", "Enhanced profile card", "GoHighLevel automation"],
-    cta: "Get Featured",
+    features: [
+      "Everything in Free",
+      "Featured badge & top placement",
+      "Priority in search results",
+      "Enhanced profile card",
+      "GoHighLevel automation",
+      "Google Reviews widget",
+    ],
+    cta: "Get Gulf Breeze",
     highlight: true,
+    color: "border-[var(--color-ocean)]",
   },
   {
-    id: "sponsored",
-    name: "Sponsored",
-    price: "$99",
+    id: "island_premier",
+    name: "Island Premier",
+    price: "$79",
     period: "per month",
-    features: ["Everything in Featured", "Sponsored badge", "Homepage placement", "Category page hero", "Dedicated account support"],
-    cta: "Go Sponsored",
+    features: [
+      "Everything in Gulf Breeze",
+      "Sponsored badge",
+      "Homepage placement",
+      "Category page hero",
+      "Dedicated account support",
+      "Google Reviews widget",
+    ],
+    cta: "Get Island Premier",
     highlight: false,
+    color: "border-[var(--color-coral)]",
   },
 ];
 
@@ -47,8 +70,10 @@ const AREAS = [
 ];
 
 export default function SubmitListing() {
-  const [selectedPlan, setSelectedPlan] = useState("free");
+  const [selectedPlan, setSelectedPlan] = useState<"free" | "gulf_breeze" | "island_premier">("free");
   const [submitted, setSubmitted] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"success" | "cancelled" | null>(null);
+  const [submittedName, setSubmittedName] = useState("");
   const [form, setForm] = useState({
     businessName: "",
     category: "",
@@ -59,22 +84,46 @@ export default function SubmitListing() {
     address: "",
     area: "",
     description: "",
-    plan: "free",
   });
 
+  // Handle Stripe redirect-back query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (payment === "success") {
+      setPaymentStatus("success");
+      const plan = params.get("plan") ?? "";
+      const planName = PLANS.find((p) => p.id === plan)?.name ?? "paid";
+      toast.success(`Payment received for ${planName} plan! Your listing is under review.`);
+    } else if (payment === "cancelled") {
+      setPaymentStatus("cancelled");
+      toast.info("Payment cancelled. You can re-submit or choose the free plan.");
+    }
+  }, []);
+
   const submitMutation = trpc.submissions.submit.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
-      toast.success("Listing submitted successfully!");
-    },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Something went wrong. Please try again.");
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const checkoutMutation = trpc.submissions.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.info("Redirecting to secure payment…");
+        window.open(data.url, "_blank");
+      }
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || "Could not create checkout session. Please try again.");
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    submitMutation.mutate({
+
+    // 1. Save submission to DB
+    const result = await submitMutation.mutateAsync({
       businessName: form.businessName,
       contactName: form.contactName,
       email: form.email,
@@ -82,15 +131,101 @@ export default function SubmitListing() {
       website: form.website || undefined,
       address: form.address || undefined,
       description: form.description
-        ? `[Plan: ${selectedPlan}] [Category: ${form.category}] [Area: ${form.area}] ${form.description}`
-        : `[Plan: ${selectedPlan}] [Category: ${form.category}] [Area: ${form.area}]`,
+        ? `[Category: ${form.category}] [Area: ${form.area}] ${form.description}`
+        : `[Category: ${form.category}] [Area: ${form.area}]`,
+      tier: selectedPlan,
     });
+
+    setSubmittedName(form.businessName);
+
+    if (selectedPlan === "free") {
+      // Free tier: show confirmation immediately
+      setSubmitted(true);
+      toast.success("Listing submitted! We'll review and publish it within 1–2 business days.");
+    } else {
+      // Paid tier: redirect to Stripe Checkout
+      checkoutMutation.mutate({
+        submissionId: result.id,
+        tier: selectedPlan,
+        interval: "monthly",
+        contactName: form.contactName,
+        email: form.email,
+        origin: window.location.origin,
+      });
+      setSubmitted(true);
+    }
   };
 
-  const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [field]: e.target.value }));
+  const update = (field: string) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  if (submitted) {
+  const isPending = submitMutation.isPending || checkoutMutation.isPending;
+  const selectedPlanData = PLANS.find((p) => p.id === selectedPlan)!;
+
+  // ── Payment success state ─────────────────────────────────────────────────────
+  if (paymentStatus === "success") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center py-20 bg-[var(--color-white-sand)]">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="w-20 h-20 rounded-full bg-[var(--color-seafoam-light)] flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-[var(--color-seafoam)]" />
+            </div>
+            <h2 className="font-serif text-3xl font-bold text-[var(--color-charcoal)] mb-3">
+              Payment Received!
+            </h2>
+            <p className="text-[var(--color-muted-foreground)] mb-2 leading-relaxed">
+              Your listing is now under review. We'll activate your profile within 1–2 business days and send you a confirmation email.
+            </p>
+            <p className="text-sm text-[var(--color-ocean)] mb-6">
+              If your submission is not approved, your payment will be fully refunded.
+            </p>
+            <a href="/directory" className="btn-ocean">
+              Browse the Directory
+            </a>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Payment cancelled state ───────────────────────────────────────────────────
+  if (paymentStatus === "cancelled") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center py-20 bg-[var(--color-white-sand)]">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-orange-500" />
+            </div>
+            <h2 className="font-serif text-3xl font-bold text-[var(--color-charcoal)] mb-3">
+              Payment Cancelled
+            </h2>
+            <p className="text-[var(--color-muted-foreground)] mb-6 leading-relaxed">
+              No charge was made. You can try again or choose the free listing option.
+            </p>
+            <button
+              onClick={() => {
+                setPaymentStatus(null);
+                window.history.replaceState({}, "", "/submit-listing");
+              }}
+              className="btn-ocean"
+            >
+              Return to Form
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Free-tier submission success state ────────────────────────────────────────
+  if (submitted && selectedPlan === "free") {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -102,17 +237,54 @@ export default function SubmitListing() {
             <h2 className="font-serif text-3xl font-bold text-[var(--color-charcoal)] mb-3">
               Listing Submitted!
             </h2>
-            <p className="text-[var(--color-muted-foreground)] mb-2 leading-relaxed">
-              Thank you for submitting <strong>{form.businessName}</strong>. We'll review your listing and publish it within 1–2 business days.
+            <p className="text-[var(--color-muted-foreground)] mb-6 leading-relaxed">
+              Thank you for submitting <strong>{submittedName}</strong>. We'll review your listing and publish it within 1–2 business days.
             </p>
-            {selectedPlan !== "free" && (
-              <p className="text-sm text-[var(--color-ocean)] mb-6">
-                Our team will reach out to set up your {selectedPlan} plan and GoHighLevel automation.
-              </p>
-            )}
             <a href="/directory" className="btn-ocean">
               Browse the Directory
             </a>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Paid-tier: redirecting to Stripe ─────────────────────────────────────────
+  if (submitted && selectedPlan !== "free") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center py-20 bg-[var(--color-white-sand)]">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="w-20 h-20 rounded-full bg-[var(--color-ocean-pale)] flex items-center justify-center mx-auto mb-6">
+              <CreditCard className="w-10 h-10 text-[var(--color-ocean)]" />
+            </div>
+            <h2 className="font-serif text-3xl font-bold text-[var(--color-charcoal)] mb-3">
+              Redirecting to Payment…
+            </h2>
+            <p className="text-[var(--color-muted-foreground)] mb-2 leading-relaxed">
+              Your listing for <strong>{submittedName}</strong> has been saved. Opening secure checkout for the <strong>{selectedPlanData.name}</strong> plan in a new tab.
+            </p>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              If the checkout tab didn't open,{" "}
+              <button
+                className="text-[var(--color-ocean)] underline"
+                onClick={() =>
+                  checkoutMutation.mutate({
+                    submissionId: 0,
+                    tier: selectedPlan as "gulf_breeze" | "island_premier",
+                    interval: "monthly",
+                    contactName: form.contactName,
+                    email: form.email,
+                    origin: window.location.origin,
+                  })
+                }
+              >
+                click here to retry
+              </button>
+              .
+            </p>
           </div>
         </div>
         <Footer />
@@ -129,7 +301,6 @@ export default function SubmitListing() {
       />
       <Navbar />
 
-      {/* Header */}
       <PageHero
         title="Submit Your Business"
         subtitle="Get your business in front of thousands of Siesta Key visitors and residents. Choose a plan that works for you."
@@ -148,26 +319,24 @@ export default function SubmitListing() {
                 <button
                   key={plan.id}
                   type="button"
-                  onClick={() => setSelectedPlan(plan.id)}
-                  className={`text-left rounded-2xl p-6 border-2 transition-all duration-200 ${
+                  onClick={() => setSelectedPlan(plan.id as typeof selectedPlan)}
+                  className={`text-left rounded-2xl p-6 border-2 transition-all duration-200 relative ${
                     selectedPlan === plan.id
-                      ? plan.highlight
-                        ? "border-[var(--color-ocean)] bg-[var(--color-ocean-pale)] shadow-lg"
-                        : "border-[var(--color-ocean)] bg-white shadow-lg"
+                      ? `${plan.color} bg-white shadow-lg`
                       : "border-[var(--color-border)] bg-white hover:border-[var(--color-ocean-light)]"
-                  } ${plan.highlight ? "relative" : ""}`}
+                  }`}
                 >
                   {plan.highlight && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="badge-featured flex items-center gap-1 px-3 py-1">
-                        <Star className="w-3 h-3" /> Most Popular
+                      <span className="badge-featured flex items-center gap-1 px-3 py-1 text-xs whitespace-nowrap">
+                        ★ Most Popular
                       </span>
                     </div>
                   )}
                   <div className="flex items-center justify-between mb-3">
                     <div className="font-serif font-bold text-lg text-[var(--color-charcoal)]">{plan.name}</div>
                     {selectedPlan === plan.id && (
-                      <div className="w-5 h-5 rounded-full bg-[var(--color-ocean)] flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full bg-[var(--color-ocean)] flex items-center justify-center shrink-0">
                         <CheckCircle className="w-3.5 h-3.5 text-white fill-white" />
                       </div>
                     )}
@@ -198,7 +367,7 @@ export default function SubmitListing() {
               <div>
                 <h2 className="font-serif text-xl font-semibold text-[var(--color-charcoal)]">Business Details</h2>
                 <p className="text-xs text-[var(--color-muted-foreground)]">
-                  Plan selected: <strong className="text-[var(--color-ocean)]">{PLANS.find((p) => p.id === selectedPlan)?.name}</strong>
+                  Plan selected: <strong className="text-[var(--color-ocean)]">{selectedPlanData.name}</strong>
                 </p>
               </div>
             </div>
@@ -323,16 +492,16 @@ export default function SubmitListing() {
                 />
               </div>
 
-              {/* Premium note */}
+              {/* Paid tier note */}
               {selectedPlan !== "free" && (
                 <div className="bg-[var(--color-ocean-pale)] border border-[var(--color-ocean-light)] rounded-xl p-4 flex items-start gap-3">
-                  <Crown className="w-5 h-5 text-[var(--color-ocean)] shrink-0 mt-0.5" />
+                  <CreditCard className="w-5 h-5 text-[var(--color-ocean)] shrink-0 mt-0.5" />
                   <div>
                     <div className="text-sm font-semibold text-[var(--color-ocean-deep)] mb-1">
-                      {selectedPlan === "featured" ? "Featured Plan Selected" : "Sponsored Plan Selected"}
+                      Secure Payment via Stripe
                     </div>
                     <p className="text-xs text-[var(--color-muted-foreground)]">
-                      After submission, our team will contact you to complete payment via GoHighLevel and activate your {selectedPlan} listing. You'll receive an automated onboarding email with next steps.
+                      After submitting your details, you'll be redirected to a secure Stripe checkout page to complete payment for the <strong>{selectedPlanData.name}</strong> plan ({selectedPlanData.price}/mo). If your listing is not approved, your payment will be fully refunded.
                     </p>
                   </div>
                 </div>
@@ -340,14 +509,12 @@ export default function SubmitListing() {
 
               <button
                 type="submit"
-                disabled={submitMutation.isPending}
+                disabled={isPending}
                 className="btn-coral w-full justify-center py-3.5 text-base"
               >
-                {submitMutation.isPending
-                  ? "Submitting…"
-                  : selectedPlan === "free"
-                  ? "Submit Free Listing"
-                  : `Submit & Get ${PLANS.find((p) => p.id === selectedPlan)?.name}`}
+                {isPending
+                  ? selectedPlan === "free" ? "Submitting…" : "Preparing checkout…"
+                  : selectedPlanData.cta}
               </button>
 
               <p className="text-xs text-center text-[var(--color-muted-foreground)]">

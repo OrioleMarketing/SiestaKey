@@ -133,3 +133,18 @@
 - [x] Bug: approving a submission only updated its status but never created a business listing
 - [x] Fix: updateSubmission procedure now fetches the submission row and inserts a new business when status === "approved"
 - [x] Fix: Admin SubmissionsTab shows a descriptive toast on approval and invalidates the businesses list cache
+
+## Enhancement Round 14 — Payment at Submission + Admin Improvements
+- [x] Submission form: add tier selection step (Free / Gulf Breeze / Island Premier) before submit
+- [x] Submission form: after submit, redirect Free tier straight to confirmation; paid tiers redirect to Stripe checkout
+- [x] Schema: add stripeCheckoutSessionId, stripePaymentIntentId, stripeSubscriptionId, tier, createdBusinessId columns to listing_submissions
+- [x] Backend: createListingSubmission stores tier; createCheckout creates session linked to submission
+- [x] Backend: updateSubmission (approve) triggers GHL NEW_LISTING_ADDED workflow with profile URL; maps tier to business tier
+- [x] Backend: updateSubmission (reject) calls cancelAndRefundSubmission to cancel subscription and refund payment
+- [x] Admin Submissions tab: show "View Listing" button on approved submissions
+- [x] Admin Submissions tab: show "Edit Listing" link that jumps to admin Businesses tab for that business
+- [x] Admin Submissions tab: show tier badge (Gulf Breeze / Island Premier) on paid submissions
+- [x] SubmitListing.tsx: plan IDs corrected to free/gulf_breeze/island_premier (matching backend enum)
+- [x] SubmitListing.tsx: payment=success and payment=cancelled redirect states handled with clear messaging
+- [x] stripeWebhook.ts: createCheckoutSession supports submissionId and redirects back to /submit-listing
+- [x] stripeWebhook.ts: cancelAndRefundSubmission helper added

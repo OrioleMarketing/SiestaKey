@@ -108,6 +108,15 @@ export const listingSubmissions = mysqlTable("listing_submissions", {
   website: varchar("website", { length: 300 }),
   address: varchar("address", { length: 300 }),
   description: text("description"),
+  // Tier requested at submission time
+  tier: mysqlEnum("tier", ["free", "gulf_breeze", "island_premier"]).default("free").notNull(),
+  // Stripe identifiers (populated for paid tiers)
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 200 }),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 200 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 200 }),
+  // ID and slug of the business created on approval
+  createdBusinessId: int("createdBusinessId"),
+  createdBusinessSlug: varchar("createdBusinessSlug", { length: 150 }),
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
   ghlWebhookSent: boolean("ghlWebhookSent").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

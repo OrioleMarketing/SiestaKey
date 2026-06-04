@@ -21,6 +21,7 @@ import {
   markSubmissionWebhookSent,
   updateBusinessFlags,
   updateSubmissionStatus,
+  updateSubmissionStripeIds,
   getDb,
 } from "./db";
 import { businesses, listingSubmissions, users } from "../drizzle/schema";
@@ -31,7 +32,7 @@ import {
   ghlTriggerWorkflow,
   ghlUpsertContact,
 } from "./ghl";
-import { createCheckoutSession } from "./stripeWebhook";
+import { createCheckoutSession, cancelAndRefundSubmission } from "./stripeWebhook";
 import { storagePut } from "./storage";
 import { type PlanKey, type BillingInterval } from "./stripeProducts";
 
@@ -74,58 +75,127 @@ export const appRouter = router({
         z.object({
           id: z.number(),
           status: z.enum(["pending", "approved", "rejected"]),
+          origin: z.string().optional(), // frontend passes window.location.origin for approval email links
         })
       )
       .mutation(async ({ input }) => {
         await updateSubmissionStatus(input.id, input.status);
 
+        const db = await getDb();
+
         // When approving, auto-create a business listing from the submission data
-        if (input.status === "approved") {
-          const db = await getDb();
-          if (db) {
-            // Fetch the submission
-            const rows = await db
-              .select()
-              .from(listingSubmissions)
-              .where(eq(listingSubmissions.id, input.id))
+        if (input.status === "approved" && db) {
+          // Fetch the submission
+          const rows = await db
+            .select()
+            .from(listingSubmissions)
+            .where(eq(listingSubmissions.id, input.id))
+            .limit(1);
+          const sub = rows[0];
+
+          if (sub) {
+            // Map submission tier to business tier
+            const bizTier: "free" | "featured" | "sponsored" =
+              sub.tier === "island_premier" ? "sponsored"
+              : sub.tier === "gulf_breeze" ? "featured"
+              : "free";
+
+            // Generate a unique slug from the business name
+            const baseSlug = sub.businessName
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-|-$/g, "");
+            const existing = await db
+              .select({ slug: businesses.slug })
+              .from(businesses)
+              .where(eq(businesses.slug, baseSlug))
               .limit(1);
-            const sub = rows[0];
+            const slug = existing.length > 0 ? `${baseSlug}-${Date.now()}` : baseSlug;
 
-            if (sub) {
-              // Generate a unique slug from the business name
-              const baseSlug = sub.businessName
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/^-|-$/g, "");
-              const existing = await db
-                .select({ slug: businesses.slug })
-                .from(businesses)
-                .where(eq(businesses.slug, baseSlug))
-                .limit(1);
-              const slug = existing.length > 0 ? `${baseSlug}-${Date.now()}` : baseSlug;
+            const insertResult = await db.insert(businesses).values({
+              slug,
+              name: sub.businessName,
+              categoryId: sub.categoryId ?? 1,
+              description: sub.description ?? null,
+              shortDescription: null,
+              address: sub.address ?? null,
+              area: "Siesta Key Village",
+              phone: sub.phone ?? null,
+              website: sub.website ?? null,
+              email: sub.email ?? null,
+              isActive: true,
+              isFeatured: bizTier === "featured" || bizTier === "sponsored",
+              isSponsored: bizTier === "sponsored",
+              isClaimed: false,
+              tier: bizTier,
+            });
 
-              await db.insert(businesses).values({
-                slug,
-                name: sub.businessName,
-                categoryId: sub.categoryId ?? 1, // default to first category if not set
-                description: sub.description ?? null,
-                shortDescription: null,
-                address: sub.address ?? null,
-                area: "Siesta Key Village",
-                phone: sub.phone ?? null,
-                website: sub.website ?? null,
-                email: sub.email ?? null,
-                isActive: true,
-                isFeatured: false,
-                isSponsored: false,
-                isClaimed: false,
-                tier: "free",
-              });
+            const newBusinessId = Number((insertResult as any)[0]?.insertId ?? 0);
+
+            // Store the created business ID and slug back on the submission
+            if (newBusinessId) {
+              await updateSubmissionStripeIds(input.id, { createdBusinessId: newBusinessId, createdBusinessSlug: slug });
             }
+
+            // Trigger GHL "Listing Approved" workflow with profile URL
+            try {
+              const origin = input.origin ?? "https://shopinsiestakey.com";
+              const profileUrl = `${origin}/business/${slug}`;
+              const nameParts = sub.contactName.trim().split(" ");
+              const contactId = await ghlUpsertContact({
+                firstName: nameParts[0] ?? sub.contactName,
+                lastName: nameParts.slice(1).join(" ") || undefined,
+                email: sub.email,
+                phone: sub.phone ?? undefined,
+                companyName: sub.businessName,
+                tags: ["Listing Approved", "Siesta Key Directory"],
+                customFields: [
+                  { key: "listing_url", field_value: profileUrl },
+                ],
+              });
+              if (contactId) {
+                await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_LISTING_ADDED);
+              }
+            } catch (ghlErr) {
+              console.error("[GHL] approval workflow error:", ghlErr);
+            }
+
+            // Notify owner
+            await notifyOwner({
+              title: `Listing Approved: ${sub.businessName}`,
+              content: `Submission #${input.id} approved. Business profile created at /business/${slug}. Tier: ${bizTier}.`,
+            });
+
+            // Return the slug so the frontend can build the correct View Listing URL
+            return { success: true, slug, businessId: newBusinessId };
           }
         }
 
-        return { success: true };
+        // When rejecting, cancel Stripe subscription and issue refund if payment exists
+        if (input.status === "rejected" && db) {
+          const rows = await db
+            .select()
+            .from(listingSubmissions)
+            .where(eq(listingSubmissions.id, input.id))
+            .limit(1);
+          const sub = rows[0];
+
+          if (sub?.stripeSubscriptionId || sub?.stripePaymentIntentId) {
+            const result = await cancelAndRefundSubmission({
+              stripeSubscriptionId: sub.stripeSubscriptionId,
+              stripePaymentIntentId: sub.stripePaymentIntentId,
+            });
+            console.log(`[Stripe] Rejection refund for submission ${input.id}:`, result.message);
+
+            // Notify owner of refund outcome
+            await notifyOwner({
+              title: `Submission Rejected + Refund: ${sub.businessName}`,
+              content: `Submission #${input.id} rejected. Refund status: ${result.message}`,
+            });
+          }
+        }
+
+        return { success: true, slug: undefined as string | undefined, businessId: undefined as number | undefined };
       }),
 
     // Approve/reject a claim and trigger the appropriate GHL workflow
@@ -379,6 +449,7 @@ export const appRouter = router({
           website: z.string().url().optional().or(z.literal("")),
           address: z.string().optional(),
           description: z.string().optional(),
+          tier: z.enum(["free", "gulf_breeze", "island_premier"]).default("free"),
         })
       )
       .mutation(async ({ input }) => {
@@ -391,20 +462,28 @@ export const appRouter = router({
           const firstName = nameParts[0] ?? input.contactName;
           const lastName = nameParts.slice(1).join(" ") || undefined;
 
+          const tierTags = input.tier === "gulf_breeze"
+            ? ["Gulf Breeze Plan", "Paid Submission", "New Business Request", "Siesta Key Directory"]
+            : input.tier === "island_premier"
+            ? ["Island Premier Plan", "Paid Submission", "New Business Request", "Siesta Key Directory"]
+            : ["Free Listing", "New Business Request", "Siesta Key Directory"];
+
           const contactId = await ghlUpsertContact({
             firstName,
             lastName,
             email: input.email,
             phone: input.phone,
             companyName: input.businessName,
-            tags: ["Free Listing", "New Business Request", "Siesta Key Directory"],
+            tags: tierTags,
             source: "Shop in Siesta Key - Add Listing Form",
           });
 
           if (contactId) {
             await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_BUSINESS_REQUEST);
-            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_LISTING_ADDED);
-            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.FREE_LISTING_OUTREACH);
+            if (input.tier === "free") {
+              await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_LISTING_ADDED);
+              await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.FREE_LISTING_OUTREACH);
+            }
             await markSubmissionWebhookSent(id);
           }
         } catch (err) {
@@ -413,11 +492,37 @@ export const appRouter = router({
 
         // 3. Notify owner
         await notifyOwner({
-          title: `New Listing Submission: ${input.businessName}`,
-          content: `${input.contactName} (${input.email}) submitted a new listing for "${input.businessName}". ${input.address ? `Address: ${input.address}.` : ""} ${input.website ? `Website: ${input.website}.` : ""}`,
+          title: `New Listing Submission (${input.tier}): ${input.businessName}`,
+          content: `${input.contactName} (${input.email}) submitted a new listing for "${input.businessName}" on the ${input.tier} plan. ${input.address ? `Address: ${input.address}.` : ""} ${input.website ? `Website: ${input.website}.` : ""}`,
         });
 
         return { success: true, id };
+      }),
+
+    // Create a Stripe Checkout session for a paid submission (called right after submit)
+    createCheckout: publicProcedure
+      .input(
+        z.object({
+          submissionId: z.number().int().positive(),
+          tier: z.enum(["gulf_breeze", "island_premier"]),
+          interval: z.enum(["monthly", "yearly"]).default("monthly"),
+          contactName: z.string(),
+          email: z.string().email(),
+          origin: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { submissionId, tier, interval, contactName, email, origin } = input;
+        const url = await createCheckoutSession({
+          planKey: tier as PlanKey,
+          interval: interval as BillingInterval,
+          userId: 0,
+          userEmail: email,
+          userName: contactName,
+          origin,
+          submissionId,
+        });
+        return { url };
       }),
   }),
 

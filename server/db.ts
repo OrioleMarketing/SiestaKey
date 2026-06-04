@@ -226,6 +226,7 @@ export async function createListingSubmission(data: {
   website?: string;
   address?: string;
   description?: string;
+  tier?: "free" | "gulf_breeze" | "island_premier";
 }): Promise<number> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -238,10 +239,26 @@ export async function createListingSubmission(data: {
     website: data.website ?? null,
     address: data.address ?? null,
     description: data.description ?? null,
+    tier: data.tier ?? "free",
     status: "pending",
     ghlWebhookSent: false,
   });
   return Number((result as any)[0]?.insertId ?? 0);
+}
+
+export async function updateSubmissionStripeIds(
+  id: number,
+  data: {
+    stripeCheckoutSessionId?: string | null;
+    stripePaymentIntentId?: string | null;
+    stripeSubscriptionId?: string | null;
+    createdBusinessId?: number | null;
+    createdBusinessSlug?: string | null;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(listingSubmissions).set(data).where(eq(listingSubmissions.id, id));
 }
 
 export async function markSubmissionWebhookSent(id: number): Promise<void> {

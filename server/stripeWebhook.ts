@@ -10,14 +10,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   apiVersion: "2026-05-27.dahlia",
 });
 
-// ── Helper: get or create a Stripe price for a plan ──────────────────────────
+// Helper: get or create a Stripe price for a plan
 async function getOrCreatePrice(planKey: PlanKey, interval: BillingInterval): Promise<string> {
   const plan = PLANS[planKey];
   const amount = interval === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
   const stripeInterval = interval === "monthly" ? "month" : "year";
   const nickname = `${plan.name} ${interval === "monthly" ? "Monthly" : "Annual"}`;
 
-  // Search for existing price
   const prices = await stripe.prices.list({
     active: true,
     type: "recurring",
@@ -33,7 +32,6 @@ async function getOrCreatePrice(planKey: PlanKey, interval: BillingInterval): Pr
 
   if (existing) return existing.id;
 
-  // Create product + price
   const product = await stripe.products.create({
     name: `${plan.name} - Shop in Siesta Key`,
     description: plan.description,
@@ -52,7 +50,7 @@ async function getOrCreatePrice(planKey: PlanKey, interval: BillingInterval): Pr
   return price.id;
 }
 
-// ── Create a Checkout Session ─────────────────────────────────────────────────
+// Create a Checkout Session
 export async function createCheckoutSession(opts: {
   planKey: PlanKey;
   interval: BillingInterval;
@@ -60,9 +58,18 @@ export async function createCheckoutSession(opts: {
   userEmail: string;
   userName: string;
   origin: string;
+  submissionId?: number; // optional: links checkout to a listing submission
 }): Promise<string> {
-  const { planKey, interval, userId, userEmail, userName, origin } = opts;
+  const { planKey, interval, userId, userEmail, userName, origin, submissionId } = opts;
   const priceId = await getOrCreatePrice(planKey, interval);
+
+  // Determine redirect URLs based on whether this is a submission checkout
+  const successPath = submissionId
+    ? `/submit-listing?payment=success&plan=${planKey}&sid=${submissionId}`
+    : `/pricing?success=1&plan=${planKey}`;
+  const cancelPath = submissionId
+    ? `/submit-listing?payment=cancelled`
+    : `/pricing?cancelled=1`;
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -70,28 +77,66 @@ export async function createCheckoutSession(opts: {
     line_items: [{ price: priceId, quantity: 1 }],
     customer_email: userEmail,
     allow_promotion_codes: true,
-    client_reference_id: userId.toString(),
+    client_reference_id: userId ? userId.toString() : undefined,
     metadata: {
-      user_id: userId.toString(),
+      user_id: userId ? userId.toString() : "",
       customer_email: userEmail,
       customer_name: userName,
       plan_key: planKey,
       billing_interval: interval,
+      ...(submissionId ? { submission_id: submissionId.toString() } : {}),
     },
-    success_url: `${origin}/pricing?success=1&plan=${planKey}`,
-    cancel_url: `${origin}/pricing?cancelled=1`,
+    success_url: `${origin}${successPath}`,
+    cancel_url: `${origin}${cancelPath}`,
   });
 
   return session.url ?? "";
 }
 
-// ── Register Stripe webhook route ─────────────────────────────────────────────
+// Cancel a subscription and refund the last payment (used on submission rejection)
+export async function cancelAndRefundSubmission(opts: {
+  stripeSubscriptionId?: string | null;
+  stripePaymentIntentId?: string | null;
+}): Promise<{ refunded: boolean; message: string }> {
+  const { stripeSubscriptionId, stripePaymentIntentId } = opts;
+  if (!stripeSubscriptionId && !stripePaymentIntentId) {
+    return { refunded: false, message: "No Stripe identifiers found" };
+  }
+  try {
+    let paymentIntentId = stripePaymentIntentId;
+    // Retrieve payment intent from the subscription's latest invoice before cancelling
+    if (!paymentIntentId && stripeSubscriptionId) {
+      const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+        expand: ["latest_invoice"],
+      });
+      const invoice = (sub.latest_invoice as any) ?? null;
+      paymentIntentId =
+        typeof invoice?.payment_intent === "string"
+          ? invoice.payment_intent
+          : (invoice?.payment_intent as Stripe.PaymentIntent | null)?.id ?? null;
+    }
+    // Cancel the subscription immediately
+    if (stripeSubscriptionId) {
+      await stripe.subscriptions.cancel(stripeSubscriptionId);
+    }
+    // Refund the payment
+    if (paymentIntentId) {
+      await stripe.refunds.create({ payment_intent: paymentIntentId });
+      return { refunded: true, message: "Subscription cancelled and payment refunded" };
+    }
+    return { refunded: false, message: "Subscription cancelled but no payment found to refund" };
+  } catch (err: any) {
+    console.error("[Stripe] cancelAndRefundSubmission error:", err);
+    return { refunded: false, message: err?.message ?? "Refund failed" };
+  }
+}
+
+// Register Stripe webhook route
 export function registerStripeWebhook(app: Express) {
   app.post(
     "/api/stripe/webhook",
     // raw body required for signature verification — registered BEFORE express.json()
     (req: Request, res: Response, next) => {
-      // If already parsed (Buffer), skip; otherwise read raw
       if (Buffer.isBuffer(req.body)) return next();
       let data = "";
       req.setEncoding("utf8");
@@ -131,21 +176,40 @@ export function registerStripeWebhook(app: Express) {
           const planKey = (session.metadata?.plan_key ?? "gulf_breeze") as PlanKey;
           const customerEmail = session.metadata?.customer_email ?? "";
           const customerName = session.metadata?.customer_name ?? "";
-          const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? "";
-          const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? "";
+          const customerId =
+            typeof session.customer === "string" ? session.customer : session.customer?.id ?? "";
+          const subscriptionId =
+            typeof session.subscription === "string"
+              ? session.subscription
+              : session.subscription?.id ?? "";
+          const submissionId = session.metadata?.submission_id
+            ? parseInt(session.metadata.submission_id)
+            : null;
+
+          // If this checkout is linked to a listing submission, store the subscription ID
+          if (submissionId) {
+            const { listingSubmissions } = await import("../drizzle/schema");
+            const db = await getDb();
+            if (db) {
+              await db
+                .update(listingSubmissions)
+                .set({ stripeSubscriptionId: subscriptionId })
+                .where(eq(listingSubmissions.id, submissionId));
+            }
+          }
 
           if (userId) {
-          // Update user record
-          const db1 = await getDb();
-          await db1!
-            .update(users)
-            .set({
-              stripeCustomerId: customerId,
-              stripeSubscriptionId: subscriptionId,
-              subscriptionPlan: planKey,
-              subscriptionStatus: "active",
-            })
-            .where(eq(users.id, userId));
+            // Update user record for existing-user upgrades
+            const db1 = await getDb();
+            await db1!
+              .update(users)
+              .set({
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscriptionId,
+                subscriptionPlan: planKey,
+                subscriptionStatus: "active",
+              })
+              .where(eq(users.id, userId));
           }
 
           // Trigger GHL workflows
@@ -174,9 +238,9 @@ export function registerStripeWebhook(app: Express) {
 
         if (event.type === "customer.subscription.deleted") {
           const sub = event.data.object as Stripe.Subscription;
-          const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+          const customerId =
+            typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
-          // Find user by stripeCustomerId and reset plan
           const db2 = await getDb();
           const [user] = await db2!
             .select()

@@ -63,6 +63,23 @@ export async function ghlCreateContact(input: GHLContactInput): Promise<{ id: st
 }
 
 /**
+ * Update an existing GHL contact by ID.
+ */
+export async function ghlUpdateContact(
+  contactId: string,
+  input: Partial<GHLContactInput>
+): Promise<void> {
+  const res = await fetch(`${GHL_BASE}/contacts/${contactId}`, {
+    method: "PUT",
+    headers: ghlHeaders(),
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    console.error("[GHL] updateContact failed:", res.status, await res.text());
+  }
+}
+
+/**
  * Upsert a contact: find by email, update if found, create if not.
  * Returns the contact id.
  */
@@ -73,6 +90,14 @@ export async function ghlUpsertContact(input: GHLContactInput): Promise<string |
       // Update tags on existing contact
       if (input.tags?.length) {
         await ghlAddTags(existing.id, input.tags);
+      }
+      // Update custom fields and other fields on existing contact
+      const updatePayload: Partial<GHLContactInput> = {};
+      if (input.customFields?.length) updatePayload.customFields = input.customFields;
+      if (input.companyName) updatePayload.companyName = input.companyName;
+      if (input.phone) updatePayload.phone = input.phone;
+      if (Object.keys(updatePayload).length > 0) {
+        await ghlUpdateContact(existing.id, updatePayload);
       }
       return existing.id;
     }

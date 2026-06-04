@@ -28,7 +28,7 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import PageHero from "@/components/PageHero";
 
@@ -494,10 +494,9 @@ function SubmissionsTab() {
     onSuccess: (_data, variables) => {
       if (variables.status === "approved") {
         toast.success("Submission approved — business listing created and added to the directory!");
-        // Invalidate the businesses list so it reflects the new listing immediately
         utils.admin.listBusinesses.invalidate();
       } else if (variables.status === "rejected") {
-        toast.success("Submission rejected.");
+        toast.success("Submission rejected. Stripe refund initiated if payment was collected.");
       } else {
         toast.success("Status updated.");
       }
@@ -505,6 +504,12 @@ function SubmissionsTab() {
     },
     onError: () => toast.error("Update failed"),
   });
+
+  const TIER_LABELS: Record<string, string> = {
+    free: "Free",
+    gulf_breeze: "Gulf Breeze",
+    island_premier: "Island Premier",
+  };
 
   if (isLoading) {
     return (
@@ -526,6 +531,11 @@ function SubmissionsTab() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-foreground">{s.businessName}</span>
                   <StatusBadge status={s.status} />
+                  {s.tier && s.tier !== "free" && (
+                    <Badge variant="outline" className="text-xs border-ocean/30 text-ocean">
+                      {TIER_LABELS[s.tier] ?? s.tier}
+                    </Badge>
+                  )}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
                   <div>
@@ -555,18 +565,39 @@ function SubmissionsTab() {
                       {s.description}
                     </div>
                   )}
-                  <div className="text-xs text-muted-foreground/70 mt-1">
-                    Submitted {new Date(s.createdAt).toLocaleDateString()}
+                  <div className="text-xs text-muted-foreground/70 mt-1 flex items-center gap-3 flex-wrap">
+                    <span>Submitted {new Date(s.createdAt).toLocaleDateString()}</span>
+                    {s.status === "approved" && s.createdBusinessId && (
+                      <a
+                        href={`/admin#businesses-${s.createdBusinessId}`}
+                        className="inline-flex items-center gap-1 text-ocean hover:underline font-medium"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Edit Listing
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
+              <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                {s.status === "approved" && s.createdBusinessSlug && (
+                  <a
+                    href={`/business/${s.createdBusinessSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button size="sm" variant="outline" className="h-8 text-xs gap-1">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      View Listing
+                    </Button>
+                  </a>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
                   className="text-green-700 border-green-200 hover:bg-green-50 h-8 text-xs"
                   disabled={s.status === "approved" || updateStatus.isPending}
-                  onClick={() => updateStatus.mutate({ id: s.id, status: "approved" })}
+                  onClick={() => updateStatus.mutate({ id: s.id, status: "approved", origin: window.location.origin })}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                   Approve
@@ -576,7 +607,7 @@ function SubmissionsTab() {
                   variant="outline"
                   className="text-red-700 border-red-200 hover:bg-red-50 h-8 text-xs"
                   disabled={s.status === "rejected" || updateStatus.isPending}
-                  onClick={() => updateStatus.mutate({ id: s.id, status: "rejected" })}
+                  onClick={() => updateStatus.mutate({ id: s.id, status: "rejected", origin: window.location.origin })}
                 >
                   <XCircle className="w-3.5 h-3.5 mr-1" />
                   Reject
@@ -692,6 +723,19 @@ export default function Admin() {
     enabled: user?.role === "admin",
   });
 
+  // Hash-based tab switching: #businesses-{id} switches to Businesses tab
+  const [activeTab, setActiveTab] = useState<string>("businesses");
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith("#businesses")) {
+      setActiveTab("businesses");
+    } else if (hash.startsWith("#submissions")) {
+      setActiveTab("submissions");
+    } else if (hash.startsWith("#claims")) {
+      setActiveTab("claims");
+    }
+  }, []);
+
   // Loading
   if (loading) {
     return (
@@ -791,7 +835,7 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="businesses">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6 bg-white border border-border shadow-sm rounded-xl p-1 h-auto gap-1">
             <TabsTrigger
               value="businesses"
