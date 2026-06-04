@@ -516,11 +516,17 @@ function SubmissionsTab() {
     onError: (err) => toast.error(`Resend failed: ${err.message}`),
   });
 
+  const [showResolved, setShowResolved] = useState(false);
+
   const TIER_LABELS: Record<string, string> = {
     free: "Free",
     gulf_breeze: "Gulf Breeze",
     island_premier: "Island Premier",
   };
+
+  const pendingSubmissions = submissions?.filter((s) => s.status === "pending") ?? [];
+  const resolvedSubmissions = submissions?.filter((s) => s.status !== "pending") ?? [];
+  const visibleSubmissions = showResolved ? (submissions ?? []) : pendingSubmissions;
 
   if (isLoading) {
     return (
@@ -534,7 +540,30 @@ function SubmissionsTab() {
 
   return (
     <div className="space-y-3">
-      {submissions?.map((s) => (
+      {/* Filter toolbar */}
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-sm text-muted-foreground">
+          {pendingSubmissions.length} pending
+          {resolvedSubmissions.length > 0 && (
+            <span className="ml-2 text-muted-foreground/60">
+              · {resolvedSubmissions.length} resolved
+            </span>
+          )}
+        </p>
+        {resolvedSubmissions.length > 0 && (
+          <button
+            onClick={() => setShowResolved((v) => !v)}
+            className="text-xs text-ocean hover:underline"
+          >
+            {showResolved ? "Hide resolved" : `Show resolved (${resolvedSubmissions.length})`}
+          </button>
+        )}
+      </div>
+
+      {visibleSubmissions.length === 0 && pendingSubmissions.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">No submissions yet.</div>
+      )}
+      {visibleSubmissions.length === 0 && pendingSubmissions.length === 0 ? null : visibleSubmissions.map((s) => (
         <Card key={s.id} className="card-coastal">
           <CardContent className="pt-4 pb-4">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -646,8 +675,13 @@ function SubmissionsTab() {
           </CardContent>
         </Card>
       ))}
-      {submissions?.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">No submissions yet.</div>
+      {visibleSubmissions.length === 0 && pendingSubmissions.length > 0 && (
+        <div className="text-center py-10 text-muted-foreground text-sm">
+          All caught up — no pending submissions.
+          <button onClick={() => setShowResolved(true)} className="ml-2 text-ocean hover:underline">
+            View resolved ({resolvedSubmissions.length})
+          </button>
+        </div>
       )}
     </div>
   );
