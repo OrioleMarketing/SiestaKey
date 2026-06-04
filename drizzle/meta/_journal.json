@@ -1,5 +1,20 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1780592497819,
+      "tag": "0000_typical_mulholland_black",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1780592742404,
+      "tag": "0001_volatile_shard",
+      "breakpoints": true
+    }
+  ]
 }

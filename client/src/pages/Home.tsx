@@ -1,31 +1,361 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { useState, useCallback } from "react";
+import { useLocation } from "wouter";
+import { Search, MapPin, Star, ArrowRight, Waves, UtensilsCrossed, ShoppingBag, Sailboat, Music, Heart, Bed, Home as HomeIcon, Wrench, Crown, Sparkles } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import BusinessCard from "@/components/BusinessCard";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  dining: <UtensilsCrossed className="w-6 h-6" />,
+  shopping: <ShoppingBag className="w-6 h-6" />,
+  activities: <Waves className="w-6 h-6" />,
+  services: <Wrench className="w-6 h-6" />,
+  nightlife: <Music className="w-6 h-6" />,
+  wellness: <Heart className="w-6 h-6" />,
+  accommodations: <Bed className="w-6 h-6" />,
+  "real-estate": <HomeIcon className="w-6 h-6" />,
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  dining: "from-orange-400 to-red-400",
+  shopping: "from-pink-400 to-rose-400",
+  activities: "from-cyan-400 to-blue-500",
+  services: "from-slate-400 to-slate-600",
+  nightlife: "from-purple-400 to-indigo-500",
+  wellness: "from-green-400 to-emerald-500",
+  accommodations: "from-amber-400 to-orange-400",
+  "real-estate": "from-teal-400 to-cyan-500",
+};
+
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const [keyword, setKeyword] = useState("");
+  const [, navigate] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const { data: categories } = trpc.categories.list.useQuery();
+  const { data: featured } = trpc.businesses.featured.useQuery();
+
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (keyword.trim()) {
+        navigate(`/directory?q=${encodeURIComponent(keyword.trim())}`);
+      } else {
+        navigate("/directory");
+      }
+    },
+    [keyword, navigate]
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+      <Navbar />
+
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <section
+        className="relative min-h-[92vh] flex items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: `url(/manus-storage/siesta-key-hero_9fab06e2.jpg)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 30%",
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-hero-gradient" />
+
+        {/* Floating particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white/5"
+              style={{
+                width: `${60 + i * 40}px`,
+                height: `${60 + i * 40}px`,
+                top: `${10 + i * 12}%`,
+                left: `${5 + i * 15}%`,
+                animation: `fadeIn ${2 + i * 0.5}s ease both`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 container text-center text-white">
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6">
+              <MapPin className="w-3.5 h-3.5" />
+              Siesta Key, Florida — America's #1 Beach
+            </div>
+          </div>
+
+          <h1
+            className="font-serif text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in-up"
+            style={{ animationDelay: "0.2s" }}
+          >
+            Discover the Best of
+            <br />
+            <span className="italic text-[var(--color-seafoam)]">Siesta Key</span>
+          </h1>
+
+          <p
+            className="text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up"
+            style={{ animationDelay: "0.3s" }}
+          >
+            Your premier guide to dining, shopping, activities, and services on Florida's most beautiful island.
+          </p>
+
+          {/* Search bar */}
+          <form
+            onSubmit={handleSearch}
+            className="max-w-2xl mx-auto animate-fade-in-up"
+            style={{ animationDelay: "0.4s" }}
+          >
+            <div className="flex gap-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+              <div className="flex-1 flex items-center gap-3 bg-white rounded-xl px-4 py-3">
+                <Search className="w-5 h-5 text-[var(--color-muted-foreground)] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search restaurants, shops, activities…"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-[var(--color-charcoal)] placeholder:text-[var(--color-muted-foreground)] text-sm"
+                />
+              </div>
+              <button type="submit" className="btn-ocean px-6 py-3 rounded-xl text-sm shrink-0">
+                Search
+              </button>
+            </div>
+          </form>
+
+          {/* Quick stats */}
+          <div
+            className="flex flex-wrap justify-center gap-6 mt-10 animate-fade-in-up"
+            style={{ animationDelay: "0.5s" }}
+          >
+            {[
+              { value: "200+", label: "Local Businesses" },
+              { value: "8", label: "Categories" },
+              { value: "3", label: "Distinct Areas" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-2xl font-serif font-bold">{stat.value}</div>
+                <div className="text-xs text-white/60 uppercase tracking-wider">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom wave */}
+        <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-none" style={{ marginBottom: "-2px" }}>
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" style={{ display: "block" }}>
+            <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="var(--color-white-sand)" />
+          </svg>
+        </div>
+      </section>
+
+      {/* ── Categories ───────────────────────────────────────────────────────── */}
+      <section className="py-16 bg-[var(--color-white-sand)]">
+        <div className="container">
+          <div className="text-center mb-10">
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)] mb-3">
+              Explore by Category
+            </h2>
+            <p className="text-[var(--color-muted-foreground)] max-w-xl mx-auto">
+              From waterfront dining to water sports, discover everything Siesta Key has to offer.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {(categories ?? []).map((cat, i) => (
+              <a
+                key={cat.id}
+                href={`/directory/${cat.slug}`}
+                className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-white border border-[var(--color-border)] hover:border-[var(--color-ocean-light)] hover:shadow-lg transition-all duration-200 cursor-pointer animate-fade-in-up"
+                style={{ animationDelay: `${i * 0.05}s` }}
+              >
+                <div
+                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${CATEGORY_COLORS[cat.slug] ?? "from-blue-400 to-cyan-500"} flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform duration-200`}
+                >
+                  {CATEGORY_ICONS[cat.slug] ?? <Star className="w-6 h-6" />}
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-sm text-[var(--color-charcoal)] group-hover:text-[var(--color-ocean)] transition-colors">
+                    {cat.name}
+                  </div>
+                  {cat.description && (
+                    <div className="text-[11px] text-[var(--color-muted-foreground)] mt-0.5 line-clamp-1">
+                      {cat.description}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Featured Businesses ───────────────────────────────────────────────── */}
+      <section className="py-16 bg-white">
+        <div className="container">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="w-5 h-5 text-[var(--color-gold)]" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-gold)]">
+                  Featured & Sponsored
+                </span>
+              </div>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)]">
+                Top Siesta Key Businesses
+              </h2>
+            </div>
+            <a
+              href="/directory"
+              className="hidden md:flex items-center gap-2 text-sm font-semibold text-[var(--color-ocean)] hover:text-[var(--color-ocean-deep)] transition-colors"
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          {!featured ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="rounded-2xl overflow-hidden">
+                  <div className="skeleton h-2 w-full" />
+                  <div className="p-5 space-y-3">
+                    <div className="skeleton h-5 w-3/4" />
+                    <div className="skeleton h-4 w-full" />
+                    <div className="skeleton h-4 w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featured.map((biz, i) => (
+                <div
+                  key={biz.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.07}s` }}
+                >
+                  <BusinessCard business={biz} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8 md:hidden">
+            <a href="/directory" className="btn-ocean">
+              View All Businesses <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Premium Banner ────────────────────────────────────────────────────── */}
+      <section className="py-16 bg-[var(--color-white-sand)]">
+        <div className="container">
+          <div className="premium-banner">
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-5 h-5 text-[var(--color-gold)]" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                    Premium Listing
+                  </span>
+                </div>
+                <h3 className="font-serif text-2xl md:text-3xl font-bold mb-2">
+                  Get Your Business Featured
+                </h3>
+                <p className="text-white/75 max-w-lg text-sm leading-relaxed">
+                  Stand out from the crowd with a premium listing. Get featured at the top of search results, a highlighted profile, and direct GoHighLevel automation to capture more leads.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                <a href="/claim" className="btn-coral px-6 py-3">
+                  Claim Your Business
+                </a>
+                <a href="/submit-listing" className="btn-outline-ocean px-6 py-3 border-white/40 text-white hover:bg-white/10">
+                  Submit New Listing
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why Siesta Key ────────────────────────────────────────────────────── */}
+      <section className="py-16 bg-white">
+        <div className="container">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-ocean-pale)] text-[var(--color-ocean)] text-xs font-semibold uppercase tracking-wider mb-4">
+                <Waves className="w-3.5 h-3.5" /> America's #1 Beach
+              </div>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)] mb-4">
+                The Perfect Island Destination
+              </h2>
+              <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-6">
+                Siesta Key is home to the world's finest, whitest quartz sand beaches and a vibrant community of locally owned businesses. Whether you're a visitor looking for the best dining and activities, or a local seeking trusted services, our directory connects you to the heart of island life.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: "🏖️", label: "#1 Beach in the US", sub: "TripAdvisor 2023" },
+                  { icon: "🌊", label: "Crystal Clear Waters", sub: "Gulf of Mexico" },
+                  { icon: "🍽️", label: "World-Class Dining", sub: "Fresh local seafood" },
+                  { icon: "🛍️", label: "Unique Boutiques", sub: "One-of-a-kind shops" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-white-sand)]">
+                    <span className="text-2xl">{item.icon}</span>
+                    <div>
+                      <div className="font-semibold text-sm text-[var(--color-charcoal)]">{item.label}</div>
+                      <div className="text-xs text-[var(--color-muted-foreground)]">{item.sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <img
+                src="/manus-storage/siesta-key-beach_bf6ee230.jpg"
+                alt="Siesta Key Beach"
+                className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
+              />
+              <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-lg p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-ocean-gradient flex items-center justify-center">
+                  <Star className="w-5 h-5 text-white fill-white" />
+                </div>
+                <div>
+                  <div className="font-serif font-bold text-sm">Voted #1 Beach</div>
+                  <div className="text-xs text-[var(--color-muted-foreground)]">by TripAdvisor</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Strip ─────────────────────────────────────────────────────────── */}
+      <section className="py-12 bg-ocean-gradient text-white">
+        <div className="container text-center">
+          <h3 className="font-serif text-2xl md:text-3xl font-bold mb-3">
+            Own a Business on Siesta Key?
+          </h3>
+          <p className="text-white/75 mb-6 max-w-xl mx-auto">
+            Join hundreds of local businesses already listed in the directory. Claim your free listing or upgrade to a featured placement today.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="/claim" className="btn-coral px-8 py-3">
+              Claim Your Business
+            </a>
+            <a href="/submit-listing" className="inline-flex items-center gap-2 px-8 py-3 rounded-lg border border-white/40 text-white font-semibold text-sm hover:bg-white/10 transition-colors">
+              Add New Listing
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }
