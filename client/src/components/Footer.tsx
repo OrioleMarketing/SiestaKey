@@ -19,7 +19,7 @@ export default function Footer() {
               <img
                 src="/manus-storage/Shop-Transparent_ae2924c4.webp"
                 alt="Shop in Siesta Key"
-                className="h-14 w-auto object-contain brightness-0 invert"
+                className="h-14 w-auto object-contain"
               />
             </div>
             <p className="text-sm text-white/70 leading-relaxed">
