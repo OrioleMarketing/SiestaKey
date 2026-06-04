@@ -17,9 +17,9 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="mb-4">
               <img
-                src="/manus-storage/Shopfooterlogo_5bc6bc84.png"
+                src="/manus-storage/Shop-Transparent_ae2924c4.webp"
                 alt="Shop in Siesta Key"
-                className="h-14 w-auto object-contain"
+                className="h-14 w-auto object-contain brightness-0 invert"
               />
             </div>
             <p className="text-sm text-white/70 leading-relaxed">

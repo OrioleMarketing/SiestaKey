@@ -37,11 +37,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <img
-              src="/manus-storage/ShopinSiestaKeyLogo_1f645988.png"
+              src="/manus-storage/Shop-Transparent_ae2924c4.webp"
               alt="Shop in Siesta Key"
-              className={`h-10 md:h-12 w-auto object-contain transition-all duration-300 ${
-                transparent ? "brightness-0 invert" : ""
-              }`}
+              className="h-10 md:h-12 w-auto object-contain transition-all duration-300"
             />
           </Link>
 
