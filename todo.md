@@ -77,3 +77,18 @@
 - [x] Feature comparison rows with checkmarks/X marks like Hawaii Thrive
 - [x] Add /pricing route to App.tsx
 - [x] Add Pricing link to footer
+
+## Enhancement Round 9 — GHL + Stripe Integration
+- [x] Store GHL API key as environment secret (GHL_API_KEY)
+- [x] Build server/ghl.ts helper: upsertContact, addTags, triggerWorkflow
+- [x] Wire Claim Business form → GHL New Claim Request workflow
+- [x] Wire Submit Listing form → GHL New Business Request workflow
+- [x] Wire Contact form → GHL Contact Form Submitted workflow
+- [x] Wire new user registration → GHL New User Created workflow
+- [x] Install Stripe npm package
+- [x] Create server/stripeProducts.ts with Gulf Breeze and Island Premier plan configs
+- [x] Create server/stripeWebhook.ts: checkout session creator + webhook handler
+- [x] Register Stripe webhook route before express.json() in server/_core/index.ts
+- [x] Add stripe.createCheckout and stripe.subscriptionStatus tRPC procedures to routers.ts
+- [x] Wire Pricing page CTA buttons to Stripe checkout (auth-aware, loading state)
+- [x] Add Login button to Navbar (shows user first name + Sign Out dropdown when logged in)

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn, User } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +16,8 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { href: "/directory/dining", label: "Dining" },
@@ -91,6 +95,41 @@ export default function Navbar() {
             >
               Add Listing
             </Link>
+            {/* Login / User */}
+            {user ? (
+              <div className="relative group">
+                <button
+                  className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-lg transition-all duration-150 ${
+                    transparent
+                      ? "text-white hover:bg-white/15"
+                      : "text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  <span className="max-w-[100px] truncate">{user.name?.split(" ")[0]}</span>
+                </button>
+                <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-[var(--color-border)] py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                  <button
+                    onClick={() => logout()}
+                    className="w-full text-left px-4 py-2.5 text-sm text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <a
+                href={getLoginUrl()}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-lg border transition-all duration-150 whitespace-nowrap ${
+                  transparent
+                    ? "border-white/40 text-white hover:bg-white/15"
+                    : "border-[var(--color-border)] text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+                }`}
+              >
+                <LogIn className="w-4 h-4" />
+                Login
+              </a>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -142,6 +181,23 @@ export default function Navbar() {
               >
                 Add Listing
               </Link>
+              {user ? (
+                <button
+                  onClick={() => { logout(); setMobileOpen(false); }}
+                  className="border border-[var(--color-border)] text-[var(--color-foreground)] text-sm text-center py-2.5 rounded-lg font-semibold hover:bg-[var(--color-muted)] transition-colors"
+                >
+                  Sign Out ({user.name?.split(" ")[0]})
+                </button>
+              ) : (
+                <a
+                  href={getLoginUrl()}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 border border-[var(--color-border)] text-[var(--color-foreground)] text-sm py-2.5 rounded-lg font-semibold hover:bg-[var(--color-muted)] transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </a>
+              )}
             </div>
           </div>
         </div>

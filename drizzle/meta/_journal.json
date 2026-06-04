@@ -15,6 +15,13 @@
       "when": 1780592742404,
       "tag": "0001_volatile_shard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1780603233189,
+      "tag": "0002_smooth_starhawk",
+      "breakpoints": true
     }
   ]
 }

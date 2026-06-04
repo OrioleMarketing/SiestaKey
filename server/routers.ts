@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createClaimLead,
   createListingSubmission,
@@ -20,30 +20,20 @@ import {
   updateBusinessFlags,
   updateSubmissionStatus,
 } from "./db";
-import { ENV } from "./_core/env";
-
-// ─── GoHighLevel Webhook Helper ────────────────────────────────────────────────
-async function sendGHLWebhook(webhookUrl: string, payload: Record<string, unknown>) {
-  if (!webhookUrl) return false;
-  try {
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    return res.ok;
-  } catch (err) {
-    console.error("[GHL Webhook] Failed to send:", err);
-    return false;
-  }
-}
+import {
+  GHL_WORKFLOWS,
+  ghlAddTags,
+  ghlTriggerWorkflow,
+  ghlUpsertContact,
+} from "./ghl";
+import { createCheckoutSession } from "./stripeWebhook";
+import { type PlanKey, type BillingInterval } from "./stripeProducts";
 
 export const appRouter = router({
   system: systemRouter,
 
   // ─── Admin Panel ─────────────────────────────────────────────────────────────
   admin: router({
-    // Listings
     listBusinesses: adminProcedure.query(async () => {
       return getAllBusinessesAdmin();
     }),
@@ -65,12 +55,10 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Claim Leads
     listClaims: adminProcedure.query(async () => {
       return getAllClaimLeads();
     }),
 
-    // Listing Submissions
     listSubmissions: adminProcedure.query(async () => {
       return getAllSubmissions();
     }),
@@ -87,7 +75,27 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Stats overview
+    // Approve/reject a claim and trigger the appropriate GHL workflow
+    approveClaim: adminProcedure
+      .input(z.object({ claimId: z.number(), contactId: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        if (input.contactId) {
+          await ghlAddTags(input.contactId, ["Claim Approved"]);
+          await ghlTriggerWorkflow(input.contactId, GHL_WORKFLOWS.CLAIM_REQUEST_APPROVED);
+        }
+        return { success: true };
+      }),
+
+    rejectClaim: adminProcedure
+      .input(z.object({ claimId: z.number(), contactId: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        if (input.contactId) {
+          await ghlAddTags(input.contactId, ["Claim Rejected"]);
+          await ghlTriggerWorkflow(input.contactId, GHL_WORKFLOWS.CLAIM_REQUEST_REJECTED);
+        }
+        return { success: true };
+      }),
+
     stats: adminProcedure.query(async () => {
       const [businesses, claims, submissions] = await Promise.all([
         getAllBusinessesAdmin(),
@@ -175,20 +183,28 @@ export const appRouter = router({
         // 1. Save to DB
         const id = await createClaimLead(input);
 
-        // 2. Send GHL webhook
-        const webhookUrl = process.env.GHL_CLAIM_WEBHOOK_URL ?? "";
-        if (webhookUrl) {
-          const sent = await sendGHLWebhook(webhookUrl, {
-            type: "claim_lead",
-            id,
-            businessName: input.businessName,
-            contactName: input.contactName,
+        // 2. Create/update GHL contact and trigger workflow
+        try {
+          const nameParts = input.contactName.trim().split(" ");
+          const firstName = nameParts[0] ?? input.contactName;
+          const lastName = nameParts.slice(1).join(" ") || undefined;
+
+          const contactId = await ghlUpsertContact({
+            firstName,
+            lastName,
             email: input.email,
-            phone: input.phone ?? "",
-            message: input.message ?? "",
-            submittedAt: new Date().toISOString(),
+            phone: input.phone,
+            companyName: input.businessName,
+            tags: ["Claim Request", "Siesta Key Directory"],
+            source: "Shop in Siesta Key - Claim Form",
           });
-          if (sent) await markClaimLeadWebhookSent(id);
+
+          if (contactId) {
+            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_CLAIM_REQUEST);
+            await markClaimLeadWebhookSent(id);
+          }
+        } catch (err) {
+          console.error("[GHL] claim submit error:", err);
         }
 
         // 3. Notify owner
@@ -220,23 +236,30 @@ export const appRouter = router({
         // 1. Save to DB
         const id = await createListingSubmission(input);
 
-        // 2. Send GHL webhook
-        const webhookUrl = process.env.GHL_SUBMISSION_WEBHOOK_URL ?? "";
-        if (webhookUrl) {
-          const sent = await sendGHLWebhook(webhookUrl, {
-            type: "listing_submission",
-            id,
-            businessName: input.businessName,
-            categoryId: input.categoryId,
-            contactName: input.contactName,
+        // 2. Create/update GHL contact and trigger workflows
+        try {
+          const nameParts = input.contactName.trim().split(" ");
+          const firstName = nameParts[0] ?? input.contactName;
+          const lastName = nameParts.slice(1).join(" ") || undefined;
+
+          const contactId = await ghlUpsertContact({
+            firstName,
+            lastName,
             email: input.email,
-            phone: input.phone ?? "",
-            website: input.website ?? "",
-            address: input.address ?? "",
-            description: input.description ?? "",
-            submittedAt: new Date().toISOString(),
+            phone: input.phone,
+            companyName: input.businessName,
+            tags: ["Free Listing", "New Business Request", "Siesta Key Directory"],
+            source: "Shop in Siesta Key - Add Listing Form",
           });
-          if (sent) await markSubmissionWebhookSent(id);
+
+          if (contactId) {
+            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_BUSINESS_REQUEST);
+            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_LISTING_ADDED);
+            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.FREE_LISTING_OUTREACH);
+            await markSubmissionWebhookSent(id);
+          }
+        } catch (err) {
+          console.error("[GHL] submission submit error:", err);
         }
 
         // 3. Notify owner
@@ -247,6 +270,108 @@ export const appRouter = router({
 
         return { success: true, id };
       }),
+  }),
+
+  // ─── Contact Form ────────────────────────────────────────────────────────────
+  contact: router({
+    submit: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).max(200),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          subject: z.string().optional(),
+          message: z.string().min(1).max(2000),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Create/update GHL contact and trigger workflow
+        try {
+          const nameParts = input.name.trim().split(" ");
+          const firstName = nameParts[0] ?? input.name;
+          const lastName = nameParts.slice(1).join(" ") || undefined;
+
+          const contactId = await ghlUpsertContact({
+            firstName,
+            lastName,
+            email: input.email,
+            phone: input.phone,
+            tags: ["Contact Form", "Siesta Key Directory"],
+            source: "Shop in Siesta Key - Contact Form",
+          });
+
+          if (contactId) {
+            await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.CONTACT_FORM_SUBMITTED);
+          }
+        } catch (err) {
+          console.error("[GHL] contact submit error:", err);
+        }
+
+        // Notify owner
+        await notifyOwner({
+          title: `Contact Form: ${input.subject ?? "New Message"}`,
+          content: `${input.name} (${input.email}) sent a message: "${input.message}"`,
+        });
+
+        return { success: true };
+      }),
+  }),
+
+  // ─── Stripe Payments ────────────────────────────────────────────────────────
+  stripe: router({
+    createCheckout: protectedProcedure
+      .input(
+        z.object({
+          planKey: z.enum(["gulf_breeze", "island_premier"]),
+          interval: z.enum(["monthly", "yearly"]),
+          origin: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const url = await createCheckoutSession({
+          planKey: input.planKey as PlanKey,
+          interval: input.interval as BillingInterval,
+          userId: ctx.user.id,
+          userEmail: ctx.user.email ?? "",
+          userName: ctx.user.name ?? "",
+          origin: input.origin,
+        });
+        return { url };
+      }),
+
+    subscriptionStatus: protectedProcedure.query(async ({ ctx }) => {
+      return {
+        plan: ctx.user.subscriptionPlan ?? "free",
+        status: ctx.user.subscriptionStatus ?? "inactive",
+      };
+    }),
+  }),
+
+  // ─── User hooks (trigger GHL on new user) ────────────────────────────────────
+  users: router({
+    onboardNewUser: protectedProcedure.mutation(async ({ ctx }) => {
+      const user = ctx.user;
+      try {
+        const nameParts = (user.name ?? "").trim().split(" ");
+        const firstName = nameParts[0] ?? user.name ?? "";
+        const lastName = nameParts.slice(1).join(" ") || undefined;
+
+        const contactId = await ghlUpsertContact({
+          firstName,
+          lastName,
+          email: user.email ?? undefined,
+          tags: ["New User", "Siesta Key Directory"],
+          source: "Shop in Siesta Key - Registration",
+        });
+
+        if (contactId) {
+          await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_USER_CREATED);
+        }
+      } catch (err) {
+        console.error("[GHL] onboardNewUser error:", err);
+      }
+      return { success: true };
+    }),
   }),
 });
 

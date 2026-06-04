@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Check, X, Crown, Star, Sparkles, Phone, Mail, Zap, Shield, BarChart3, MapPin } from "lucide-react";
+import { Check, X, Crown, Star, Sparkles, Zap, Shield, BarChart3, MapPin, LogIn, Loader2, Phone, Mail } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
+import { toast } from "sonner";
 
 // ── Feature rows ──────────────────────────────────────────────────────────────
 type FeatureRow = {
@@ -122,6 +126,31 @@ function FeatureCell({ value }: { value: boolean | string }) {
 
 export default function Pricing() {
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
+  const { user } = useAuth();
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+
+  const checkout = trpc.stripe.createCheckout.useMutation({
+    onSuccess: ({ url }) => {
+      if (url) window.open(url, "_blank");
+      else toast.error("Could not create checkout session. Please try again.");
+      setCheckingOut(null);
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "Checkout failed. Please try again.");
+      setCheckingOut(null);
+    },
+  });
+
+  function handlePaidPlan(planId: string) {
+    if (!user) {
+      window.location.href = getLoginUrl();
+      return;
+    }
+    const planKey = planId === "featured" ? "gulf_breeze" : "island_premier";
+    const interval = billing === "monthly" ? "monthly" : "yearly";
+    setCheckingOut(planId);
+    checkout.mutate({ planKey, interval, origin: window.location.origin });
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -293,19 +322,33 @@ export default function Pricing() {
 
                   {/* CTA */}
                   <div className="px-6 pb-7 pt-2">
-                    <Link
-                      href={plan.ctaHref}
-                      className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-[0.97] ${
-                        plan.ctaStyle === "outline"
-                          ? "border-2 border-[var(--color-ocean)] text-[var(--color-ocean)] hover:bg-[var(--color-ocean)] hover:text-white"
-                          : plan.ctaStyle === "ocean"
-                          ? "bg-[var(--color-ocean)] text-white hover:bg-[var(--color-ocean-deep)]"
-                          : "bg-[var(--color-coral)] text-white hover:bg-[var(--color-coral-dark,#c94a34)]"
-                      }`}
-                    >
-                      {plan.id === "premium" && <Crown className="w-4 h-4" />}
-                      {plan.cta}
-                    </Link>
+                    {plan.id === "free" ? (
+                      <Link
+                        href={plan.ctaHref}
+                        className="w-full flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-[0.97] border-2 border-[var(--color-ocean)] text-[var(--color-ocean)] hover:bg-[var(--color-ocean)] hover:text-white"
+                      >
+                        {plan.cta}
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => handlePaidPlan(plan.id)}
+                        disabled={checkingOut === plan.id}
+                        className={`w-full flex items-center justify-center gap-2 font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-[0.97] disabled:opacity-70 disabled:cursor-not-allowed ${
+                          plan.ctaStyle === "ocean"
+                            ? "bg-[var(--color-ocean)] text-white hover:bg-[var(--color-ocean-deep)]"
+                            : "bg-[var(--color-coral)] text-white hover:bg-[var(--color-coral-dark,#c94a34)]"
+                        }`}
+                      >
+                        {checkingOut === plan.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : plan.id === "premium" ? (
+                          <Crown className="w-4 h-4" />
+                        ) : !user ? (
+                          <LogIn className="w-4 h-4" />
+                        ) : null}
+                        {checkingOut === plan.id ? "Redirecting..." : !user ? `Sign in to ${plan.cta}` : plan.cta}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
