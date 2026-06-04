@@ -102,7 +102,40 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-white/10">
+        {/* Trust & Membership Section */}
+        <div className="mt-10 pt-8 border-t border-white/10">
+          <p className="text-center text-xs text-white/40 uppercase tracking-widest mb-5">Proud Member Of</p>
+          <div className="flex flex-wrap items-center justify-center gap-8 mb-8">
+            {/* Siesta Key Chamber of Commerce */}
+            <div className="flex flex-col items-center gap-2">
+              <img
+                src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                alt="Siesta Key Chamber of Commerce"
+                className="h-12 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+              />
+              <span className="text-[10px] text-white/40">Siesta Key Chamber of Commerce</span>
+            </div>
+            {/* BBB Seal */}
+            <div className="flex flex-col items-center gap-2">
+              <a
+                href="https://www.bbb.org/us/in/plainfield/profile/digital-marketing/oriole-marketing-llc-0382-90038569/#sealclick"
+                target="_blank"
+                rel="nofollow"
+                className="opacity-70 hover:opacity-100 transition-opacity"
+              >
+                <img
+                  src="https://seal-indy.bbb.org/seals/blue-seal-200-42-bbb-90038569.png"
+                  style={{ border: 0 }}
+                  alt="Oriole Marketing LLC BBB Business Review"
+                  className="h-12 w-auto object-contain"
+                />
+              </a>
+              <span className="text-[10px] text-white/40">Better Business Bureau</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-6 border-t border-white/10">
           {/* Legal links row */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4">
 
