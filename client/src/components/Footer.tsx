@@ -1,11 +1,7 @@
 import { Link } from "wouter";
-import { MapPin, Mail, Instagram, Facebook, Shield } from "lucide-react";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { MapPin, Mail, Instagram, Facebook } from "lucide-react";
 
 export default function Footer() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-
   return (
     <footer className="bg-[var(--color-ocean-deep)] text-white">
       {/* Wave top */}
@@ -103,18 +99,7 @@ export default function Footer() {
         <div className="mt-10 pt-6 border-t border-white/10">
           {/* Legal links row */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4">
-            {isAdmin && (
-              <>
-                <Link
-                  href="/admin"
-                  className="text-xs text-white/40 hover:text-white/80 transition-colors flex items-center gap-1"
-                >
-                  <Shield className="w-3 h-3" />
-                  Admin
-                </Link>
-                <span className="text-white/20 text-xs">|</span>
-              </>
-            )}
+
             <a
               href="/privacy"
               target="_blank"

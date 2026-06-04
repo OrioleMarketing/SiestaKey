@@ -116,7 +116,7 @@ export default function ClaimBusiness() {
               <div className="premium-banner mt-6">
                 <div className="relative z-10">
                   <Crown className="w-6 h-6 text-[var(--color-gold)] mb-2" />
-                  <h3 className="font-serif font-bold text-lg mb-1">Go Premium</h3>
+                  <h3 className="font-serif font-bold text-lg mb-1 text-white">Go Premium</h3>
                   <p className="text-sm text-white/75 mb-3">
                     After claiming, upgrade to a featured listing for top placement in search results.
                   </p>
@@ -124,7 +124,7 @@ export default function ClaimBusiness() {
                     href={import.meta.env.VITE_GHL_PAYMENT_LINK ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] hover:text-white transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-[var(--color-gold)] transition-colors underline underline-offset-2"
                   >
                     Learn about Premium →
                   </a>

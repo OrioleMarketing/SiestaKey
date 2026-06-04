@@ -36,10 +36,14 @@ export default function Navbar() {
     >
       <div className="container">
         <nav className="flex items-center justify-between h-16 md:h-18">
-          {/* Logo */}
+          {/* Logo — white-text variant on transparent hero, original when scrolled */}
           <Link href="/" className="flex items-center group shrink-0">
             <img
-              src="/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
+              src={
+                transparent
+                  ? "/manus-storage/Shop-Logo-White_a2daf85e.png"
+                  : "/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
+              }
               alt="Shop in Siesta Key"
               className="h-12 md:h-16 w-auto object-contain transition-all duration-300"
             />
