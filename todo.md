@@ -56,3 +56,10 @@
 - [x] Add /privacy and /terms routes to App.tsx
 - [x] Update footer links to open Privacy and T&C in new tab
 - [x] Correct Olaf's Siesta Village to be an ice cream shop (update description, category)
+
+## Enhancement Round 5
+- [ ] Navbar: increase background darkness so logo/links are clearly visible over bright hero sky
+- [ ] Navbar: replace current links with Dining, Shopping, Activities, Nightlife, Accommodations (remove duplicate Add Listing)
+- [ ] Navbar: keep Claim Your Business and Add Listing CTA buttons (one each, no duplicates)
+- [ ] Navbar: add Admin link visible only to logged-in admin users
+- [ ] Featured businesses: find and add 2-3 real photos per business (CB's, The Hub, The Salty Dog, Palm Bay Club, Chamber, Olaf's)

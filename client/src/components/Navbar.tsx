@@ -8,6 +8,7 @@ export default function Navbar() {
   const [location] = useLocation();
   const isHome = location === "/";
 
+
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -15,27 +16,28 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { href: "/directory", label: "Directory" },
     { href: "/directory/dining", label: "Dining" },
-    { href: "/directory/activities", label: "Activities" },
     { href: "/directory/shopping", label: "Shopping" },
-    { href: "/submit-listing", label: "Add Listing" },
+    { href: "/directory/activities", label: "Activities" },
+    { href: "/directory/nightlife", label: "Nightlife" },
+    { href: "/directory/accommodations", label: "Accommodations" },
   ];
 
+  // Transparent state: only on homepage before scroll, and not when mobile menu is open
   const transparent = isHome && !isScrolled && !mobileOpen;
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         transparent
-          ? "bg-gradient-to-b from-black/40 via-black/20 to-transparent"
-          : "bg-white/95 backdrop-blur-md shadow-sm border-b border-[var(--color-border)]"
+          ? "bg-gradient-to-b from-black/65 via-black/40 to-transparent"
+          : "bg-white/97 backdrop-blur-md shadow-sm border-b border-[var(--color-border)]"
       }`}
     >
       <div className="container">
         <nav className="flex items-center justify-between h-16 md:h-18">
           {/* Logo */}
-          <Link href="/" className="flex items-center group">
+          <Link href="/" className="flex items-center group shrink-0">
             <img
               src="/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
               alt="Shop in Siesta Key"
@@ -43,20 +45,20 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop nav links */}
+          <div className="hidden lg:flex items-center gap-0.5 mx-4">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap ${
                   transparent
-                    ? "text-white/90 hover:text-white hover:bg-white/10"
+                    ? "text-white hover:text-white hover:bg-white/15"
                     : "text-[var(--color-foreground)] hover:text-[var(--color-ocean)] hover:bg-[var(--color-ocean-pale)]"
                 } ${
                   location === link.href
                     ? transparent
-                      ? "text-white bg-white/15"
+                      ? "text-white bg-white/20"
                       : "text-[var(--color-ocean)] bg-[var(--color-ocean-pale)]"
                     : ""
                 }`}
@@ -64,15 +66,16 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+
           </div>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
             <Link
               href="/claim"
-              className={`text-sm font-semibold px-4 py-2 rounded-lg border transition-all duration-150 ${
+              className={`text-sm font-semibold px-4 py-2 rounded-lg border transition-all duration-150 whitespace-nowrap ${
                 transparent
-                  ? "border-white/50 text-white hover:bg-white/10"
+                  ? "border-white/60 text-white hover:bg-white/15"
                   : "border-[var(--color-ocean)] text-[var(--color-ocean)] hover:bg-[var(--color-ocean-pale)]"
               }`}
             >
@@ -80,7 +83,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/submit-listing"
-              className="btn-ocean text-sm px-4 py-2"
+              className="btn-coral text-sm px-4 py-2 whitespace-nowrap"
             >
               Add Listing
             </Link>
@@ -88,8 +91,10 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <button
-            className={`md:hidden p-2 rounded-lg transition-colors ${
-              transparent ? "text-white hover:bg-white/10" : "text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+            className={`lg:hidden p-2 rounded-lg transition-colors ${
+              transparent
+                ? "text-white hover:bg-white/15"
+                : "text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
             }`}
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
@@ -101,7 +106,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-[var(--color-border)] shadow-lg">
+        <div className="lg:hidden bg-white border-t border-[var(--color-border)] shadow-lg">
           <div className="container py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
@@ -117,18 +122,19 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+
             <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex flex-col gap-2">
               <Link
                 href="/claim"
                 onClick={() => setMobileOpen(false)}
-                className="btn-outline-ocean text-sm text-center justify-center"
+                className="border border-[var(--color-ocean)] text-[var(--color-ocean)] text-sm text-center py-2.5 rounded-lg font-semibold hover:bg-[var(--color-ocean-pale)] transition-colors"
               >
                 Claim Your Business
               </Link>
               <Link
                 href="/submit-listing"
                 onClick={() => setMobileOpen(false)}
-                className="btn-ocean text-sm text-center justify-center"
+                className="btn-coral text-sm text-center justify-center"
               >
                 Add Listing
               </Link>

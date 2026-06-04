@@ -41,9 +41,9 @@ function StatCard({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground font-medium">{label}</p>
-            <p className="text-3xl font-bold mt-1 text-foreground">
-              {value ?? <Skeleton className="h-8 w-12 inline-block" />}
-            </p>
+            <div className="text-3xl font-bold mt-1 text-foreground">
+              {value ?? <Skeleton className="h-8 w-12" />}
+            </div>
           </div>
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
             <Icon className="w-6 h-6 text-white" />
