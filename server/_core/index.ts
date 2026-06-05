@@ -47,6 +47,12 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
+      onError({ error, path }) {
+        // Log all internal errors so they appear in the server log
+        if (error.code === "INTERNAL_SERVER_ERROR") {
+          console.error(`[tRPC] Internal error on ${path ?? "unknown"}:`, error.cause ?? error.message);
+        }
+      },
     })
   );
   // development mode uses Vite, production mode uses static files
