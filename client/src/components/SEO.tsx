@@ -74,11 +74,19 @@ export default function SEO({
       <meta property="og:image" content={image} />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 
-      {/* Twitter Card */}
+      {/* Twitter / X Card */}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@ShopInSiestaKey" />
+      <meta name="twitter:creator" content="@ShopInSiestaKey" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {/* Geo meta tags (Bing + local search aggregators) */}
+      <meta name="geo.region" content="US-FL" />
+      <meta name="geo.placename" content="Siesta Key, Florida" />
+      <meta name="geo.position" content="27.2683;-82.5459" />
+      <meta name="ICBM" content="27.2683, -82.5459" />
 
       {/* JSON-LD Structured Data */}
       {schemas.map((schema, i) => (
