@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   ClipboardList,
   ExternalLink,
+  FileSpreadsheet,
   Lock,
   LogIn,
   MessageSquare,
@@ -30,6 +31,7 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
+import { CsvImportTab } from "./AdminCsvImport";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import PageHero from "@/components/PageHero";
@@ -1167,6 +1169,13 @@ export default function Admin() {
               <Users className="w-4 h-4 mr-2 inline" />
               Claim Leads
             </TabsTrigger>
+            <TabsTrigger
+              value="csv-import"
+              className="rounded-lg data-[state=active]:bg-ocean data-[state=active]:text-white px-4 py-2 text-sm font-medium"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2 inline" />
+              CSV Import
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="businesses">
@@ -1209,6 +1218,20 @@ export default function Admin() {
               </CardHeader>
               <CardContent className="pt-0">
                 <ClaimsTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="csv-import">
+            <Card className="card-coastal">
+              <CardHeader className="pb-4">
+                <CardTitle className="font-serif text-lg">Bulk CSV Import</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Upload a CSV file to create or update multiple business listings at once.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CsvImportTab />
               </CardContent>
             </Card>
           </TabsContent>

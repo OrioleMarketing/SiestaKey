@@ -402,6 +402,149 @@ export const appRouter = router({
         return { checkoutUrl };
       }),
 
+    bulkImportBusinesses: adminProcedure
+      .input(
+        z.object({
+          rows: z.array(
+            z.object({
+              name: z.string().min(1),
+              slug: z.string().optional(),
+              category: z.string().min(1),   // category name or slug
+              area: z.string().optional(),
+              phone: z.string().optional(),
+              email: z.string().optional(),
+              website: z.string().optional(),
+              address: z.string().optional(),
+              shortDescription: z.string().optional(),
+              description: z.string().optional(),
+              tier: z.enum(["free", "featured", "sponsored"]).optional(),
+              lat: z.string().optional(),
+              lng: z.string().optional(),
+              tags: z.string().optional(),          // comma-separated
+              facebook: z.string().optional(),
+              instagram: z.string().optional(),
+              twitter: z.string().optional(),
+              yelp: z.string().optional(),
+              tripadvisor: z.string().optional(),
+              rating: z.string().optional(),
+              reviewCount: z.string().optional(),
+              mondayHours: z.string().optional(),
+              tuesdayHours: z.string().optional(),
+              wednesdayHours: z.string().optional(),
+              thursdayHours: z.string().optional(),
+              fridayHours: z.string().optional(),
+              saturdayHours: z.string().optional(),
+              sundayHours: z.string().optional(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+
+        // Load all categories once for name/slug lookup
+        const allCats = await db.select().from(businesses).limit(0); // just to warm db
+        const { categories: catsTable } = await import("../drizzle/schema");
+        const cats = await db.select().from(catsTable);
+
+        const results: { row: number; action: "created" | "updated" | "error"; name: string; error?: string }[] = [];
+
+        for (let i = 0; i < input.rows.length; i++) {
+          const row = input.rows[i];
+          try {
+            // Resolve category
+            const catMatch = cats.find(
+              (c) =>
+                c.name.toLowerCase() === row.category.toLowerCase() ||
+                c.slug.toLowerCase() === row.category.toLowerCase()
+            );
+            if (!catMatch) throw new Error(`Unknown category: "${row.category}"`);
+
+            // Build slug from name if not provided
+            const slug =
+              row.slug ||
+              row.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "");
+
+            // Build hours object
+            const hours: Record<string, string> = {};
+            if (row.mondayHours) hours.monday = row.mondayHours;
+            if (row.tuesdayHours) hours.tuesday = row.tuesdayHours;
+            if (row.wednesdayHours) hours.wednesday = row.wednesdayHours;
+            if (row.thursdayHours) hours.thursday = row.thursdayHours;
+            if (row.fridayHours) hours.friday = row.fridayHours;
+            if (row.saturdayHours) hours.saturday = row.saturdayHours;
+            if (row.sundayHours) hours.sunday = row.sundayHours;
+
+            // Build social links
+            const socialLinks: Record<string, string> = {};
+            if (row.facebook) socialLinks.facebook = row.facebook;
+            if (row.instagram) socialLinks.instagram = row.instagram;
+            if (row.twitter) socialLinks.twitter = row.twitter;
+            if (row.yelp) socialLinks.yelp = row.yelp;
+            if (row.tripadvisor) socialLinks.tripadvisor = row.tripadvisor;
+
+            const tags = row.tags
+              ? row.tags.split(",").map((t) => t.trim()).filter(Boolean)
+              : [];
+
+            const tier = row.tier ?? "free";
+            const isFeatured = tier === "featured";
+            const isSponsored = tier === "sponsored";
+
+            const payload = {
+              name: row.name,
+              slug,
+              categoryId: catMatch.id,
+              area: row.area ?? "Siesta Key Village",
+              phone: row.phone ?? null,
+              email: row.email ?? null,
+              website: row.website ?? null,
+              address: row.address ?? null,
+              shortDescription: row.shortDescription ?? null,
+              description: row.description ?? null,
+              tier,
+              isFeatured,
+              isSponsored,
+              isActive: true,
+              lat: row.lat ?? null,
+              lng: row.lng ?? null,
+              tags,
+              hours,
+              socialLinks,
+              rating: row.rating ?? "4.5",
+              reviewCount: row.reviewCount ? parseInt(row.reviewCount, 10) : 0,
+            };
+
+            // Check if slug already exists
+            const existing = await db
+              .select({ id: businesses.id })
+              .from(businesses)
+              .where(eq(businesses.slug, slug))
+              .limit(1);
+
+            if (existing.length > 0) {
+              await db.update(businesses).set(payload).where(eq(businesses.slug, slug));
+              results.push({ row: i + 1, action: "updated", name: row.name });
+            } else {
+              await db.insert(businesses).values({ ...payload, photos: [], isClaimed: false });
+              results.push({ row: i + 1, action: "created", name: row.name });
+            }
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            results.push({ row: i + 1, action: "error", name: row.name, error: msg });
+          }
+        }
+
+        const created = results.filter((r) => r.action === "created").length;
+        const updated = results.filter((r) => r.action === "updated").length;
+        const errors = results.filter((r) => r.action === "error").length;
+        return { created, updated, errors, results };
+      }),
+
     stats: adminProcedure.query(async () => {
       const [businesses, claims, submissions] = await Promise.all([
         getAllBusinessesAdmin(),

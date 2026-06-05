@@ -168,3 +168,13 @@
 - [x] Backend: expand admin.updateBusiness to accept all business fields (name, slug, categoryId, descriptions, address, area, phone, website, email, lat, lng, rating, reviewCount, tags, hours, socialLinks, googleReviewEmbedCode)
 - [x] Admin Businesses tab: add Pencil (Edit) button per row that opens a full-edit dialog
 - [x] EditListingDialog: scrollable modal with all DB fields — core info, descriptions, tags, hours (per day), social links, ratings, Google Review embed
+
+## Enhancement Round 18 — Bulk CSV Import
+- [x] Backend: admin.bulkImportBusinesses tRPC procedure (upsert by slug: create if missing, update if exists)
+- [x] Backend: validate required columns (name, category) and return per-row errors with row number and column name
+- [x] Admin panel: new "CSV Import" tab with file picker, column validation feedback, preview table (first 5 rows, first 8 cols), and Import button
+- [x] Admin panel: downloadable CSV template with all 28 supported columns and one example row
+- [x] Admin panel: import results summary (created N, updated N, errors N) with per-row result table
+- [x] AdminCsvImport.tsx: pure client-side CSV parser (handles quoted fields, commas in values)
+- [x] Quick Reference section: valid categories, tiers, upsert logic, tags/hours format
+- [x] Admin CSV import: invalidate businesses list after successful import so Listings tab refreshes automatically
