@@ -173,7 +173,7 @@ export default function BlogPost() {
         )}
 
         {/* Content */}
-        <article className="prose prose-slate max-w-none prose-headings:text-[#0d3b5e] prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl">
+        <article className="prose prose-slate max-w-none prose-headings:text-[#0d3b5e] prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-p:mb-5 prose-p:leading-relaxed prose-headings:mt-8 prose-headings:mb-3">
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </article>
 
