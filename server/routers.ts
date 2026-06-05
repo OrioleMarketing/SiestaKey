@@ -953,8 +953,29 @@ export const appRouter = router({
         }
         const currentPhotos: string[] = Array.isArray(existing.photos) ? (existing.photos as string[]) : [];
         const updatedPhotos = currentPhotos.filter((p) => p !== input.photoUrl);
-        await updateBusinessByUserId(ctx.user.id, { photos: updatedPhotos });
+        // If the removed photo was the cover, clear coverPhoto too
+        const clearCover = (existing as any).coverPhoto === input.photoUrl;
+        await updateBusinessByUserId(ctx.user.id, {
+          photos: updatedPhotos,
+          ...(clearCover ? { coverPhoto: null } : {}),
+        });
         return { photos: updatedPhotos };
+      }),
+
+    // Set a specific photo as the cover/header image
+    setCoverPhoto: protectedProcedure
+      .input(z.object({ photoUrl: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getBusinessByUserId(ctx.user.id);
+        if (!existing) {
+          throw new Error("No claimed listing found for this account.");
+        }
+        const currentPhotos: string[] = Array.isArray(existing.photos) ? (existing.photos as string[]) : [];
+        if (!currentPhotos.includes(input.photoUrl)) {
+          throw new Error("Photo not found in this listing's gallery.");
+        }
+        await updateBusinessByUserId(ctx.user.id, { coverPhoto: input.photoUrl });
+        return { coverPhoto: input.photoUrl };
       }),
   }),
 

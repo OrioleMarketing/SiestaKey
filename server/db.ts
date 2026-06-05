@@ -312,6 +312,7 @@ export async function updateBusinessByUserId(
     area?: string;
     hours?: Record<string, string>;
     photos?: string[];
+    coverPhoto?: string | null;
     socialLinks?: Record<string, string>;
     lat?: string;
     lng?: string;

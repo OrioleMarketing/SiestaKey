@@ -43,6 +43,13 @@
       "when": 1780608130326,
       "tag": "0005_sour_speed_demon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1780675790729,
+      "tag": "0006_purple_may_parker",
+      "breakpoints": true
     }
   ]
 }

@@ -48,7 +48,11 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
   const tags = Array.isArray(business.tags) ? business.tags : [];
   const desc = business.shortDescription || (business.description ? business.description.slice(0, 120) + "…" : "");
   const photos = Array.isArray((business as any).photos) ? (business as any).photos as string[] : [];
-  const coverImage = photos.length > 0 ? photos[0] : (business.tier === "free" && !business.isClaimed ? LIFEGUARD_DEFAULT : null);
+  const coverImage = (business as any).coverPhoto
+    ? (business as any).coverPhoto
+    : photos.length > 0
+      ? photos[0]
+      : (business.tier === "free" && !business.isClaimed ? LIFEGUARD_DEFAULT : null);
 
   return (
     <Link href={`/business/${business.slug}`} className="block group">

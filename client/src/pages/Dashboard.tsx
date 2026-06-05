@@ -43,6 +43,8 @@ import {
   Trash2,
   Loader2,
   MessageSquare,
+  ImageIcon,
+  Star as StarIcon,
 } from "lucide-react";
 import { useRef } from "react";
 
@@ -99,6 +101,14 @@ export default function Dashboard() {
       refetch();
     },
     onError: (err) => toast.error(err.message || "Remove failed."),
+  });
+
+  const setCoverPhotoMutation = trpc.dashboard.setCoverPhoto.useMutation({
+    onSuccess: () => {
+      toast.success("Cover photo updated!");
+      refetch();
+    },
+    onError: (err) => toast.error(err.message || "Failed to set cover photo."),
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -551,27 +561,61 @@ export default function Dashboard() {
                   {/* Existing photos */}
                   {Array.isArray(listing.photos) && (listing.photos as string[]).length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
-                      {(listing.photos as string[]).map((url, idx) => (
-                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square bg-gray-100">
-                          <img
-                            src={url}
-                            alt={`Business photo ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            onClick={() => setConfirmRemoveUrl(url)}
-                            disabled={removePhotoMutation.isPending}
-                            className="absolute top-1.5 right-1.5 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-700 disabled:opacity-50"
-                            title="Remove photo"
-                          >
-                            {removePhotoMutation.isPending ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-3.5 w-3.5" />
+                      {(listing.photos as string[]).map((url, idx) => {
+                        const isCover = (listing as any).coverPhoto === url || (!((listing as any).coverPhoto) && idx === 0);
+                        return (
+                          <div key={idx} className={`relative group rounded-lg overflow-hidden aspect-square bg-gray-100 ${
+                            isCover ? "border-2 border-sky-500 shadow-md" : "border border-gray-200"
+                          }`}>
+                            <img
+                              src={url}
+                              alt={`Business photo ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Cover badge */}
+                            {isCover && (
+                              <div className="absolute top-1.5 left-1.5 bg-sky-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow">
+                                <StarIcon className="h-2.5 w-2.5" /> COVER
+                              </div>
                             )}
-                          </button>
-                        </div>
-                      ))}
+                            {/* Hover action bar */}
+                            <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center px-1.5 py-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {!isCover && (
+                                <button
+                                  onClick={() => setCoverPhotoMutation.mutate({ photoUrl: url })}
+                                  disabled={setCoverPhotoMutation.isPending}
+                                  className="text-white text-[10px] font-semibold flex items-center gap-1 hover:text-sky-300 transition-colors disabled:opacity-50"
+                                  title="Set as cover photo"
+                                >
+                                  {setCoverPhotoMutation.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <ImageIcon className="h-3 w-3" />
+                                  )}
+                                  Set Cover
+                                </button>
+                              )}
+                              {isCover && (
+                                <span className="text-sky-300 text-[10px] font-semibold flex items-center gap-1">
+                                  <StarIcon className="h-3 w-3" /> Cover
+                                </span>
+                              )}
+                              <button
+                                onClick={() => setConfirmRemoveUrl(url)}
+                                disabled={removePhotoMutation.isPending}
+                                className="bg-red-600 text-white rounded-full p-1 hover:bg-red-700 disabled:opacity-50 transition-colors"
+                                title="Remove photo"
+                              >
+                                {removePhotoMutation.isPending ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center mb-4">

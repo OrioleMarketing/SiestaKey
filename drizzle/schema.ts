@@ -55,6 +55,8 @@ export const businesses = mysqlTable("businesses", {
   email: varchar("email", { length: 200 }),
   // JSON array of photo URLs
   photos: json("photos").$type<string[]>().default([]),
+  // URL of the designated cover/header image (must be one of the photos URLs)
+  coverPhoto: varchar("coverPhoto", { length: 500 }),
   // JSON object: { monday: "9am-5pm", ... }
   hours: json("hours").$type<Record<string, string>>().default({}),
   // Map coordinates

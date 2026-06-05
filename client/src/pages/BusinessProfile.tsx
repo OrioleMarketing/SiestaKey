@@ -98,10 +98,12 @@ export default function BusinessProfile() {
   const isIslandPremier = business?.tier === "sponsored";
   const isPaid = isGulfBreeze || isIslandPremier;
 
-  // Cover image: first photo if available, else lifeguard for unclaimed free
-  const coverImage = photos.length > 0
-    ? photos[0]
-    : (isFree && !business?.isClaimed ? LIFEGUARD_DEFAULT : null);
+  // Cover image: use designated coverPhoto, fall back to first photo, then lifeguard for unclaimed free
+  const coverImage = (business as any)?.coverPhoto
+    ? (business as any).coverPhoto
+    : photos.length > 0
+      ? photos[0]
+      : (isFree && !business?.isClaimed ? LIFEGUARD_DEFAULT : null);
 
   if (isLoading) {
     return (
