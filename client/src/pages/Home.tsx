@@ -227,10 +227,10 @@ export default function Home() {
               </h2>
             </div>
             <a
-              href="/directory"
+              href="/directory?tier=featured"
               className="hidden md:flex items-center gap-2 text-sm font-semibold text-[var(--color-ocean)] hover:text-[var(--color-ocean-deep)] transition-colors"
             >
-              View All <ArrowRight className="w-4 h-4" />
+              View All Featured <ArrowRight className="w-4 h-4" />
             </a>
           </div>
 
@@ -249,7 +249,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featured.map((biz, i) => (
+              {featured.slice(0, 9).map((biz, i) => (
                 <div
                   key={biz.id}
                   className="animate-fade-in-up"
@@ -261,9 +261,13 @@ export default function Home() {
             </div>
           )}
 
-          <div className="text-center mt-8 md:hidden">
-            <a href="/directory" className="btn-ocean">
-              View All Businesses <ArrowRight className="w-4 h-4" />
+          {/* View All buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+            <a href="/directory?tier=featured" className="btn-outline-ocean px-8 py-3 flex items-center gap-2">
+              View All Featured &amp; Sponsored <ArrowRight className="w-4 h-4" />
+            </a>
+            <a href="/directory" className="btn-ocean px-8 py-3 flex items-center gap-2">
+              View All Listings <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </div>

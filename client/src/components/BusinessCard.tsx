@@ -65,7 +65,7 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
             <div className="absolute top-2 left-2 flex gap-1.5">
               {business.isSponsored && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[var(--color-gold)] text-white shadow">
-                  <Crown className="w-3 h-3" /> FEATURED
+                  <Crown className="w-3 h-3" /> SPONSORED
                 </span>
               )}
               {!business.isSponsored && business.isFeatured && (
