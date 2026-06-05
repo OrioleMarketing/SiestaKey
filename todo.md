@@ -228,3 +228,8 @@
 - [x] Upload SiestaKey.webp panorama to storage: /manus-storage/SiestaKey_panorama_734eb779.webp
 - [x] BusinessCard: all businesses without a photo now show the 500x500 lifeguard stand (was only unclaimed free)
 - [x] BusinessProfile: cover photo area now always shows the panorama default when no coverPhoto or photos exist (was null for paid/claimed listings)
+
+## Enhancement Round 26 — SEO og:image, Update Photos CTA, Admin default cover
+- [x] BusinessProfile: seoImage now uses panorama as og:image fallback (absolute URL) instead of undefined
+- [x] BusinessProfile: "Update Photos" CTA banner shown to the claimed listing owner when no custom photos exist
+- [x] Admin createBusiness: new listings seeded with panorama as default coverPhoto so profile page shows branded cover immediately

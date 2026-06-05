@@ -6,6 +6,8 @@ import {
   Facebook, Instagram, Twitter, Youtube, Linkedin
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BusinessCard from "@/components/BusinessCard";
@@ -58,6 +60,7 @@ export default function BusinessProfile() {
   const { slug } = useParams<{ slug: string }>();
   const mapRef = useRef<google.maps.Map | null>(null);
 
+  const { user } = useAuth();
   const { data: business, isLoading } = trpc.businesses.bySlug.useQuery({ slug: slug ?? "" });
   const { data: related } = trpc.businesses.related.useQuery(
     { categoryId: business?.categoryId ?? 0, excludeId: business?.id ?? 0 },
@@ -140,7 +143,9 @@ export default function BusinessProfile() {
   const seoDesc = business.description
     ? `${business.description.slice(0, 145).trimEnd()}…`
     : `Visit ${business.name} on Siesta Key, Florida. Find hours, location, contact info, and more.`;
-  const seoImage = photos.length > 0 ? photos[0] : undefined;
+  const seoImage = photos.length > 0
+    ? `https://shopinsiestakey.com${photos[0].startsWith('/') ? '' : '/'}${photos[0]}`
+    : `https://shopinsiestakey.com/manus-storage/SiestaKey_panorama_734eb779.webp`;
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-white-sand)]">
@@ -231,6 +236,23 @@ export default function BusinessProfile() {
           </div>
         )}
       </div>
+
+      {/* ── Update Photos CTA ─────────────────────────────────────────────────── */}
+      {business?.isClaimed && !(business as any).coverPhoto && photos.length === 0 && user && (business as any).claimedByUserId === user.id && (
+        <div className="bg-[var(--color-ocean-pale)] border-b border-[var(--color-ocean)]/20">
+          <div className="container max-w-5xl py-2.5 flex items-center justify-between gap-3">
+            <p className="text-sm text-[var(--color-ocean-deep)] font-medium">
+              This listing is using a default cover image. Upload your own photos to make it stand out.
+            </p>
+            <a
+              href="/dashboard"
+              className="shrink-0 text-sm font-semibold text-white bg-[var(--color-ocean)] hover:bg-[var(--color-ocean-deep)] px-3 py-1.5 rounded-full transition-colors"
+            >
+              Update Photos
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* ── Business Name + Meta ──────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[var(--color-border)] shadow-sm">

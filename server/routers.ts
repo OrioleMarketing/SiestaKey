@@ -370,6 +370,7 @@ export const appRouter = router({
           .where(eq(businesses.slug, baseSlug))
           .limit(1);
         const slug = existing.length > 0 ? `${baseSlug}-${Date.now()}` : baseSlug;
+        const DEFAULT_COVER = "/manus-storage/SiestaKey_panorama_734eb779.webp";
         await db.insert(businesses).values({
           slug,
           name: input.name,
@@ -388,6 +389,7 @@ export const appRouter = router({
           isSponsored: false,
           isClaimed: false,
           tier: "free",
+          coverPhoto: DEFAULT_COVER,
         });
         return { success: true, slug };
       }),
