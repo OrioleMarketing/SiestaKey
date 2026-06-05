@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Link, useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import SEO from "@/components/SEO";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, ArrowLeft, Share2 } from "lucide-react";
@@ -111,6 +113,7 @@ export default function BlogPost() {
 
   return (
     <>
+      <Navbar />
       <SEO
         title={`${post.title} | Shop in Siesta Key`}
         description={post.excerpt ?? `Read our guide: ${post.title}`}
@@ -204,6 +207,7 @@ export default function BlogPost() {
           </Link>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

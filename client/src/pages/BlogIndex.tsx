@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import SEO from "@/components/SEO";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,6 +47,7 @@ export default function BlogIndex() {
 
   return (
     <>
+      <Navbar />
       <SEO
         title="Siesta Key Travel Guides & Local Tips | Shop in Siesta Key"
         description="Explore our guides to the best restaurants, beaches, activities, and shopping on Siesta Key, Florida. Local tips from people who know the island."
@@ -197,6 +200,7 @@ export default function BlogIndex() {
           </>
         )}
       </main>
+      <Footer />
     </>
   );
 }
