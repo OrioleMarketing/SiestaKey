@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "Shop in Siesta Key";
-const BASE_URL = "https://shopinsiestakey.com";
+export const BASE_URL = "https://shopinsiestakey.com";
 const DEFAULT_IMAGE = `${BASE_URL}/manus-storage/SiestaKey-hero_60f0f3c1.webp`;
 const DEFAULT_DESCRIPTION =
   "Your premier guide to dining, shopping, activities, nightlife, and accommodations on Siesta Key — Florida's #1 beach destination.";
@@ -19,14 +19,18 @@ interface SEOProps {
   type?: "website" | "article";
   /** Prevent search engines from indexing this page */
   noIndex?: boolean;
+  /** One or more JSON-LD structured data objects to inject into <head> */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 /**
  * Drop-in SEO head component.
- * Renders <title>, meta description, Open Graph, Twitter Card, and canonical link.
+ * Renders <title>, meta description, Open Graph, Twitter Card, canonical link,
+ * and optional JSON-LD structured data for rich search results.
  *
  * Usage:
  *   <SEO title="Dining" description="Best restaurants on Siesta Key." canonical="/directory/dining" />
+ *   <SEO jsonLd={{ "@context": "https://schema.org", "@type": "WebSite", ... }} />
  */
 export default function SEO({
   title,
@@ -35,9 +39,17 @@ export default function SEO({
   image = DEFAULT_IMAGE,
   type = "website",
   noIndex = false,
+  jsonLd,
 }: SEOProps) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Siesta Key Business Directory`;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
+
+  // Normalise to array so we can render multiple schema blocks
+  const schemas = jsonLd
+    ? Array.isArray(jsonLd)
+      ? jsonLd
+      : [jsonLd]
+    : [];
 
   return (
     <Helmet>
@@ -60,6 +72,13 @@ export default function SEO({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {/* JSON-LD Structured Data */}
+      {schemas.map((schema, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      ))}
     </Helmet>
   );
 }

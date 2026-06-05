@@ -48,12 +48,54 @@ export default function Home() {
     [keyword, navigate]
   );
 
+  const homeSchemas = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "https://shopinsiestakey.com/#website",
+      "name": "Shop in Siesta Key",
+      "url": "https://shopinsiestakey.com",
+      "description": "Your premier guide to dining, shopping, activities, nightlife, and accommodations on Siesta Key — Florida's #1 beach destination.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://shopinsiestakey.com/directory?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://shopinsiestakey.com/#organization",
+      "name": "Shop in Siesta Key",
+      "url": "https://shopinsiestakey.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://shopinsiestakey.com/manus-storage/SiestaKey-hero_60f0f3c1.webp"
+      },
+      "sameAs": [
+        "https://www.facebook.com/shopinsiestakey",
+        "https://www.instagram.com/shopinsiestakey"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Siesta Key",
+        "addressRegion": "FL",
+        "postalCode": "34242",
+        "addressCountry": "US"
+      }
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Siesta Key Business Directory — Dining, Shopping & More"
         description="Discover the best restaurants, shops, activities, nightlife, and accommodations on Siesta Key, Florida's #1 beach. Browse 200+ local businesses."
         canonical="/"
+        jsonLd={homeSchemas}
       />
       <Navbar />
 

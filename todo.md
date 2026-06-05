@@ -233,3 +233,10 @@
 - [x] BusinessProfile: seoImage now uses panorama as og:image fallback (absolute URL) instead of undefined
 - [x] BusinessProfile: "Update Photos" CTA banner shown to the claimed listing owner when no custom photos exist
 - [x] Admin createBusiness: new listings seeded with panorama as default coverPhoto so profile page shows branded cover immediately
+
+## Enhancement Round 27 — Schema Markup, Panorama Backfill, Share Button
+- [x] Add JSON-LD structured data (LocalBusiness, WebSite, BreadcrumbList) to SEO component and business profile
+- [x] Add JSON-LD to Homepage (WebSite + SearchAction)
+- [x] Add JSON-LD to Directory page (ItemList)
+- [x] Backfill panorama coverPhoto on existing listings where coverPhoto IS NULL (203 rows updated)
+- [x] Add Share button to business profile page (copy URL to clipboard, with toast feedback)

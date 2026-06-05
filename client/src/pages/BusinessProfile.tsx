@@ -6,6 +6,7 @@ import {
   Facebook, Instagram, Twitter, Youtube, Linkedin
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import Navbar from "@/components/Navbar";
@@ -147,6 +148,65 @@ export default function BusinessProfile() {
     ? `https://shopinsiestakey.com${photos[0].startsWith('/') ? '' : '/'}${photos[0]}`
     : `https://shopinsiestakey.com/manus-storage/SiestaKey_panorama_734eb779.webp`;
 
+  // ── JSON-LD Structured Data ──────────────────────────────────────────────
+  const businessSchema: Record<string, unknown>[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "@id": `https://shopinsiestakey.com/business/${business.slug}`,
+      "name": business.name,
+      "description": seoDesc,
+      "url": `https://shopinsiestakey.com/business/${business.slug}`,
+      "image": seoImage,
+      ...(business.address ? {
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": business.address,
+          "addressLocality": "Siesta Key",
+          "addressRegion": "FL",
+          "addressCountry": "US"
+        }
+      } : {}),
+      ...(business.phone ? { "telephone": business.phone } : {}),
+      ...(business.website ? { "sameAs": business.website } : {}),
+      ...(business.email ? { "email": business.email } : {}),
+      ...(business.lat && business.lng ? {
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": business.lat,
+          "longitude": business.lng
+        }
+      } : {}),
+      ...(business.rating && business.reviewCount && business.reviewCount > 0 ? {
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": business.rating,
+          "reviewCount": business.reviewCount,
+          "bestRating": "5",
+          "worstRating": "1"
+        }
+      } : {}),
+      ...(Object.keys(hours).length > 0 ? {
+        "openingHoursSpecification": Object.entries(hours).map(([day, timeStr]) => ({
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": `https://schema.org/${day}`,
+          "opens": timeStr.split("-")[0]?.trim() ?? "",
+          "closes": timeStr.split("-")[1]?.trim() ?? ""
+        }))
+      } : {}),
+      "isPartOf": { "@id": "https://shopinsiestakey.com/#website" }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://shopinsiestakey.com" },
+        { "@type": "ListItem", "position": 2, "name": "Directory", "item": "https://shopinsiestakey.com/directory" },
+        { "@type": "ListItem", "position": 3, "name": business.name, "item": `https://shopinsiestakey.com/business/${business.slug}` }
+      ]
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-white-sand)]">
       <SEO
@@ -155,6 +215,7 @@ export default function BusinessProfile() {
         canonical={`/business/${business.slug}`}
         image={seoImage}
         type="article"
+        jsonLd={businessSchema}
       />
       <Navbar />
 
@@ -300,7 +361,23 @@ export default function BusinessProfile() {
                 </a>
               )}
               <button
-                onClick={() => navigator.share?.({ title: business.name, url: window.location.href })}
+                onClick={async () => {
+                  const url = window.location.href;
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: business.name, url });
+                    } catch {
+                      // user cancelled — no toast needed
+                    }
+                  } else {
+                    try {
+                      await navigator.clipboard.writeText(url);
+                      toast.success("Link copied to clipboard!");
+                    } catch {
+                      toast.error("Could not copy link. Please copy the URL manually.");
+                    }
+                  }
+                }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-ocean-pale)] text-sm font-medium transition-colors text-[var(--color-ocean)]"
               >
                 <Share2 className="w-4 h-4" /> Share

@@ -132,9 +132,29 @@ export default function Directory() {
     ? `/directory/${selectedCategory}`
     : "/directory";
 
+  const directorySchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `https://shopinsiestakey.com${seoCanonical}#collection`,
+    "name": seoTitle,
+    "description": seoDesc,
+    "url": `https://shopinsiestakey.com${seoCanonical}`,
+    "isPartOf": { "@id": "https://shopinsiestakey.com/#website" },
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": total,
+      "itemListElement": businesses.slice(0, 20).map((b, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "url": `https://shopinsiestakey.com/business/${b.slug}`,
+        "name": b.name,
+      }))
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <SEO title={seoTitle} description={seoDesc} canonical={seoCanonical} />
+      <SEO title={seoTitle} description={seoDesc} canonical={seoCanonical} jsonLd={directorySchema} />
       <Navbar />
 
       {/* ── Page Header ─────────────────────────────────────────────────────── */}
