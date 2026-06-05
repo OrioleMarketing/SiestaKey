@@ -253,14 +253,17 @@
 
 ## Enhancement Round 30 — Blog / Guide Section
 
-- [ ] Add blog_posts table to drizzle schema
-- [ ] Run migration and apply SQL
-- [ ] Add db.ts helpers: getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost
-- [ ] Add tRPC procedures: blog.list, blog.bySlug, blog.create (admin), blog.update (admin), blog.delete (admin)
-- [ ] Build /guide page — article listing with category filter and featured post hero
-- [ ] Build /guide/[slug] page — full article with JSON-LD Article schema, related posts, CTA to directory
-- [ ] Add Admin blog editor tab — create/edit/delete posts with markdown editor
-- [ ] Add "Guide" nav link to Navbar
-- [ ] Add blog teaser section to Homepage (latest 3 posts)
-- [ ] Seed 4 articles targeting high-value local search terms
-- [ ] Add JSON-LD Article schema to blog post pages
+- [x] Add blog_posts table to drizzle schema
+- [x] Run migration and apply SQL
+- [x] Add db.ts helpers: getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost
+- [x] Add tRPC procedures: blog.list, blog.bySlug, blog.create (admin), blog.update (admin), blog.delete (admin)
+- [x] Build /guides page — article listing with featured post hero
+- [x] Build /guides/:slug page — full article with JSON-LD Article schema, Share button, CTA to directory
+- [x] Add Admin blog editor tab — create/edit/delete posts with markdown editor
+- [x] Add "Guides" nav link to Navbar
+- [x] Add blog teaser section to Homepage (latest 3 posts)
+- [x] Seed 4 articles targeting high-value local search terms
+- [x] Add JSON-LD Article schema to blog post pages
+- [x] Add 4 blog post URLs to /sitemap.xml (now 284 total URLs)
+- [x] Fix blog article paragraph spacing (prose-p:mb-5, leading-relaxed, heading margins)
+- [x] Generate and assign unique AI cover images for all 4 blog posts
