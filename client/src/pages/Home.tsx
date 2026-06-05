@@ -211,19 +211,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Featured Businesses ───────────────────────────────────────────────── */}
+      {/* ── Featured Businesses (Gulf Breeze) ─────────────────────────────────── */}
       <section className="py-16 bg-white">
         <div className="container">
           <div className="flex items-end justify-between mb-10">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Crown className="w-5 h-5 text-[var(--color-gold)]" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-gold)]">
-                  Featured & Sponsored
+                <Star className="w-5 h-5 text-[var(--color-ocean)]" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ocean)]">
+                  Featured Listings
                 </span>
               </div>
               <h2 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)]">
-                Top Siesta Key Businesses
+                Featured Siesta Key Businesses
               </h2>
             </div>
             <a
@@ -247,19 +247,50 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featured.slice(0, 9).map((biz, i) => (
-                <div
-                  key={biz.id}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${i * 0.07}s` }}
-                >
-                  <BusinessCard business={biz} />
-                </div>
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            const featuredOnly = featured.filter((b: any) => !b.isSponsored).slice(0, 9);
+            const sponsoredOnly = featured.filter((b: any) => b.isSponsored).slice(0, 9);
+            return (
+              <>
+                {/* Featured (non-sponsored) grid */}
+                {featuredOnly.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {featuredOnly.map((biz: any, i: number) => (
+                      <div key={biz.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                        <BusinessCard business={biz} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Sponsored section */}
+                {sponsoredOnly.length > 0 && (
+                  <div className="mt-14">
+                    <div className="flex items-end justify-between mb-8">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Crown className="w-5 h-5 text-[var(--color-gold)]" />
+                          <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-gold)]">
+                            Sponsored Listings
+                          </span>
+                        </div>
+                        <h2 className="font-serif text-2xl md:text-3xl font-bold text-[var(--color-charcoal)]">
+                          Our Sponsors
+                        </h2>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sponsoredOnly.map((biz: any, i: number) => (
+                        <div key={biz.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                          <BusinessCard business={biz} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {/* View All buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">

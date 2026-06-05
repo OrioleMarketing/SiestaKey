@@ -1,4 +1,4 @@
-import { and, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   Business,
@@ -161,7 +161,7 @@ export async function getBusinesses(opts: {
       .orderBy(
         desc(businesses.isSponsored),
         desc(businesses.isFeatured),
-        desc(businesses.reviewCount)
+        asc(businesses.name)
       )
       .limit(limit)
       .offset(offset),
