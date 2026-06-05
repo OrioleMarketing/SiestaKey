@@ -285,9 +285,20 @@ export default function BusinessProfile() {
               {(business.description || business.shortDescription) && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h2 className="font-serif text-xl font-semibold mb-4 text-[var(--color-charcoal)]">About</h2>
-                  <p className="text-[var(--color-muted-foreground)] leading-relaxed">
-                    {business.description ?? business.shortDescription}
-                  </p>
+                  <div className="text-[var(--color-muted-foreground)] leading-relaxed space-y-4">
+                    {(business.description ?? business.shortDescription ?? "")
+                      .split(/\n\n+/)
+                      .map((para, i) => (
+                        <p key={i}>
+                          {para.split(/\n/).map((line, j, arr) => (
+                            <span key={j}>
+                              {line}
+                              {j < arr.length - 1 && <br />}
+                            </span>
+                          ))}
+                        </p>
+                      ))}
+                  </div>
                 </div>
               )}
 
