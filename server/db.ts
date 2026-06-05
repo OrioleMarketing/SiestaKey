@@ -231,6 +231,8 @@ export async function updateClaimStatus(
   id: number,
   status: "approved" | "rejected",
   approvedAt?: Date,
+  rejectionReason?: string,
+  rejectionNotes?: string,
 ): Promise<void> {
   const db = await getDb();
   if (!db) return;
@@ -239,6 +241,8 @@ export async function updateClaimStatus(
     .set({
       status,
       approvedAt: status === "approved" ? (approvedAt ?? new Date()) : null,
+      rejectionReason: status === "rejected" ? (rejectionReason ?? null) : null,
+      rejectionNotes: status === "rejected" ? (rejectionNotes ?? null) : null,
     })
     .where(eq(claimLeads.id, id));
 }

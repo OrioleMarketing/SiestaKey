@@ -98,6 +98,8 @@ export const claimLeads = mysqlTable("claim_leads", {
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
   ghlContactId: varchar("ghlContactId", { length: 100 }),
   approvedAt: timestamp("approvedAt"),
+  rejectionReason: varchar("rejectionReason", { length: 300 }),
+  rejectionNotes: text("rejectionNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

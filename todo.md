@@ -198,3 +198,12 @@
 - [x] Homepage: show all featured businesses (gulf_breeze + island_premier) not just a limited count
 - [x] BusinessCard + BusinessProfile: use lifeguard image as default photo for unclaimed free-tier listings
 - [x] BusinessProfile: redesign to match Hawaii Thrive detail page layout with all plan-tier features
+
+## Enhancement Round 22 — Admin Rejection Dialog + Claim Form Hint
+- [x] Admin ClaimsTab: Reject button now opens a dialog instead of immediately rejecting
+- [x] Admin ClaimsTab rejection dialog: 17-item dropdown of pre-set rejection reasons (required)
+- [x] Admin ClaimsTab rejection dialog: free-text Additional Notes textarea (optional, included in GHL notification)
+- [x] Admin ClaimsTab rejection dialog: Confirm Rejection button disabled until a reason is selected
+- [x] Backend: rejectClaim tRPC procedure already accepts rejectionReason + rejectionNotes; passes to GHL custom fields + triggers CLAIM_REQUEST_REJECTED workflow
+- [x] ClaimBusiness form: branded email domain hint below email field ("Tip: Using your business email helps verify ownership faster")
+- [x] Vitest: added 3 new tests for rejectClaim input validation (missing claimId, reason too long, notes too long)

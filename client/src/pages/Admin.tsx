@@ -1038,6 +1038,26 @@ function SubmissionsTab() {
   );
 }
 
+const REJECTION_REASONS = [
+  "Claimant cannot prove ownership or authorized representation",
+  "A different person has already claimed this listing",
+  "Name provided does not match the registered business owner",
+  "Email domain does not match the business website domain",
+  "Business name submitted does not match the listing",
+  "Phone number provided does not match the business on record",
+  "Address provided does not match the listing address",
+  "Business appears to be permanently closed",
+  "Suspected fraudulent claim — information appears fabricated",
+  "Duplicate claim submitted for the same business",
+  "Claimant has previously had a claim rejected for this listing",
+  "Business is not located in the Siesta Key service area",
+  "Business category is not eligible for directory listing",
+  "Suspected competitor attempting to claim a rival's listing",
+  "Insufficient information provided to verify ownership",
+  "Claimant did not respond to verification request in time",
+  "Other (see notes below)",
+];
+
 // ─── Claims Tab ─────────────────────────────────────────────────────────────────
 function ClaimsTab() {
   const utils = trpc.useUtils();
@@ -1047,6 +1067,11 @@ function ClaimsTab() {
   const [approvedSlugs, setApprovedSlugs] = useState<Record<number, string>>({});
   // IDs of claims just resolved in this session — keep them visible so links are accessible
   const [justResolved, setJustResolved] = useState<Set<number>>(new Set());
+  // Rejection dialog state
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<{ claimId: number; contactId?: string; businessName: string } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectNotes, setRejectNotes] = useState("");
 
   const approveMutation = trpc.admin.approveClaim.useMutation({
     onSuccess: (data, variables) => {
@@ -1203,16 +1228,16 @@ function ClaimsTab() {
                         <CheckCircle2 className="w-3 h-3" /> Approve
                       </button>
                       <button
-                        onClick={() =>
-                          rejectMutation.mutate({
-                            claimId: c.id,
-                            contactId: (c as any).ghlContactId ?? undefined,
-                          })
-                        }
+                        onClick={() => {
+                          setRejectTarget({ claimId: c.id, contactId: (c as any).ghlContactId ?? undefined, businessName: c.businessName });
+                          setRejectReason("");
+                          setRejectNotes("");
+                          setRejectDialogOpen(true);
+                        }}
                         disabled={rejectMutation.isPending}
                         className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
                       >
-                        Reject
+                        <XCircle className="w-3 h-3" /> Reject
                       </button>
                     </>
                   )}
@@ -1222,6 +1247,74 @@ function ClaimsTab() {
           </Card>
         );
       })}
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={(v) => { if (!v) setRejectDialogOpen(false); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              Reject Claim — {rejectTarget?.businessName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="reject-reason" className="text-sm font-medium">
+                Rejection Reason <span className="text-red-500">*</span>
+              </Label>
+              <Select value={rejectReason} onValueChange={setRejectReason}>
+                <SelectTrigger id="reject-reason" className="mt-1">
+                  <SelectValue placeholder="Select a reason…" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {REJECTION_REASONS.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="reject-notes" className="text-sm font-medium">
+                Additional Notes <span className="text-xs text-muted-foreground font-normal">(optional — included in rejection email)</span>
+              </Label>
+              <Textarea
+                id="reject-notes"
+                value={rejectNotes}
+                onChange={(e) => setRejectNotes(e.target.value)}
+                placeholder="Add any specific details or instructions for the claimant…"
+                rows={4}
+                className="mt-1"
+              />
+            </div>
+            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-xs text-red-700">
+              The claimant will be notified via GHL with the selected reason and notes.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)} disabled={rejectMutation.isPending}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={!rejectReason || rejectMutation.isPending}
+              onClick={() => {
+                if (!rejectTarget) return;
+                rejectMutation.mutate(
+                  { claimId: rejectTarget.claimId, contactId: rejectTarget.contactId, rejectionReason: rejectReason, rejectionNotes: rejectNotes || undefined },
+                  {
+                    onSuccess: () => {
+                      setRejectDialogOpen(false);
+                      setJustResolved((prev) => new Set(Array.from(prev).concat(rejectTarget.claimId)));
+                    },
+                  }
+                );
+              }}
+            >
+              {rejectMutation.isPending ? "Rejecting…" : "Confirm Rejection"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {pending.length === 0 && !showResolved && (
         <div className="text-center py-12 text-muted-foreground">

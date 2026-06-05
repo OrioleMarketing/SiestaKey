@@ -115,3 +115,41 @@ describe("auth.logout", () => {
     expect(result.success).toBe(true);
   });
 });
+
+describe("admin.rejectClaim input validation", () => {
+  function createAdminContext(): TrpcContext {
+    return {
+      user: { id: 1, openId: "admin-open-id", email: "admin@test.com", name: "Admin", role: "admin", createdAt: new Date() },
+      req: { protocol: "https", headers: {} } as TrpcContext["req"],
+      res: { clearCookie: () => {} } as unknown as TrpcContext["res"],
+    };
+  }
+
+  it("rejects when claimId is missing", async () => {
+    const caller = appRouter.createCaller(createAdminContext());
+    await expect(
+      // @ts-expect-error intentionally passing bad input
+      caller.admin.rejectClaim({})
+    ).rejects.toThrow();
+  });
+
+  it("rejects when rejectionReason exceeds 300 chars", async () => {
+    const caller = appRouter.createCaller(createAdminContext());
+    await expect(
+      caller.admin.rejectClaim({
+        claimId: 9999,
+        rejectionReason: "x".repeat(301),
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects when rejectionNotes exceeds 2000 chars", async () => {
+    const caller = appRouter.createCaller(createAdminContext());
+    await expect(
+      caller.admin.rejectClaim({
+        claimId: 9999,
+        rejectionNotes: "x".repeat(2001),
+      })
+    ).rejects.toThrow();
+  });
+});

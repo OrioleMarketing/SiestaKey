@@ -304,13 +304,36 @@ export const appRouter = router({
       }),
 
     rejectClaim: adminProcedure
-      .input(z.object({ claimId: z.number(), contactId: z.string().optional() }))
+      .input(z.object({
+        claimId: z.number(),
+        contactId: z.string().optional(),
+        rejectionReason: z.string().max(300).optional(),
+        rejectionNotes: z.string().max(2000).optional(),
+      }))
       .mutation(async ({ input }) => {
-        // Update claim status to rejected
-        await updateClaimStatus(input.claimId, "rejected");
+        // Update claim status to rejected with reason and notes
+        await updateClaimStatus(
+          input.claimId,
+          "rejected",
+          undefined,
+          input.rejectionReason,
+          input.rejectionNotes,
+        );
 
         if (input.contactId) {
           await ghlAddTags(input.contactId, ["Claim Rejected"]);
+          // Pass rejection reason and notes as custom fields to GHL contact
+          try {
+            const { ghlUpdateContact } = await import("./ghl");
+            await ghlUpdateContact(input.contactId, {
+              customFields: [
+                { key: "claim_rejection_reason", field_value: input.rejectionReason ?? "" },
+                { key: "claim_rejection_notes", field_value: input.rejectionNotes ?? "" },
+              ],
+            });
+          } catch (e) {
+            console.error("[GHL] failed to set rejection custom fields:", e);
+          }
           await ghlTriggerWorkflow(input.contactId, GHL_WORKFLOWS.CLAIM_REQUEST_REJECTED);
         }
         return { success: true };

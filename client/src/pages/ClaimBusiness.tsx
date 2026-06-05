@@ -199,6 +199,9 @@ export default function ClaimBusiness() {
                       placeholder="you@yourbusiness.com"
                       className="search-input"
                     />
+                    <p className="mt-1.5 text-xs text-[var(--color-muted-foreground)]">
+                      <span className="font-medium text-[var(--color-charcoal)]">Tip:</span> Using your business email address (e.g., <span className="font-mono">you@yourbusiness.com</span>) helps us verify ownership faster. Generic addresses like Gmail or Yahoo may require additional verification.
+                    </p>
                   </div>
 
                   <div>
