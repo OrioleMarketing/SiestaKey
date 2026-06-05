@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
+import { TRPCError } from "@trpc/server";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createClaimLead,
@@ -25,6 +26,15 @@ import {
   updateSubmissionStripeIds,
   getDb,
 } from "./db";
+import {
+  getBlogPosts,
+  getBlogPostBySlug,
+  getBlogPostById,
+  createBlogPost,
+  updateBlogPost,
+  deleteBlogPost,
+  generateSlug,
+} from "./blogDb";
 import { businesses, claimLeads, listingSubmissions, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import {
@@ -1031,6 +1041,90 @@ export const appRouter = router({
       } catch (err) {
         console.error("[GHL] onboardNewUser error:", err);
       }
+      return { success: true };
+    }),
+  }),
+
+  // ─── Blog ─────────────────────────────────────────────────────────────────────
+  blog: router({
+  list: publicProcedure
+    .input(
+      z.object({
+        publishedOnly: z.boolean().optional().default(true),
+        category: z.string().optional(),
+        limit: z.number().min(1).max(50).optional().default(20),
+        offset: z.number().min(0).optional().default(0),
+      }).optional()
+    )
+    .query(async ({ input }) => {
+      return getBlogPosts({
+        publishedOnly: input?.publishedOnly ?? true,
+        category: input?.category,
+        limit: input?.limit ?? 20,
+        offset: input?.offset ?? 0,
+      });
+    }),
+
+  bySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const post = await getBlogPostBySlug(input.slug);
+      if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Article not found" });
+      return post;
+    }),
+
+  create: adminProcedure
+    .input(
+      z.object({
+        title: z.string().min(1).max(300),
+        slug: z.string().optional(),
+        excerpt: z.string().optional(),
+        content: z.string().min(1),
+        coverImage: z.string().optional(),
+        author: z.string().optional().default("Shop in Siesta Key"),
+        category: z.string().optional().default("Guide"),
+        tags: z.array(z.string()).optional().default([]),
+        isPublished: z.boolean().optional().default(false),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const slug = input.slug || generateSlug(input.title);
+      const id = await createBlogPost({
+        ...input,
+        slug,
+        tags: input.tags ?? [],
+        isPublished: input.isPublished ?? false,
+        publishedAt: input.isPublished ? new Date() : null,
+      });
+      return { id, slug };
+    }),
+
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().min(1).max(300).optional(),
+        slug: z.string().optional(),
+        excerpt: z.string().optional(),
+        content: z.string().min(1).optional(),
+        coverImage: z.string().nullable().optional(),
+        author: z.string().optional(),
+        category: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+        isPublished: z.boolean().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      await updateBlogPost(id, data);
+      const updated = await getBlogPostById(id);
+      return updated;
+    }),
+
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await deleteBlogPost(input.id);
       return { success: true };
     }),
   }),

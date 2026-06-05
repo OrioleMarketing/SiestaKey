@@ -250,3 +250,17 @@
 - [x] Add canonical <link rel="canonical"> to every business profile via SEO component
 - [x] Add ogType prop to SEO component and map category slugs to granular og:type values
 - [x] Add "Last Updated" timestamp below business name on profile page
+
+## Enhancement Round 30 — Blog / Guide Section
+
+- [ ] Add blog_posts table to drizzle schema
+- [ ] Run migration and apply SQL
+- [ ] Add db.ts helpers: getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost
+- [ ] Add tRPC procedures: blog.list, blog.bySlug, blog.create (admin), blog.update (admin), blog.delete (admin)
+- [ ] Build /guide page — article listing with category filter and featured post hero
+- [ ] Build /guide/[slug] page — full article with JSON-LD Article schema, related posts, CTA to directory
+- [ ] Add Admin blog editor tab — create/edit/delete posts with markdown editor
+- [ ] Add "Guide" nav link to Navbar
+- [ ] Add blog teaser section to Homepage (latest 3 posts)
+- [ ] Seed 4 articles targeting high-value local search terms
+- [ ] Add JSON-LD Article schema to blog post pages

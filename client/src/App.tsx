@@ -15,6 +15,8 @@ import Terms from "./pages/Terms";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import Contact from "./pages/Contact";
+import BlogIndex from "./pages/BlogIndex";
+import BlogPost from "./pages/BlogPost";
 
 function Router() {
   return (
@@ -31,6 +33,8 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/contact" component={Contact} />
+      <Route path="/guides" component={BlogIndex} />
+      <Route path="/guides/:slug" component={BlogPost} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

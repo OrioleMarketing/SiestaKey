@@ -131,3 +131,23 @@ export const listingSubmissions = mysqlTable("listing_submissions", {
 });
 
 export type ListingSubmission = typeof listingSubmissions.$inferSelect;
+
+// ─── Blog Posts ────────────────────────────────────────────────────────────────
+export const blogPosts = mysqlTable("blog_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 200 }).notNull().unique(),
+  title: varchar("title", { length: 300 }).notNull(),
+  excerpt: text("excerpt"),
+  content: text("content").notNull(),
+  coverImage: varchar("coverImage", { length: 500 }),
+  author: varchar("author", { length: 150 }).default("Shop in Siesta Key"),
+  category: varchar("category", { length: 100 }).default("Guide"),
+  tags: json("tags").$type<string[]>().default([]),
+  isPublished: boolean("isPublished").default(false).notNull(),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;

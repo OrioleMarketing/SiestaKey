@@ -1488,6 +1488,13 @@ export default function Admin() {
               <FileSpreadsheet className="w-4 h-4 mr-2 inline" />
               CSV Import
             </TabsTrigger>
+            <TabsTrigger
+              value="blog"
+              className="rounded-lg data-[state=active]:bg-ocean data-[state=active]:text-white px-4 py-2 text-sm font-medium"
+            >
+              <MessageSquare className="w-4 h-4 mr-2 inline" />
+              Blog / Guides
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="businesses">
@@ -1547,8 +1554,187 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="blog">
+            <Card className="card-coastal">
+              <CardHeader className="pb-4">
+                <CardTitle className="font-serif text-lg">Blog &amp; Guides</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Create, edit, and publish guides and articles for the Guides section.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <BlogTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+// ─── Blog Tab ────────────────────────────────────────────────────────────────
+const BLOG_CATEGORIES = ["Guide", "Dining", "Activities", "Shopping", "Beach Tips", "Events"];
+
+function BlogTab() {
+  const utils = trpc.useUtils();
+  const { data: posts, isLoading } = trpc.blog.list.useQuery({ publishedOnly: false, limit: 100 });
+
+  const [editPost, setEditPost] = useState<{
+    id?: number; title: string; slug: string; excerpt: string; content: string;
+    coverImage: string; author: string; category: string; tags: string; isPublished: boolean;
+  } | null>(null);
+
+  const createMutation = trpc.blog.create.useMutation({
+    onSuccess: () => { utils.blog.list.invalidate(); setEditPost(null); toast.success("Article created!"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateMutation = trpc.blog.update.useMutation({
+    onSuccess: () => { utils.blog.list.invalidate(); setEditPost(null); toast.success("Article updated!"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMutation = trpc.blog.delete.useMutation({
+    onSuccess: () => { utils.blog.list.invalidate(); toast.success("Article deleted."); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const blankPost = { title: "", slug: "", excerpt: "", content: "", coverImage: "", author: "Shop in Siesta Key", category: "Guide", tags: "", isPublished: false };
+
+  const handleSave = () => {
+    if (!editPost) return;
+    const payload = {
+      title: editPost.title,
+      slug: editPost.slug || undefined,
+      excerpt: editPost.excerpt || undefined,
+      content: editPost.content,
+      coverImage: editPost.coverImage || undefined,
+      author: editPost.author || undefined,
+      category: editPost.category || undefined,
+      tags: editPost.tags ? editPost.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
+      isPublished: editPost.isPublished,
+    };
+    if (editPost.id) {
+      updateMutation.mutate({ id: editPost.id, ...payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-sm text-muted-foreground">{posts?.length ?? 0} articles</p>
+        <Button size="sm" onClick={() => setEditPost(blankPost)}>
+          <Plus className="w-4 h-4 mr-1" /> New Article
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+      ) : (posts ?? []).length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground">
+          <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
+          <p>No articles yet. Create your first guide!</p>
+        </div>
+      ) : (
+        <div className="divide-y">
+          {(posts ?? []).map((post) => (
+            <div key={post.id} className="flex items-center justify-between py-3 gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm truncate">{post.title}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Badge variant={post.isPublished ? "default" : "secondary"} className="text-xs">
+                    {post.isPublished ? "Published" : "Draft"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">{post.category}</span>
+                  <span className="text-xs text-muted-foreground">/guides/{post.slug}</span>
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button size="sm" variant="outline" onClick={() => setEditPost({
+                  id: post.id, title: post.title, slug: post.slug,
+                  excerpt: post.excerpt ?? "", content: post.content,
+                  coverImage: post.coverImage ?? "", author: post.author ?? "Shop in Siesta Key",
+                  category: post.category ?? "Guide",
+                  tags: (post.tags as string[]).join(", "),
+                  isPublished: post.isPublished ?? false,
+                })}>
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600"
+                  onClick={() => { if (confirm("Delete this article?")) deleteMutation.mutate({ id: post.id }); }}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Edit / Create dialog */}
+      <Dialog open={!!editPost} onOpenChange={(o) => !o && setEditPost(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editPost?.id ? "Edit Article" : "New Article"}</DialogTitle>
+          </DialogHeader>
+          {editPost && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label>Title *</Label>
+                  <Input value={editPost.title} onChange={e => setEditPost({ ...editPost, title: e.target.value })} placeholder="Best Restaurants on Siesta Key" />
+                </div>
+                <div>
+                  <Label>Slug (auto-generated if blank)</Label>
+                  <Input value={editPost.slug} onChange={e => setEditPost({ ...editPost, slug: e.target.value })} placeholder="best-restaurants-siesta-key" />
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select value={editPost.category} onValueChange={v => setEditPost({ ...editPost, category: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {BLOG_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <Label>Excerpt (shown in listing cards)</Label>
+                  <Textarea rows={2} value={editPost.excerpt} onChange={e => setEditPost({ ...editPost, excerpt: e.target.value })} placeholder="A short summary of the article..." />
+                </div>
+                <div className="col-span-2">
+                  <Label>Content * (Markdown supported)</Label>
+                  <Textarea rows={12} value={editPost.content} onChange={e => setEditPost({ ...editPost, content: e.target.value })} placeholder="Write your article in Markdown..." className="font-mono text-sm" />
+                </div>
+                <div>
+                  <Label>Cover Image URL</Label>
+                  <Input value={editPost.coverImage} onChange={e => setEditPost({ ...editPost, coverImage: e.target.value })} placeholder="https://..." />
+                </div>
+                <div>
+                  <Label>Author</Label>
+                  <Input value={editPost.author} onChange={e => setEditPost({ ...editPost, author: e.target.value })} />
+                </div>
+                <div className="col-span-2">
+                  <Label>Tags (comma-separated)</Label>
+                  <Input value={editPost.tags} onChange={e => setEditPost({ ...editPost, tags: e.target.value })} placeholder="restaurants, dining, siesta key" />
+                </div>
+                <div className="col-span-2 flex items-center gap-3">
+                  <input type="checkbox" id="isPublished" checked={editPost.isPublished}
+                    onChange={e => setEditPost({ ...editPost, isPublished: e.target.checked })}
+                    className="w-4 h-4 rounded" />
+                  <Label htmlFor="isPublished" className="cursor-pointer">Publish immediately (visible to all visitors)</Label>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPost(null)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending}>
+              {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Article"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

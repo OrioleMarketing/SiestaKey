@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Search, MapPin, Star, ArrowRight, Waves, UtensilsCrossed, ShoppingBag, Sailboat, Music, Heart, Bed, Home as HomeIcon, Wrench, Crown, Sparkles } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, Waves, UtensilsCrossed, ShoppingBag, Sailboat, Music, Heart, Bed, Home as HomeIcon, Wrench, Crown, Sparkles, BookOpen, Calendar } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -429,6 +429,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Guides Teaser ─────────────────────────────────────────────────── */}
+      <GuidesTeaser />
+
       {/* ── CTA Strip ─────────────────────────────────────────────────────────── */}
       <section className="py-12 bg-ocean-gradient text-white">
         <div className="container text-center">
@@ -451,5 +454,72 @@ export default function Home() {
 
       <Footer />
     </div>
+  );
+}
+
+// ─── Guides Teaser ──────────────────────────────────────────────────────────
+const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+
+function GuidesTeaser() {
+  const { data: posts } = trpc.blog.list.useQuery({ publishedOnly: true, limit: 3 });
+
+  if (!posts || posts.length === 0) return null;
+
+  return (
+    <section className="py-16 bg-[var(--color-white-sand)]">
+      <div className="container">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-semibold uppercase tracking-wider mb-3">
+              <BookOpen className="w-3.5 h-3.5" /> Local Guides
+            </div>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)]">
+              Explore Siesta Key
+            </h2>
+            <p className="text-[var(--color-muted-foreground)] mt-2 max-w-lg">
+              Insider tips and local guides to help you make the most of your visit.
+            </p>
+          </div>
+          <a href="/guides" className="hidden md:flex items-center gap-1 text-sm font-semibold text-[var(--color-ocean)] hover:underline shrink-0">
+            View All Guides <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((post) => (
+            <a key={post.id} href={`/guides/${post.slug}`} className="group block bg-white rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
+              <div className="h-44 overflow-hidden">
+                <img
+                  src={post.coverImage ?? PANORAMA_DEFAULT}
+                  alt={post.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="p-5">
+                <span className="text-xs font-semibold text-teal-600 uppercase tracking-wide">{post.category ?? "Guide"}</span>
+                <h3 className="font-bold text-[var(--color-charcoal)] mt-1 mb-2 leading-snug line-clamp-2 group-hover:text-[var(--color-ocean)] transition-colors">
+                  {post.title}
+                </h3>
+                {post.excerpt && (
+                  <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">{post.excerpt}</p>
+                )}
+                {post.publishedAt && (
+                  <div className="flex items-center gap-1 mt-3 text-xs text-gray-400">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  </div>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <div className="mt-6 text-center md:hidden">
+          <a href="/guides" className="btn-ocean px-6 py-2.5 text-sm inline-flex items-center gap-2">
+            View All Guides <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
