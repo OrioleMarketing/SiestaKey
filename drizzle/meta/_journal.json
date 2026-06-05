@@ -50,6 +50,13 @@
       "when": 1780675790729,
       "tag": "0006_purple_may_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1780677977499,
+      "tag": "0007_skinny_shiva",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,7 @@ interface BusinessCardProps {
     isFeatured: boolean;
     isSponsored: boolean;
     isClaimed?: boolean | null;
+    isChamberMember?: boolean | null;
     rating?: string | null;
     reviewCount?: number | null;
     tags?: string[] | null;
@@ -83,6 +84,16 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-600 text-white shadow">
                   <BadgeCheck className="w-3 h-3" /> CLAIMED
                 </span>
+              </div>
+            )}
+            {(business as any).isChamberMember && (
+              <div className="absolute bottom-2 left-2">
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+                  alt="Siesta Key Chamber Member"
+                  title="Siesta Key Chamber of Commerce Member"
+                  className="w-10 h-10 rounded-full shadow-lg border-2 border-white/60"
+                />
               </div>
             )}
           </div>

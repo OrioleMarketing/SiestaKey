@@ -217,6 +217,16 @@ export default function BusinessProfile() {
             </Link>
           </div>
         )}
+        {coverImage && (business as any).isChamberMember && (
+          <div className="absolute bottom-4 right-4">
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+              alt="Siesta Key Chamber of Commerce Member"
+              title="Siesta Key Chamber of Commerce Member"
+              className="w-14 h-14 rounded-full shadow-xl border-2 border-white/70"
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Business Name + Meta ──────────────────────────────────────────────── */}

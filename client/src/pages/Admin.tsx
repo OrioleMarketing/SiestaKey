@@ -508,7 +508,7 @@ function BusinessesTab() {
     setReviewEmbed(b.googleReviewEmbedCode ?? "");
   };
 
-  const toggle = (id: number, field: "isFeatured" | "isSponsored" | "isActive", current: boolean) => {
+  const toggle = (id: number, field: "isFeatured" | "isSponsored" | "isActive" | "isChamberMember", current: boolean) => {
     updateBusiness.mutate({ id, [field]: !current });
   };
 
@@ -546,6 +546,7 @@ function BusinessesTab() {
               <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Sponsored</th>
               <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Active</th>
               <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Claimed</th>
+              <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Chamber</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
@@ -618,6 +619,21 @@ function BusinessesTab() {
                   }`}>
                     {b.isClaimed ? "Claimed" : "Unclaimed"}
                   </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => toggle(b.id, "isChamberMember", (b as any).isChamberMember ?? false)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors ${
+                      (b as any).isChamberMember ? "bg-teal-600 text-white" : "bg-muted text-muted-foreground hover:bg-teal-100"
+                    }`}
+                    title={(b as any).isChamberMember ? "Remove Chamber Member" : "Mark as Chamber Member"}
+                  >
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+                      alt="Chamber"
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  </button>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">

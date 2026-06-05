@@ -1,0 +1,1 @@
+ALTER TABLE `businesses` ADD `isChamberMember` boolean DEFAULT false NOT NULL;

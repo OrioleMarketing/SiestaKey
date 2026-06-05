@@ -55,6 +55,7 @@ export const appRouter = router({
           isSponsored: z.boolean().optional(),
           isActive: z.boolean().optional(),
           isClaimed: z.boolean().optional(),
+          isChamberMember: z.boolean().optional(),
           tier: z.enum(["free", "featured", "sponsored"]).optional(),
           // Core fields
           name: z.string().min(1).max(200).optional(),
