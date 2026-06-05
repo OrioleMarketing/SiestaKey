@@ -17,6 +17,12 @@ interface SEOProps {
   image?: string;
   /** "website" for static pages, "article" for blog/profile pages */
   type?: "website" | "article";
+  /**
+   * Granular og:type value — overrides `type` for Open Graph only.
+   * e.g. "restaurant.restaurant", "business.business"
+   * See https://ogp.me/#types for valid values.
+   */
+  ogType?: string;
   /** Prevent search engines from indexing this page */
   noIndex?: boolean;
   /** One or more JSON-LD structured data objects to inject into <head> */
@@ -38,6 +44,7 @@ export default function SEO({
   canonical,
   image = DEFAULT_IMAGE,
   type = "website",
+  ogType,
   noIndex = false,
   jsonLd,
 }: SEOProps) {
@@ -60,7 +67,7 @@ export default function SEO({
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
       {/* Open Graph */}
-      <meta property="og:type" content={type} />
+      <meta property="og:type" content={ogType ?? type} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />

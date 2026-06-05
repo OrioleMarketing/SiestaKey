@@ -245,3 +245,8 @@
 - [x] Add dynamic /sitemap.xml server route listing all active business slugs and category pages (216 URLs)
 - [x] Add /robots.txt pointing crawlers to the sitemap
 - [x] Map category slugs to schema.org LocalBusiness subtypes in BusinessProfile JSON-LD (Restaurant, Store, TouristAttraction, etc.)
+
+## Enhancement Round 29 — Canonical Tags, OG Types, Last Updated
+- [x] Add canonical <link rel="canonical"> to every business profile via SEO component
+- [x] Add ogType prop to SEO component and map category slugs to granular og:type values
+- [x] Add "Last Updated" timestamp below business name on profile page

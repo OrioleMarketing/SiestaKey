@@ -62,6 +62,19 @@ const CATEGORY_SCHEMA_TYPE: Record<string, string> = {
   "real-estate": "RealEstateAgent",
 };
 
+// Maps category slugs to Open Graph object types for richer social share cards
+// See: https://ogp.me/#types
+const CATEGORY_OG_TYPE: Record<string, string> = {
+  dining: "restaurant.restaurant",
+  shopping: "business.business",
+  activities: "place",
+  nightlife: "bar",
+  accommodations: "hotel",
+  services: "business.business",
+  wellness: "business.business",
+  "real-estate": "business.business",
+};
+
 const SOCIAL_ICONS: Record<string, React.ElementType> = {
   facebook: Facebook,
   instagram: Instagram,
@@ -164,6 +177,7 @@ export default function BusinessProfile() {
   // ── JSON-LD Structured Data ──────────────────────────────────────────────
   const categorySlug = (business as any).categorySlug as string | null;
   const schemaType = (categorySlug && CATEGORY_SCHEMA_TYPE[categorySlug]) ?? "LocalBusiness";
+  const ogTypeValue = (categorySlug && CATEGORY_OG_TYPE[categorySlug]) ?? "business.business";
 
   const businessSchema: Record<string, unknown>[] = [
     {
@@ -231,6 +245,7 @@ export default function BusinessProfile() {
         canonical={`/business/${business.slug}`}
         image={seoImage}
         type="article"
+        ogType={ogTypeValue}
         jsonLd={businessSchema}
       />
       <Navbar />
@@ -361,6 +376,17 @@ export default function BusinessProfile() {
 
               {business.rating && business.reviewCount != null && business.reviewCount > 0 && (
                 <StarRating rating={business.rating} count={business.reviewCount} />
+              )}
+
+              {/* Last Updated timestamp */}
+              {business.updatedAt && (
+                <p className="mt-1.5 text-xs text-[var(--color-muted-foreground)]">
+                  Last updated{" "}
+                  {new Date(business.updatedAt).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
               )}
             </div>
 
