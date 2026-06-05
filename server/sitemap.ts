@@ -1,6 +1,6 @@
 import { Express, Request, Response } from "express";
 import { getDb } from "./db";
-import { businesses, categories } from "../drizzle/schema";
+import { businesses, categories, blogPosts } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 const BASE_URL = "https://shopinsiestakey.com";
@@ -12,6 +12,7 @@ const STATIC_PAGES = [
   { loc: "/pricing", changefreq: "weekly", priority: "0.7" },
   { loc: "/claim", changefreq: "monthly", priority: "0.6" },
   { loc: "/contact", changefreq: "monthly", priority: "0.5" },
+  { loc: "/guides", changefreq: "weekly", priority: "0.8" },
 ];
 
 // Category slugs for directory sub-pages
@@ -37,7 +38,8 @@ function xmlEscape(str: string): string {
 
 function buildSitemapXml(
   staticUrls: { loc: string; changefreq: string; priority: string; lastmod?: string }[],
-  businessUrls: { loc: string; lastmod: string }[]
+  businessUrls: { loc: string; lastmod: string }[],
+  blogUrls: { loc: string; lastmod: string }[] = []
 ): string {
   const now = new Date().toISOString().split("T")[0];
 
@@ -72,6 +74,17 @@ function buildSitemapXml(
     )
     .join("\n");
 
+  const blogEntries = blogUrls
+    .map(
+      (u) => `  <url>
+    <loc>${xmlEscape(BASE_URL + u.loc)}</loc>
+    <lastmod>${u.lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+    )
+    .join("\n");
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -79,6 +92,7 @@ function buildSitemapXml(
           http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 ${staticEntries}
 ${categoryEntries}
+${blogEntries}
 ${businessEntries}
 </urlset>`;
 }
@@ -108,7 +122,26 @@ export function registerSitemapRoutes(app: Express): void {
         }));
       }
 
-      const xml = buildSitemapXml(STATIC_PAGES, businessUrls);
+      let blogUrls: { loc: string; lastmod: string }[] = [];
+
+      if (db) {
+        const blogRows = await db
+          .select({
+            slug: blogPosts.slug,
+            updatedAt: blogPosts.updatedAt,
+          })
+          .from(blogPosts)
+          .where(eq(blogPosts.isPublished, true));
+
+        blogUrls = blogRows.map((r) => ({
+          loc: `/guides/${r.slug}`,
+          lastmod: r.updatedAt
+            ? new Date(r.updatedAt).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+        }));
+      }
+
+      const xml = buildSitemapXml(STATIC_PAGES, businessUrls, blogUrls);
 
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=3600"); // cache 1 hour
