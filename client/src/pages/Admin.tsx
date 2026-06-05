@@ -254,6 +254,7 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
       tripadvisor: (biz.socialLinks as Record<string,string>)?.tripadvisor ?? "",
     },
     googleReviewEmbedCode: biz.googleReviewEmbedCode ?? "",
+    coverPhoto: (biz as any).coverPhoto ?? "",
   });
 
   const updateBusiness = trpc.admin.updateBusiness.useMutation({
@@ -264,6 +265,8 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
   const set = (field: string, value: unknown) => setForm(f => ({ ...f, [field]: value }));
   const setHour = (day: string, val: string) => setForm(f => ({ ...f, hours: { ...f.hours, [day]: val } }));
   const setSocial = (key: string, val: string) => setForm(f => ({ ...f, socialLinks: { ...f.socialLinks, [key]: val } }));
+
+  const photos = Array.isArray((biz as any).photos) ? (biz as any).photos as string[] : [];
 
   const handleSave = () => {
     const hours: Record<string,string> = {};
@@ -291,6 +294,7 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
       hours: Object.keys(hours).length ? hours : null,
       socialLinks: Object.keys(socialLinks).length ? socialLinks : null,
       googleReviewEmbedCode: form.googleReviewEmbedCode || null,
+      coverPhoto: form.coverPhoto || null,
     });
   };
 
@@ -422,6 +426,36 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
               <Input type="number" value={form.reviewCount} onChange={e => set("reviewCount", Number(e.target.value))} className="mt-1" />
             </div>
           </div>
+
+          {/* Cover Photo Picker */}
+          {photos.length > 0 && (
+            <div>
+              <Label className="mb-2 block">Cover Photo <span className="text-muted-foreground text-xs">(shown on listing card and profile hero)</span></Label>
+              <div className="grid grid-cols-4 gap-2">
+                {photos.map((url: string, idx: number) => {
+                  const isCover = form.coverPhoto === url || (!form.coverPhoto && idx === 0);
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => set("coverPhoto", url)}
+                      className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
+                        isCover ? "border-sky-500 ring-2 ring-sky-300" : "border-gray-200 hover:border-sky-300"
+                      }`}
+                    >
+                      <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      {isCover && (
+                        <div className="absolute inset-0 bg-sky-600/20 flex items-end justify-center pb-1">
+                          <span className="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">COVER</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">Click a photo to set it as the cover image.</p>
+            </div>
+          )}
 
           {/* Google Review Embed */}
           <div>

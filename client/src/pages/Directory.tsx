@@ -39,6 +39,9 @@ export default function Directory() {
   const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
   const [selectedCategory, setSelectedCategory] = useState(params.category ?? "all");
   const [selectedArea, setSelectedArea] = useState("All Areas");
+  const [selectedTier, setSelectedTier] = useState<"" | "featured_sponsored" | "featured" | "sponsored">(
+    (searchParams.get("tier") as "featured_sponsored" | "featured" | "sponsored") ?? ""
+  );
   const [page, setPage] = useState(1);
   const [showMap, setShowMap] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
@@ -48,6 +51,7 @@ export default function Directory() {
     categorySlug: selectedCategory === "all" ? undefined : selectedCategory,
     keyword: keyword || undefined,
     area: selectedArea === "All Areas" ? undefined : selectedArea,
+    tier: selectedTier || undefined,
     page,
     limit: 12,
   });
@@ -207,6 +211,28 @@ export default function Directory() {
               >
                 <MapPin className="w-3 h-3 inline mr-1" />
                 {area}
+              </button>
+            ))}
+          </div>
+
+          {/* Tier filter pills */}
+          <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-none">
+            {([
+              { value: "", label: "All Listings" },
+              { value: "featured_sponsored", label: "⭐ Featured & Sponsored" },
+              { value: "featured", label: "Gulf Breeze" },
+              { value: "sponsored", label: "🏆 Sponsored" },
+            ] as const).map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => { setSelectedTier(value); setPage(1); }}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  selectedTier === value
+                    ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]"
+                    : "bg-white text-[var(--color-muted-foreground)] border-[var(--color-border)] hover:border-[var(--color-gold)]"
+                }`}
+              >
+                {label}
               </button>
             ))}
           </div>

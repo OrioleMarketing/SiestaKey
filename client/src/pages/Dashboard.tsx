@@ -554,9 +554,15 @@ export default function Dashboard() {
                   <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                     <ImagePlus className="h-4 w-4 text-sky-500" /> Photo Gallery
                   </h3>
-                  <p className="text-xs text-gray-500 mb-4">
+                  <p className="text-xs text-gray-500 mb-3">
                     Upload up to 10 photos (JPEG, PNG, WebP — max 10MB each). Photos appear on your public business profile.
                   </p>
+                  <div className="flex items-start gap-2 bg-sky-50 border border-sky-200 rounded-lg px-3 py-2 mb-4">
+                    <ImageIcon className="h-3.5 w-3.5 text-sky-500 mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-sky-700 leading-relaxed">
+                      <strong>Cover photo tip:</strong> The first photo you upload becomes your default cover image (shown on listing cards and your profile header). To change it, hover any photo and click <strong>Set Cover</strong>. The active cover is highlighted with a blue border and a <strong>COVER</strong> badge.
+                    </p>
+                  </div>
 
                   {/* Existing photos */}
                   {Array.isArray(listing.photos) && (listing.photos as string[]).length > 0 ? (

@@ -96,17 +96,33 @@ export async function getBusinesses(opts: {
   categorySlug?: string;
   keyword?: string;
   area?: string;
+  tier?: "free" | "featured" | "sponsored" | "featured_sponsored";
   page?: number;
   limit?: number;
 }): Promise<{ items: Business[]; total: number }> {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
 
-  const { categorySlug, keyword, area, page = 1, limit = 12 } = opts;
+  const { categorySlug, keyword, area, tier, page = 1, limit = 12 } = opts;
   const offset = (page - 1) * limit;
 
   // Build conditions
   const conditions = [eq(businesses.isActive, true)];
+
+  if (tier) {
+    if (tier === "featured_sponsored") {
+      conditions.push(
+        or(
+          eq(businesses.tier, "featured"),
+          eq(businesses.tier, "sponsored")
+        )!
+      );
+    } else {
+      // tier is narrowed to "free" | "featured" | "sponsored" here
+      const tierVal = tier as "free" | "featured" | "sponsored";
+      conditions.push(eq(businesses.tier, tierVal));
+    }
+  }
 
   if (categorySlug && categorySlug !== "all") {
     const cat = await db

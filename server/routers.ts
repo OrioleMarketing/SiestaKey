@@ -72,6 +72,7 @@ export const appRouter = router({
           rating: z.string().max(5).nullish(),
           reviewCount: z.number().int().nullish(),
           googleReviewEmbedCode: z.string().nullish(),
+          coverPhoto: z.string().url().nullish(),
           hours: z.record(z.string(), z.string()).nullish(),
           socialLinks: z.record(z.string(), z.string()).nullish(),
           tags: z.array(z.string()).nullish(),
@@ -621,6 +622,7 @@ export const appRouter = router({
           categorySlug: z.string().optional(),
           keyword: z.string().optional(),
           area: z.string().optional(),
+          tier: z.enum(["free", "featured", "sponsored", "featured_sponsored"]).optional(),
           page: z.number().min(1).default(1),
           limit: z.number().min(1).max(50).default(12),
         })
