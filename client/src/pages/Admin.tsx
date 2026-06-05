@@ -516,6 +516,30 @@ function BusinessesTab() {
     updateBusiness.mutate({ id, tier });
   };
 
+  const [sortBy, setSortBy] = useState<"name" | "category">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const CATEGORY_NAMES: Record<number, string> = {
+    1: "Dining", 2: "Shopping", 3: "Activities", 4: "Services",
+    5: "Nightlife", 6: "Wellness", 7: "Accommodations", 8: "Real Estate",
+  };
+
+  const sortedBusinesses = [...(businesses ?? [])].sort((a, b) => {
+    let valA = sortBy === "category" ? (CATEGORY_NAMES[a.categoryId] ?? "") : a.name;
+    let valB = sortBy === "category" ? (CATEGORY_NAMES[b.categoryId] ?? "") : b.name;
+    const cmp = valA.localeCompare(valB);
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const toggleSort = (field: "name" | "category") => {
+    if (sortBy === field) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -529,8 +553,28 @@ function BusinessesTab() {
   return (
     <>
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">{businesses?.length ?? 0} listings</p>
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-muted-foreground">{businesses?.length ?? 0} listings</p>
+          <span className="text-muted-foreground/40">·</span>
+          <span className="text-xs text-muted-foreground">Sort by:</span>
+          <button
+            onClick={() => toggleSort("name")}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+              sortBy === "name" ? "bg-ocean text-white border-ocean" : "bg-white text-muted-foreground border-border hover:border-ocean/50"
+            }`}
+          >
+            A–Z {sortBy === "name" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+          </button>
+          <button
+            onClick={() => toggleSort("category")}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+              sortBy === "category" ? "bg-ocean text-white border-ocean" : "bg-white text-muted-foreground border-border hover:border-ocean/50"
+            }`}
+          >
+            Category {sortBy === "category" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+          </button>
+        </div>
         <Button className="btn-ocean h-8 text-xs gap-1" onClick={() => setShowAdd(true)}>
           <Plus className="w-3.5 h-3.5" /> Add Listing
         </Button>
@@ -540,7 +584,18 @@ function BusinessesTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/50 border-b border-border">
-              <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Business</th>
+              <th
+                className="text-left px-4 py-3 font-semibold text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => toggleSort("name")}
+              >
+                Business {sortBy === "name" ? (sortDir === "asc" ? "↑" : "↓") : <span className="opacity-30">↕</span>}
+              </th>
+              <th
+                className="text-left px-4 py-3 font-semibold text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => toggleSort("category")}
+              >
+                Category {sortBy === "category" ? (sortDir === "asc" ? "↑" : "↓") : <span className="opacity-30">↕</span>}
+              </th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Tier</th>
               <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Featured</th>
               <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Sponsored</th>
@@ -551,7 +606,7 @@ function BusinessesTab() {
             </tr>
           </thead>
           <tbody>
-            {businesses?.map((b, i) => (
+            {sortedBusinesses.map((b, i) => (
               <tr
                 key={b.id}
                 className={`border-b border-border last:border-0 transition-colors hover:bg-muted/30 ${
@@ -562,7 +617,10 @@ function BusinessesTab() {
                   <div className="font-medium text-foreground">{b.name}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{b.area}</div>
                 </td>
-<td className="px-4 py-3">
+                <td className="px-4 py-3">
+                  <span className="text-xs text-muted-foreground">{CATEGORY_NAMES[b.categoryId] ?? "—"}</span>
+                </td>
+                <td className="px-4 py-3">
                   <div title="Admin override — changes tier in DB only, no payment triggered">
                     <Select
                       value={b.tier}
