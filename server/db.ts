@@ -98,13 +98,14 @@ export async function getBusinesses(opts: {
   area?: string;
   tier?: "free" | "featured" | "sponsored" | "featured_sponsored";
   chamberMember?: boolean;
+  sortBy?: "default" | "name" | "category" | "tags";
   page?: number;
   limit?: number;
 }): Promise<{ items: Business[]; total: number }> {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
 
-  const { categorySlug, keyword, area, tier, chamberMember, page = 1, limit = 12 } = opts;
+  const { categorySlug, keyword, area, tier, chamberMember, sortBy = "default", page = 1, limit = 12 } = opts;
   const offset = (page - 1) * limit;
 
   // Build conditions
@@ -164,9 +165,18 @@ export async function getBusinesses(opts: {
       .from(businesses)
       .where(whereClause)
       .orderBy(
-        desc(businesses.isSponsored),
-        desc(businesses.isFeatured),
-        asc(businesses.name)
+        ...(sortBy === "name"
+          ? [asc(businesses.name)]
+          : sortBy === "category"
+          ? [asc(businesses.categoryId), asc(businesses.name)]
+          : sortBy === "tags"
+          ? [asc(businesses.name)] // tags are stored as JSON; sort by name as proxy
+          : [
+              desc(businesses.isSponsored),
+              desc(businesses.isFeatured),
+              asc(businesses.name),
+            ]
+        )
       )
       .limit(limit)
       .offset(offset),

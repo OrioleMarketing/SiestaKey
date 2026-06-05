@@ -43,6 +43,7 @@ export default function Directory() {
     (searchParams.get("tier") as "featured_sponsored" | "featured" | "sponsored") ?? ""
   );
   const [chamberOnly, setChamberOnly] = useState(searchParams.get("chamber") === "1");
+  const [sortBy, setSortBy] = useState<"default" | "name" | "category" | "tags">("default");
   const [page, setPage] = useState(1);
   const [showMap, setShowMap] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
@@ -54,6 +55,7 @@ export default function Directory() {
     area: selectedArea === "All Areas" ? undefined : selectedArea,
     tier: selectedTier || undefined,
     chamberMember: chamberOnly || undefined,
+    sortBy: sortBy === "default" ? undefined : sortBy,
     page,
     limit: 12,
   });
@@ -165,6 +167,20 @@ export default function Directory() {
             <button type="submit" className="btn-ocean px-5 py-2.5 text-sm rounded-xl">
               Search
             </button>
+            {/* Sort dropdown */}
+            <div className="relative shrink-0">
+              <select
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
+                className="appearance-none h-full pl-3 pr-8 rounded-xl border border-[var(--color-border)] text-sm font-medium text-[var(--color-foreground)] bg-white hover:border-[var(--color-ocean-light)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ocean)]/30"
+              >
+                <option value="default">Sort: Featured</option>
+                <option value="name">Sort: Name A–Z</option>
+                <option value="category">Sort: Category</option>
+                <option value="tags">Sort: Tags</option>
+              </select>
+              <SlidersHorizontal className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-muted-foreground)]" />
+            </div>
             <button
               type="button"
               onClick={() => setShowMap(!showMap)}

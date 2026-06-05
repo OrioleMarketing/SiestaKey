@@ -214,3 +214,12 @@
 - [x] Backend routers.ts: add chamberMember: z.boolean().optional() to businesses.list input schema
 - [x] Pill uses teal accent color and small chamber badge thumbnail; toggling it deselects tier pills
 - [x] Vitest: 2 new tests for chamberMember filter (accepts param, returns only chamber members)
+
+## Enhancement Round 24 — Directory Nav Tab + Sort + Label Fix
+- [x] Navbar: add "Directory" link as first item in nav (links to /directory — all listings)
+- [x] Navbar: active state for /directory uses exact match so category sub-pages don't highlight it
+- [x] Directory page: add Sort By dropdown (Featured, Name A–Z, Category, Tags) in the search row
+- [x] Backend db.ts: sortBy param added to getBusinesses (default=featured-first, name=A–Z, category=by categoryId, tags=by name)
+- [x] Backend routers.ts: sortBy z.enum added to businesses.list input schema
+- [x] BusinessCard: "Proud Chamber Member" tooltip changed to "Chamber Member"
+- [x] BusinessProfile: "Proud Chamber Member" tooltip changed to "Chamber Member"

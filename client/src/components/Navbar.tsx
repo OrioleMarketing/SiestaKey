@@ -20,6 +20,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
 
   const navLinks = [
+    { href: "/directory", label: "Directory" },
     { href: "/directory/dining", label: "Dining" },
     { href: "/directory/shopping", label: "Shopping" },
     { href: "/directory/activities", label: "Activities" },
@@ -64,7 +65,7 @@ export default function Navbar() {
                     ? "text-white hover:text-white hover:bg-white/15"
                     : "text-[var(--color-foreground)] hover:text-[var(--color-ocean)] hover:bg-[var(--color-ocean-pale)]"
                 } ${
-                  location === link.href
+                  (link.href === "/directory" ? location === "/directory" : location === link.href)
                     ? transparent
                       ? "text-white bg-white/20"
                       : "text-[var(--color-ocean)] bg-[var(--color-ocean-pale)]"
@@ -164,7 +165,7 @@ export default function Navbar() {
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  location === link.href
+                  (link.href === "/directory" ? location === "/directory" : location === link.href)
                     ? "bg-[var(--color-ocean-pale)] text-[var(--color-ocean)]"
                     : "text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
                 }`}

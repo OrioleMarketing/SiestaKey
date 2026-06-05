@@ -90,11 +90,11 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
               <div className="absolute bottom-2 left-2 group/chamber">
                 <img
                   src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
-                  alt="Proud Chamber Member"
+                  alt="Chamber Member"
                   className="w-10 h-10 rounded-full shadow-lg border-2 border-white/60"
                 />
                 <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-gray-900/90 px-2 py-1 text-[11px] font-medium text-white opacity-0 group-hover/chamber:opacity-100 transition-opacity duration-150 shadow">
-                  Proud Chamber Member
+                  Chamber Member
                 </span>
               </div>
             )}
