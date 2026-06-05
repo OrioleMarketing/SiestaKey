@@ -42,6 +42,7 @@ export default function Directory() {
   const [selectedTier, setSelectedTier] = useState<"" | "featured_sponsored" | "featured" | "sponsored">(
     (searchParams.get("tier") as "featured_sponsored" | "featured" | "sponsored") ?? ""
   );
+  const [chamberOnly, setChamberOnly] = useState(searchParams.get("chamber") === "1");
   const [page, setPage] = useState(1);
   const [showMap, setShowMap] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
@@ -52,6 +53,7 @@ export default function Directory() {
     keyword: keyword || undefined,
     area: selectedArea === "All Areas" ? undefined : selectedArea,
     tier: selectedTier || undefined,
+    chamberMember: chamberOnly || undefined,
     page,
     limit: 12,
   });
@@ -215,7 +217,7 @@ export default function Directory() {
             ))}
           </div>
 
-          {/* Tier filter pills */}
+          {/* Tier + Chamber filter pills */}
           <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-none">
             {([
               { value: "", label: "All Listings" },
@@ -225,9 +227,9 @@ export default function Directory() {
             ] as const).map(({ value, label }) => (
               <button
                 key={value}
-                onClick={() => { setSelectedTier(value); setPage(1); }}
+                onClick={() => { setSelectedTier(value); setChamberOnly(false); setPage(1); }}
                 className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  selectedTier === value
+                  selectedTier === value && !chamberOnly
                     ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]"
                     : "bg-white text-[var(--color-muted-foreground)] border-[var(--color-border)] hover:border-[var(--color-gold)]"
                 }`}
@@ -235,6 +237,22 @@ export default function Directory() {
                 {label}
               </button>
             ))}
+            {/* Chamber Members pill */}
+            <button
+              onClick={() => { setChamberOnly((v) => !v); setSelectedTier(""); setPage(1); }}
+              className={`shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                chamberOnly
+                  ? "bg-teal-600 text-white border-teal-600"
+                  : "bg-white text-[var(--color-muted-foreground)] border-[var(--color-border)] hover:border-teal-500"
+              }`}
+            >
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+                alt=""
+                className="w-3.5 h-3.5 rounded-full object-cover"
+              />
+              Chamber Members
+            </button>
           </div>
         </div>
       </div>

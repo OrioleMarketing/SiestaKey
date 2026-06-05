@@ -207,3 +207,10 @@
 - [x] Backend: rejectClaim tRPC procedure already accepts rejectionReason + rejectionNotes; passes to GHL custom fields + triggers CLAIM_REQUEST_REJECTED workflow
 - [x] ClaimBusiness form: branded email domain hint below email field ("Tip: Using your business email helps verify ownership faster")
 - [x] Vitest: added 3 new tests for rejectClaim input validation (missing claimId, reason too long, notes too long)
+
+## Enhancement Round 23 — Chamber Members Filter
+- [x] Directory page: add "Chamber Members" toggle pill to the tier filter row
+- [x] Backend db.ts: add chamberMember?: boolean filter to getBusinesses (eq isChamberMember = true)
+- [x] Backend routers.ts: add chamberMember: z.boolean().optional() to businesses.list input schema
+- [x] Pill uses teal accent color and small chamber badge thumbnail; toggling it deselects tier pills
+- [x] Vitest: 2 new tests for chamberMember filter (accepts param, returns only chamber members)

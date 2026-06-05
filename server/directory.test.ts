@@ -153,3 +153,22 @@ describe("admin.rejectClaim input validation", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("businesses.list chamberMember filter", () => {
+  it("accepts chamberMember: true without throwing", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.businesses.list({ chamberMember: true, page: 1, limit: 5 });
+    expect(result).toHaveProperty("items");
+    expect(result).toHaveProperty("total");
+    expect(Array.isArray(result.items)).toBe(true);
+  });
+
+  it("returns only chamber members when chamberMember: true", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.businesses.list({ chamberMember: true, page: 1, limit: 50 });
+    // Every returned item must have isChamberMember === true
+    result.items.forEach((biz) => {
+      expect(biz.isChamberMember).toBe(true);
+    });
+  });
+});

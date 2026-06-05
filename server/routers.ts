@@ -647,6 +647,7 @@ export const appRouter = router({
           keyword: z.string().optional(),
           area: z.string().optional(),
           tier: z.enum(["free", "featured", "sponsored", "featured_sponsored"]).optional(),
+          chamberMember: z.boolean().optional(),
           page: z.number().min(1).default(1),
           limit: z.number().min(1).max(50).default(12),
         })

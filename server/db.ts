@@ -97,13 +97,14 @@ export async function getBusinesses(opts: {
   keyword?: string;
   area?: string;
   tier?: "free" | "featured" | "sponsored" | "featured_sponsored";
+  chamberMember?: boolean;
   page?: number;
   limit?: number;
 }): Promise<{ items: Business[]; total: number }> {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
 
-  const { categorySlug, keyword, area, tier, page = 1, limit = 12 } = opts;
+  const { categorySlug, keyword, area, tier, chamberMember, page = 1, limit = 12 } = opts;
   const offset = (page - 1) * limit;
 
   // Build conditions
@@ -149,6 +150,10 @@ export async function getBusinesses(opts: {
 
   if (area) {
     conditions.push(like(businesses.area, `%${area}%`));
+  }
+
+  if (chamberMember) {
+    conditions.push(eq(businesses.isChamberMember, true));
   }
 
   const whereClause = and(...conditions);
