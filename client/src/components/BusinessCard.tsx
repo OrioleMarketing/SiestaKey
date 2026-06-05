@@ -98,24 +98,14 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
         )}
 
         <div className="p-5 flex flex-col flex-1">
-          {/* Badges row */}
-          <div className="flex items-center gap-2 mb-3">
-            {business.isSponsored && (
-              <span className="badge-sponsored flex items-center gap-1">
-                <Crown className="w-2.5 h-2.5" /> Sponsored
-              </span>
-            )}
-            {!business.isSponsored && business.isFeatured && (
-              <span className="badge-featured flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5" /> Featured
-              </span>
-            )}
-            {categoryName && (
+          {/* Category label only — tier badge shown on image overlay */}
+          {categoryName && (
+            <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
                 {categoryName}
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Name */}
           <h3 className="font-serif font-semibold text-lg leading-snug text-[var(--color-charcoal)] group-hover:text-[var(--color-ocean)] transition-colors mb-2">
