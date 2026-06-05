@@ -191,3 +191,10 @@
 - [x] Admin ClaimsTab: View Listing + Edit in Admin links appear immediately after approval
 - [x] Admin ClaimsTab: resolved claims hidden by default with "Show resolved (N)" toggle
 - [x] Admin ClaimsTab: success/error toasts on approve and reject
+
+## Enhancement Round 19 — Claimed Badge, Homepage Featured, Lifeguard Default, Profile Redesign
+- [x] Upload lifeguard image to webdev static assets and get CDN URL
+- [x] BusinessCard: add blue "Claimed" badge overlay on listing image when isClaimed is true
+- [x] Homepage: show all featured businesses (gulf_breeze + island_premier) not just a limited count
+- [x] BusinessCard + BusinessProfile: use lifeguard image as default photo for unclaimed free-tier listings
+- [x] BusinessProfile: redesign to match Hawaii Thrive detail page layout with all plan-tier features

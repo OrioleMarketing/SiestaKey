@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { MapPin, Phone, Star, ExternalLink, Crown, Sparkles } from "lucide-react";
+import { MapPin, Phone, Star, ExternalLink, Crown, Sparkles, BadgeCheck } from "lucide-react";
 
 interface BusinessCardProps {
   business: {
@@ -16,6 +16,7 @@ interface BusinessCardProps {
     tier: string;
     isFeatured: boolean;
     isSponsored: boolean;
+    isClaimed?: boolean | null;
     rating?: string | null;
     reviewCount?: number | null;
     tags?: string[] | null;
@@ -41,23 +42,60 @@ function StarRating({ rating, count }: { rating: string; count: number }) {
   );
 }
 
+const LIFEGUARD_DEFAULT = "/manus-storage/LifeguardStand_453b6dda.png";
+
 export default function BusinessCard({ business, categoryName }: BusinessCardProps) {
   const tags = Array.isArray(business.tags) ? business.tags : [];
   const desc = business.shortDescription || (business.description ? business.description.slice(0, 120) + "…" : "");
+  const photos = Array.isArray((business as any).photos) ? (business as any).photos as string[] : [];
+  const coverImage = photos.length > 0 ? photos[0] : (business.tier === "free" && !business.isClaimed ? LIFEGUARD_DEFAULT : null);
 
   return (
     <Link href={`/business/${business.slug}`} className="block group">
       <div className={`card-coastal h-full flex flex-col ${business.isSponsored ? "ring-2 ring-[var(--color-gold)]/30" : ""}`}>
-        {/* Color header band */}
-        <div
-          className={`h-2 w-full ${
-            business.isSponsored
-              ? "bg-gradient-to-r from-[var(--color-gold)] to-[oklch(0.68_0.18_55)]"
-              : business.isFeatured
-              ? "bg-ocean-gradient"
-              : "bg-gradient-to-r from-[var(--color-seafoam)] to-[var(--color-ocean-pale)]"
-          }`}
-        />
+        {/* Cover image with badge overlays */}
+        {coverImage && (
+          <div className="relative overflow-hidden">
+            <img
+              src={coverImage}
+              alt={business.name}
+              className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            <div className="absolute top-2 left-2 flex gap-1.5">
+              {business.isSponsored && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[var(--color-gold)] text-white shadow">
+                  <Crown className="w-3 h-3" /> FEATURED
+                </span>
+              )}
+              {!business.isSponsored && business.isFeatured && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[var(--color-ocean)] text-white shadow">
+                  <Sparkles className="w-3 h-3" /> FEATURED
+                </span>
+              )}
+            </div>
+            {business.isClaimed && (
+              <div className="absolute top-2 right-2">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-600 text-white shadow">
+                  <BadgeCheck className="w-3 h-3" /> CLAIMED
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Color header band — only when no cover image */}
+        {!coverImage && (
+          <div
+            className={`h-2 w-full ${
+              business.isSponsored
+                ? "bg-gradient-to-r from-[var(--color-gold)] to-[oklch(0.68_0.18_55)]"
+                : business.isFeatured
+                ? "bg-ocean-gradient"
+                : "bg-gradient-to-r from-[var(--color-seafoam)] to-[var(--color-ocean-pale)]"
+            }`}
+          />
+        )}
 
         <div className="p-5 flex flex-col flex-1">
           {/* Badges row */}

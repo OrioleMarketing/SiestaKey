@@ -89,8 +89,7 @@ export async function getFeaturedBusinesses(): Promise<Business[]> {
     .select()
     .from(businesses)
     .where(and(eq(businesses.isActive, true), eq(businesses.isFeatured, true)))
-    .orderBy(desc(businesses.isSponsored), desc(businesses.reviewCount))
-    .limit(6);
+    .orderBy(desc(businesses.isSponsored), desc(businesses.reviewCount));
 }
 
 export async function getBusinesses(opts: {
