@@ -149,7 +149,7 @@ export default function Home() {
             {[
               { value: "200+", label: "Local Businesses" },
               { value: "8", label: "Categories" },
-              { value: "3", label: "Distinct Areas" },
+              { value: "4+", label: "Distinct Areas" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl font-serif font-bold">{stat.value}</div>
@@ -227,10 +227,10 @@ export default function Home() {
               </h2>
             </div>
             <a
-              href="/directory?tier=featured"
+              href="/directory?tier=featured_sponsored"
               className="hidden md:flex items-center gap-2 text-sm font-semibold text-[var(--color-ocean)] hover:text-[var(--color-ocean-deep)] transition-colors"
             >
-              View All Featured <ArrowRight className="w-4 h-4" />
+              View All Featured &amp; Sponsored <ArrowRight className="w-4 h-4" />
             </a>
           </div>
 
@@ -263,7 +263,7 @@ export default function Home() {
 
           {/* View All buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
-            <a href="/directory?tier=featured" className="btn-outline-ocean px-8 py-3 flex items-center gap-2">
+            <a href="/directory?tier=featured_sponsored" className="btn-outline-ocean px-8 py-3 flex items-center gap-2">
               View All Featured &amp; Sponsored <ArrowRight className="w-4 h-4" />
             </a>
             <a href="/directory" className="btn-ocean px-8 py-3 flex items-center gap-2">
