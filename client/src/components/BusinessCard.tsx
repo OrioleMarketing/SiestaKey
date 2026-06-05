@@ -53,7 +53,7 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
     ? (business as any).coverPhoto
     : photos.length > 0
       ? photos[0]
-      : (business.tier === "free" && !business.isClaimed ? LIFEGUARD_DEFAULT : null);
+      : LIFEGUARD_DEFAULT;
 
   return (
     <Link href={`/business/${business.slug}`} className="block group">

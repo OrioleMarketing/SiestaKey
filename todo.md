@@ -223,3 +223,8 @@
 - [x] Backend routers.ts: sortBy z.enum added to businesses.list input schema
 - [x] BusinessCard: "Proud Chamber Member" tooltip changed to "Chamber Member"
 - [x] BusinessProfile: "Proud Chamber Member" tooltip changed to "Chamber Member"
+
+## Enhancement Round 25 — Default Images for New Businesses
+- [x] Upload SiestaKey.webp panorama to storage: /manus-storage/SiestaKey_panorama_734eb779.webp
+- [x] BusinessCard: all businesses without a photo now show the 500x500 lifeguard stand (was only unclaimed free)
+- [x] BusinessProfile: cover photo area now always shows the panorama default when no coverPhoto or photos exist (was null for paid/claimed listings)

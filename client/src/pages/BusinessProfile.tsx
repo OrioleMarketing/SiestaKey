@@ -13,6 +13,7 @@ import { MapView } from "@/components/Map";
 import SEO from "@/components/SEO";
 
 const LIFEGUARD_DEFAULT = "/manus-storage/LifeguardStand_453b6dda.png";
+const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
 
 function StarRating({ rating, count }: { rating: string; count: number }) {
   const r = parseFloat(rating);
@@ -98,12 +99,12 @@ export default function BusinessProfile() {
   const isIslandPremier = business?.tier === "sponsored";
   const isPaid = isGulfBreeze || isIslandPremier;
 
-  // Cover image: use designated coverPhoto, fall back to first photo, then lifeguard for unclaimed free
+  // Cover image: use designated coverPhoto, fall back to first photo, then panorama default for all businesses
   const coverImage = (business as any)?.coverPhoto
     ? (business as any).coverPhoto
     : photos.length > 0
       ? photos[0]
-      : (isFree && !business?.isClaimed ? LIFEGUARD_DEFAULT : null);
+      : PANORAMA_DEFAULT;
 
   if (isLoading) {
     return (
