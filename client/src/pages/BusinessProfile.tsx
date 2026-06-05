@@ -218,13 +218,15 @@ export default function BusinessProfile() {
           </div>
         )}
         {coverImage && (business as any).isChamberMember && (
-          <div className="absolute bottom-4 right-4">
+          <div className="absolute bottom-4 right-4 group/chamber">
             <img
               src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
-              alt="Siesta Key Chamber of Commerce Member"
-              title="Siesta Key Chamber of Commerce Member"
+              alt="Proud Chamber Member"
               className="w-14 h-14 rounded-full shadow-xl border-2 border-white/70"
             />
+            <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md bg-gray-900/90 px-2.5 py-1 text-xs font-medium text-white opacity-0 group-hover/chamber:opacity-100 transition-opacity duration-150 shadow">
+              Proud Chamber Member
+            </span>
           </div>
         )}
       </div>
