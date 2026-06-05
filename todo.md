@@ -240,3 +240,8 @@
 - [x] Add JSON-LD to Directory page (ItemList)
 - [x] Backfill panorama coverPhoto on existing listings where coverPhoto IS NULL (203 rows updated)
 - [x] Add Share button to business profile page (copy URL to clipboard, with toast feedback)
+
+## Enhancement Round 28 — Sitemap, robots.txt, Schema Subtypes
+- [x] Add dynamic /sitemap.xml server route listing all active business slugs and category pages (216 URLs)
+- [x] Add /robots.txt pointing crawlers to the sitemap
+- [x] Map category slugs to schema.org LocalBusiness subtypes in BusinessProfile JSON-LD (Restaurant, Store, TouristAttraction, etc.)

@@ -49,6 +49,19 @@ function normalizeHours(raw: Record<string, string> | null): Record<string, stri
   return out;
 }
 
+// Maps category slugs to schema.org LocalBusiness subtypes for richer search results
+// See: https://schema.org/LocalBusiness
+const CATEGORY_SCHEMA_TYPE: Record<string, string> = {
+  dining: "Restaurant",
+  shopping: "Store",
+  activities: "TouristAttraction",
+  nightlife: "BarOrPub",
+  accommodations: "LodgingBusiness",
+  services: "ProfessionalService",
+  wellness: "HealthAndBeautyBusiness",
+  "real-estate": "RealEstateAgent",
+};
+
 const SOCIAL_ICONS: Record<string, React.ElementType> = {
   facebook: Facebook,
   instagram: Instagram,
@@ -149,10 +162,13 @@ export default function BusinessProfile() {
     : `https://shopinsiestakey.com/manus-storage/SiestaKey_panorama_734eb779.webp`;
 
   // ── JSON-LD Structured Data ──────────────────────────────────────────────
+  const categorySlug = (business as any).categorySlug as string | null;
+  const schemaType = (categorySlug && CATEGORY_SCHEMA_TYPE[categorySlug]) ?? "LocalBusiness";
+
   const businessSchema: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": schemaType,
       "@id": `https://shopinsiestakey.com/business/${business.slug}`,
       "name": business.name,
       "description": seoDesc,

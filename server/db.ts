@@ -189,15 +189,26 @@ export async function getBusinesses(opts: {
   return { items, total: Number(countResult[0]?.count ?? 0) };
 }
 
-export async function getBusinessBySlug(slug: string): Promise<Business | undefined> {
+export async function getBusinessBySlug(
+  slug: string
+): Promise<(Business & { categorySlug: string | null }) | undefined> {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db
+  // Fetch the business first
+  const bizResult = await db
     .select()
     .from(businesses)
     .where(and(eq(businesses.slug, slug), eq(businesses.isActive, true)))
     .limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  if (bizResult.length === 0) return undefined;
+  const biz = bizResult[0];
+  // Fetch category slug separately to avoid TypeScript spread issues
+  const catResult = await db
+    .select({ slug: categories.slug })
+    .from(categories)
+    .where(eq(categories.id, biz.categoryId))
+    .limit(1);
+  return { ...biz, categorySlug: catResult[0]?.slug ?? null };
 }
 
 export async function getRelatedBusinesses(categoryId: number, excludeId: number): Promise<Business[]> {
