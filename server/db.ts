@@ -189,15 +189,16 @@ export async function getRelatedBusinesses(categoryId: number, excludeId: number
 
 // ─── Claim Leads ───────────────────────────────────────────────────────────────
 export async function createClaimLead(data: {
-  businessId?: number;
+  businessId?: number | null;
   businessName: string;
   contactName: string;
   email: string;
-  phone?: string;
-  message?: string;
+  phone?: string | null;
+  message?: string | null;
+  ghlContactId?: string | null;
 }): Promise<number> {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) return 0;
   const result = await db.insert(claimLeads).values({
     businessId: data.businessId ?? null,
     businessName: data.businessName,
@@ -206,8 +207,25 @@ export async function createClaimLead(data: {
     phone: data.phone ?? null,
     message: data.message ?? null,
     ghlWebhookSent: false,
+    ghlContactId: data.ghlContactId ?? null,
   });
   return Number((result as any)[0]?.insertId ?? 0);
+}
+
+export async function updateClaimStatus(
+  id: number,
+  status: "approved" | "rejected",
+  approvedAt?: Date,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(claimLeads)
+    .set({
+      status,
+      approvedAt: status === "approved" ? (approvedAt ?? new Date()) : null,
+    })
+    .where(eq(claimLeads.id, id));
 }
 
 export async function markClaimLeadWebhookSent(id: number): Promise<void> {

@@ -178,3 +178,16 @@
 - [x] AdminCsvImport.tsx: pure client-side CSV parser (handles quoted fields, commas in values)
 - [x] Quick Reference section: valid categories, tiers, upsert logic, tags/hours format
 - [x] Admin CSV import: invalidate businesses list after successful import so Listings tab refreshes automatically
+
+## Bug Fix — Claim Approval Flow
+- [x] Schema: added status (pending/approved/rejected), ghlContactId, approvedAt columns to claim_leads table
+- [x] DB migration: ALTER TABLE claim_leads ADD COLUMN status/ghlContactId/approvedAt
+- [x] Backend: updateClaimStatus helper added to db.ts
+- [x] Backend: approveClaim now updates claim status, fetches business slug, links business.isClaimed + claimedByUserId, returns businessSlug
+- [x] Backend: rejectClaim now updates claim status to rejected
+- [x] Backend: ghlContactId stored on claim creation for later use in approve/reject
+- [x] Admin ClaimsTab: Approve button passes ghlContactId as contactId so GHL workflow fires correctly
+- [x] Admin ClaimsTab: Pending/Approved/Rejected/GHL Sent status badges on each card
+- [x] Admin ClaimsTab: View Listing + Edit in Admin links appear immediately after approval
+- [x] Admin ClaimsTab: resolved claims hidden by default with "Show resolved (N)" toggle
+- [x] Admin ClaimsTab: success/error toasts on approve and reject

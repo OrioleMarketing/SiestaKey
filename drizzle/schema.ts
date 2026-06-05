@@ -92,6 +92,9 @@ export const claimLeads = mysqlTable("claim_leads", {
   phone: varchar("phone", { length: 30 }),
   message: text("message"),
   ghlWebhookSent: boolean("ghlWebhookSent").default(false),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  ghlContactId: varchar("ghlContactId", { length: 100 }),
+  approvedAt: timestamp("approvedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

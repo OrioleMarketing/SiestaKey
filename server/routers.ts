@@ -20,11 +20,12 @@ import {
   markClaimLeadWebhookSent,
   markSubmissionWebhookSent,
   updateBusinessFlags,
+  updateClaimStatus,
   updateSubmissionStatus,
   updateSubmissionStripeIds,
   getDb,
 } from "./db";
-import { businesses, listingSubmissions, users } from "../drizzle/schema";
+import { businesses, claimLeads, listingSubmissions, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import {
   GHL_WORKFLOWS,
@@ -249,12 +250,26 @@ export const appRouter = router({
 
     // Approve/reject a claim and trigger the appropriate GHL workflow
     approveClaim: adminProcedure
-      .input(z.object({ claimId: z.number(), businessId: z.number().optional(), claimEmail: z.string().email().optional(), contactId: z.string().optional() }))
+      .input(z.object({
+        claimId: z.number(),
+        businessId: z.number().optional(),
+        claimEmail: z.string().email().optional(),
+        contactId: z.string().optional(),
+      }))
       .mutation(async ({ input }) => {
-        // Link the business to the user who submitted the claim (by email match)
-        if (input.businessId && input.claimEmail) {
-          const db = await getDb();
-          if (db) {
+        const db = await getDb();
+        let businessSlug: string | null = null;
+
+        // 1. Link the business to the user who submitted the claim (by email match)
+        if (input.businessId && db) {
+          const matchedBiz = await db
+            .select({ slug: businesses.slug })
+            .from(businesses)
+            .where(eq(businesses.id, input.businessId))
+            .limit(1);
+          businessSlug = matchedBiz[0]?.slug ?? null;
+
+          if (input.claimEmail) {
             const matchedUsers = await db
               .select({ id: users.id })
               .from(users)
@@ -265,19 +280,33 @@ export const appRouter = router({
               .update(businesses)
               .set({ isClaimed: true, claimedByUserId: userId })
               .where(eq(businesses.id, input.businessId));
+          } else {
+            // No email match needed — just mark as claimed
+            await db
+              .update(businesses)
+              .set({ isClaimed: true })
+              .where(eq(businesses.id, input.businessId));
           }
         }
-        // Trigger GHL workflow
+
+        // 2. Update claim status to approved
+        await updateClaimStatus(input.claimId, "approved");
+
+        // 3. Trigger GHL workflow
         if (input.contactId) {
           await ghlAddTags(input.contactId, ["Claim Approved"]);
           await ghlTriggerWorkflow(input.contactId, GHL_WORKFLOWS.CLAIM_REQUEST_APPROVED);
         }
-        return { success: true };
+
+        return { success: true, businessSlug };
       }),
 
     rejectClaim: adminProcedure
       .input(z.object({ claimId: z.number(), contactId: z.string().optional() }))
       .mutation(async ({ input }) => {
+        // Update claim status to rejected
+        await updateClaimStatus(input.claimId, "rejected");
+
         if (input.contactId) {
           await ghlAddTags(input.contactId, ["Claim Rejected"]);
           await ghlTriggerWorkflow(input.contactId, GHL_WORKFLOWS.CLAIM_REQUEST_REJECTED);
@@ -651,6 +680,11 @@ export const appRouter = router({
           if (contactId) {
             await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.NEW_CLAIM_REQUEST);
             await markClaimLeadWebhookSent(id);
+            // Persist the GHL contact ID so approve/reject can fire workflows later
+            const db = await getDb();
+            if (db) {
+              await db.update(claimLeads).set({ ghlContactId: contactId }).where(eq(claimLeads.id, id));
+            }
           }
         } catch (err) {
           console.error("[GHL] claim submit error:", err);

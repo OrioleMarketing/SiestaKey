@@ -934,11 +934,30 @@ function SubmissionsTab() {
 function ClaimsTab() {
   const utils = trpc.useUtils();
   const { data: claims, isLoading } = trpc.admin.listClaims.useQuery();
+  const [showResolved, setShowResolved] = useState(false);
+  // Track slugs returned from approveClaim so we can show View/Edit links immediately
+  const [approvedSlugs, setApprovedSlugs] = useState<Record<number, string>>({});
+  // IDs of claims just resolved in this session — keep them visible so links are accessible
+  const [justResolved, setJustResolved] = useState<Set<number>>(new Set());
+
   const approveMutation = trpc.admin.approveClaim.useMutation({
-    onSuccess: () => utils.admin.listClaims.invalidate(),
+    onSuccess: (data, variables) => {
+      utils.admin.listClaims.invalidate();
+      utils.admin.stats.invalidate();
+      if (data.businessSlug) {
+        setApprovedSlugs((prev) => ({ ...prev, [variables.claimId]: data.businessSlug! }));
+      }
+      setJustResolved((prev) => new Set(Array.from(prev).concat(variables.claimId)));
+      toast.success("Claim approved — business linked to owner account");
+    },
+    onError: (err) => toast.error(`Approval failed: ${err.message}`),
   });
   const rejectMutation = trpc.admin.rejectClaim.useMutation({
-    onSuccess: () => utils.admin.listClaims.invalidate(),
+    onSuccess: () => {
+      utils.admin.listClaims.invalidate();
+      toast.success("Claim rejected");
+    },
+    onError: (err) => toast.error(`Rejection failed: ${err.message}`),
   });
 
   if (isLoading) {
@@ -951,70 +970,162 @@ function ClaimsTab() {
     );
   }
 
+  const pending = claims?.filter((c) => (c as any).status === "pending" || !(c as any).status) ?? [];
+  const resolved = claims?.filter((c) => (c as any).status === "approved" || (c as any).status === "rejected") ?? [];
+  // Always show claims just resolved in this session so View/Edit links are accessible
+  const visible = showResolved
+    ? Array.from(new Set([...pending, ...resolved]))
+    : [...pending, ...resolved.filter((c) => justResolved.has(c.id))];
+
   return (
     <div className="space-y-3">
-      {claims?.map((c) => (
-        <Card key={c.id} className="card-coastal">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-foreground">{c.businessName}</span>
-                  {c.ghlWebhookSent && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                      <CheckCircle2 className="w-3 h-3" /> GHL Sent
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
-                  <div>
-                    <span className="font-medium">Contact:</span> {c.contactName} — {c.email}
-                    {c.phone && ` · ${c.phone}`}
+      {/* Filter toggle */}
+      {resolved.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowResolved((v) => !v)}
+            className="text-xs text-ocean hover:underline"
+          >
+            {showResolved ? "Hide resolved" : `Show resolved (${resolved.length})`}
+          </button>
+        </div>
+      )}
+
+      {visible.map((c) => {
+        const status = (c as any).status ?? "pending";
+        const isApproved = status === "approved";
+        const isRejected = status === "rejected";
+        const isResolved = isApproved || isRejected;
+        const slug = approvedSlugs[c.id] ?? null;
+
+        return (
+          <Card key={c.id} className={`card-coastal ${isResolved ? "opacity-70" : ""}`}>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-foreground">{c.businessName}</span>
+                    {/* Status badge */}
+                    {isApproved && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                        <CheckCircle2 className="w-3 h-3" /> Approved
+                      </span>
+                    )}
+                    {isRejected && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                        <XCircle className="w-3 h-3" /> Rejected
+                      </span>
+                    )}
+                    {!isResolved && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                        Pending
+                      </span>
+                    )}
+                    {c.ghlWebhookSent && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                        GHL Sent
+                      </span>
+                    )}
                   </div>
-                  {c.message && (
-                    <div className="mt-1 text-xs bg-muted/50 rounded-lg p-2 max-w-xl">
-                      {c.message}
+                  <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
+                    <div>
+                      <span className="font-medium">Contact:</span> {c.contactName} — {c.email}
+                      {c.phone && ` · ${c.phone}`}
                     </div>
-                  )}
-                  <div className="text-xs text-muted-foreground/70 mt-1">
-                    Received {new Date(c.createdAt).toLocaleDateString()}
+                    {c.message && (
+                      <div className="mt-1 text-xs bg-muted/50 rounded-lg p-2 max-w-xl">
+                        {c.message}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground/70 mt-1">
+                      Received {new Date(c.createdAt).toLocaleDateString()}
+                    </div>
+                    {/* Post-approval links */}
+                    {isApproved && slug && (
+                      <div className="flex items-center gap-3 mt-2">
+                        <a
+                          href={`/business/${slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-ocean font-medium hover:underline"
+                        >
+                          View Listing <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <a
+                          href={`/admin#businesses`}
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-ocean hover:underline"
+                        >
+                          Edit in Admin <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                    {isApproved && !slug && (
+                      <div className="flex items-center gap-3 mt-2">
+                        <a
+                          href="/admin#businesses"
+                          className="inline-flex items-center gap-1 text-xs text-ocean font-medium hover:underline"
+                        >
+                          Edit Listing in Admin <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <a
+                    href={`mailto:${c.email}`}
+                    className="inline-flex items-center gap-1 text-xs text-ocean hover:underline"
+                  >
+                    Reply <ExternalLink className="w-3 h-3" />
+                  </a>
+                  {!isResolved && (
+                    <>
+                      <button
+                        onClick={() =>
+                          approveMutation.mutate({
+                            claimId: c.id,
+                            businessId: c.businessId ?? undefined,
+                            claimEmail: c.email,
+                            contactId: (c as any).ghlContactId ?? undefined,
+                          })
+                        }
+                        disabled={approveMutation.isPending}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Approve
+                      </button>
+                      <button
+                        onClick={() =>
+                          rejectMutation.mutate({
+                            claimId: c.id,
+                            contactId: (c as any).ghlContactId ?? undefined,
+                          })
+                        }
+                        disabled={rejectMutation.isPending}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col gap-2 flex-shrink-0">
-                <a
-                  href={`mailto:${c.email}`}
-                  className="inline-flex items-center gap-1 text-xs text-ocean hover:underline"
-                >
-                  Reply <ExternalLink className="w-3 h-3" />
-                </a>
-                <button
-                  onClick={() =>
-                    approveMutation.mutate({
-                      claimId: c.id,
-                      businessId: c.businessId ?? undefined,
-                      claimEmail: c.email,
-                    })
-                  }
-                  disabled={approveMutation.isPending}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                >
-                  <CheckCircle2 className="w-3 h-3" /> Approve
-                </button>
-                <button
-                  onClick={() =>
-                    rejectMutation.mutate({ claimId: c.id })
-                  }
-                  disabled={rejectMutation.isPending}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
+
+      {pending.length === 0 && !showResolved && (
+        <div className="text-center py-12 text-muted-foreground">
+          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
+          All caught up!{" "}
+          {resolved.length > 0 && (
+            <button onClick={() => setShowResolved(true)} className="text-ocean hover:underline">
+              View {resolved.length} resolved claim{resolved.length !== 1 ? "s" : ""}
+            </button>
+          )}
+        </div>
+      )}
       {claims?.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">No claim leads yet.</div>
       )}
