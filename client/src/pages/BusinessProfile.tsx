@@ -106,14 +106,7 @@ export default function BusinessProfile() {
       position: { lat, lng },
       map,
       title: business.name,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: business.isSponsored ? "#D4A017" : "#2B6CB0",
-        fillOpacity: 1,
-        strokeColor: "#fff",
-        strokeWeight: 3,
-      },
+      // Use the standard Google Maps red pin (default marker — no custom icon)
     });
   };
 
