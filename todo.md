@@ -267,3 +267,8 @@
 - [x] Add 4 blog post URLs to /sitemap.xml (now 284 total URLs)
 - [x] Fix blog article paragraph spacing (prose-p:mb-5, leading-relaxed, heading margins)
 - [x] Generate and assign unique AI cover images for all 4 blog posts
+
+## Weather Widget
+- [x] Add weather.getCurrent tRPC procedure fetching Open-Meteo API for Siesta Key coords with 30-min server-side cache
+- [x] Build WeatherBar component showing current temp, condition, feels-like, wind, UV index, and 5-day forecast strip
+- [x] Insert WeatherBar below Navbar on homepage

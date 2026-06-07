@@ -47,10 +47,66 @@ import { createCheckoutSession, cancelAndRefundSubmission } from "./stripeWebhoo
 import { storagePut } from "./storage";
 import { type PlanKey, type BillingInterval } from "./stripeProducts";
 
+// --- Weather types & cache ---
+interface WeatherForecastDay {
+  date: string;
+  weatherCode: number;
+  condition: string;
+  highF: number;
+  lowF: number;
+}
+
+interface WeatherData {
+  tempF: number;
+  feelsLikeF: number;
+  humidity: number;
+  windMph: number;
+  uvIndex: number;
+  weatherCode: number;
+  condition: string;
+  forecast: WeatherForecastDay[];
+  fetchedAt: number;
+}
+
+interface OpenMeteoResponse {
+  current: {
+    temperature_2m: number;
+    apparent_temperature: number;
+    relative_humidity_2m: number;
+    wind_speed_10m: number;
+    weather_code: number;
+    uv_index: number;
+  };
+  daily: {
+    time: string[];
+    weather_code: number[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+  };
+}
+
+let weatherCache: { data: WeatherData; fetchedAt: number } | null = null;
+
+function wmoDescription(code: number): string {
+  if (code === 0) return "Clear Sky";
+  if (code === 1) return "Mainly Clear";
+  if (code === 2) return "Partly Cloudy";
+  if (code === 3) return "Overcast";
+  if (code >= 45 && code <= 48) return "Foggy";
+  if (code >= 51 && code <= 55) return "Drizzle";
+  if (code >= 61 && code <= 65) return "Rain";
+  if (code >= 71 && code <= 77) return "Snow";
+  if (code >= 80 && code <= 82) return "Rain Showers";
+  if (code >= 85 && code <= 86) return "Snow Showers";
+  if (code === 95) return "Thunderstorm";
+  if (code >= 96 && code <= 99) return "Thunderstorm w/ Hail";
+  return "Unknown";
+}
+
 export const appRouter = router({
   system: systemRouter,
 
-  // ─── Admin Panel ─────────────────────────────────────────────────────────────
+  // --- Admin Panel ---
   admin: router({
     listBusinesses: adminProcedure.query(async () => {
       return getAllBusinessesAdmin();
@@ -639,14 +695,14 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── Categories ─────────────────────────────────────────────────────────────
+  // --- Categories ---
   categories: router({
     list: publicProcedure.query(async () => {
       return getAllCategories();
     }),
   }),
 
-  // ─── Businesses ─────────────────────────────────────────────────────────────
+  // --- Businesses ---
   businesses: router({
     featured: publicProcedure.query(async () => {
       return getFeaturedBusinesses();
@@ -684,7 +740,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Claim Your Business ────────────────────────────────────────────────────
+  // --- Claim Your Business ---
   claims: router({
     submit: publicProcedure
       .input(
@@ -740,7 +796,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── New Listing Submission ──────────────────────────────────────────────────
+  // --- New Listing Submission ---
   submissions: router({
     submit: publicProcedure
       .input(
@@ -830,7 +886,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Contact Form ────────────────────────────────────────────────────────────
+  // --- Contact Form ---
   contact: router({
     submit: publicProcedure
       .input(
@@ -875,7 +931,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Stripe Payments ────────────────────────────────────────────────────────
+  // --- Stripe Payments ---
   stripe: router({
     createCheckout: protectedProcedure
       .input(
@@ -905,9 +961,9 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── User hooks (trigger GHL on new user) ────────────────────────────────────
+  // --- User hooks (trigger GHL on new user) ---
 
-  // ─── User Dashboard ─────────────────────────────────────────────────────────
+  // --- User Dashboard ---
   dashboard: router({
     getMyProfile: protectedProcedure.query(async ({ ctx }) => {
       return {
@@ -1045,7 +1101,7 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── Blog ─────────────────────────────────────────────────────────────────────
+  // --- Blog ---
   blog: router({
   list: publicProcedure
     .input(
@@ -1126,6 +1182,55 @@ export const appRouter = router({
     .mutation(async ({ input }) => {
       await deleteBlogPost(input.id);
       return { success: true };
+    }),
+  }),
+
+  // --- Weather ---
+  weather: router({
+    getCurrent: publicProcedure.query(async () => {
+      // 30-minute server-side cache
+      const now = Date.now();
+      if (weatherCache && now - weatherCache.fetchedAt < 30 * 60 * 1000) {
+        return weatherCache.data;
+      }
+
+      // Siesta Key, FL coordinates
+      const lat = 27.2683;
+      const lon = -82.5479;
+
+      const url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,uv_index` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+        `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=5`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Weather fetch failed" });
+      const json = await res.json() as OpenMeteoResponse;
+
+      const c = json.current;
+      const d = json.daily;
+
+      const data: WeatherData = {
+        tempF: Math.round(c.temperature_2m),
+        feelsLikeF: Math.round(c.apparent_temperature),
+        humidity: c.relative_humidity_2m,
+        windMph: Math.round(c.wind_speed_10m),
+        uvIndex: c.uv_index ?? 0,
+        weatherCode: c.weather_code,
+        condition: wmoDescription(c.weather_code),
+        forecast: d.time.map((date: string, i: number) => ({
+          date,
+          weatherCode: d.weather_code[i],
+          condition: wmoDescription(d.weather_code[i]),
+          highF: Math.round(d.temperature_2m_max[i]),
+          lowF: Math.round(d.temperature_2m_min[i]),
+        })),
+        fetchedAt: now,
+      };
+
+      weatherCache = { data, fetchedAt: now };
+      return data;
     }),
   }),
 });
