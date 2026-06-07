@@ -484,13 +484,13 @@ export default function BusinessProfile() {
                 </div>
               )}
 
-              {/* Photo Gallery — Island Premier only */}
-              {isIslandPremier && (
+              {/* Photo Gallery — Gulf Breeze (max 5) and Island Premier (max 10) */}
+              {isPaid && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h2 className="font-serif text-xl font-semibold mb-4 text-[var(--color-charcoal)]">Photos</h2>
                   {photos.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {photos.map((url: string, i: number) => (
+                      {photos.slice(0, isGulfBreeze ? 5 : 10).map((url: string, i: number) => (
                         <a
                           key={i}
                           href={url}
@@ -541,8 +541,8 @@ export default function BusinessProfile() {
                 </div>
               )}
 
-              {/* Google Reviews — Island Premier only */}
-              {isIslandPremier && business.googleReviewEmbedCode && (
+              {/* Google Reviews — Gulf Breeze + Island Premier */}
+              {isPaid && business.googleReviewEmbedCode && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h2 className="font-serif text-xl font-semibold mb-4 text-[var(--color-charcoal)] flex items-center gap-2">
                     <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -559,6 +559,32 @@ export default function BusinessProfile() {
                   />
                 </div>
               )}
+
+              {/* Video Embed — Island Premier only */}
+              {isIslandPremier && business.videoEmbed && (() => {
+                // Convert YouTube/Vimeo watch URLs to embed URLs
+                let embedUrl = business.videoEmbed as string;
+                const ytMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+                if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+                const vimeoMatch = embedUrl.match(/vimeo\.com\/(\d+)/);
+                if (vimeoMatch) embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                return (
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-4 border-b border-[var(--color-border)]">
+                      <h2 className="font-serif text-xl font-semibold text-[var(--color-charcoal)]">Video</h2>
+                    </div>
+                    <div className="aspect-video">
+                      <iframe
+                        src={embedUrl}
+                        title={`${business.name} video`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Upgrade CTA for free listings in left column */}
               {isFree && (

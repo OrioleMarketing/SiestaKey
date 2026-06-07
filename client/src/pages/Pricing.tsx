@@ -30,9 +30,9 @@ const FEATURES: FeatureRow[] = [
   { label: "Business Description",     free: false, featured: true,  premium: true  },
   { label: "Business Hours",           free: false, featured: true,  premium: true  },
   { label: "Cover Image",              free: false, featured: true,  premium: true  },
-  { label: "Photo Gallery (up to 10)", free: false, featured: true,  premium: true  },
-  { label: "Video Embed",              free: false, featured: true,  premium: true  },
-  { label: "Events & Announcements",   free: false, featured: true,  premium: true  },
+  { label: "Photo Gallery",           free: false, featured: "Up to 5",  premium: "Up to 10"  },
+  { label: "Video Embed",              free: false, featured: false, premium: true  },
+  { label: "Events & Announcements",   free: false, featured: false, premium: true  },
   { label: "Customer Reviews",         free: false, featured: true,  premium: true  },
   { label: "Google Reviews Display",   free: false, featured: true,  premium: true  },
   { label: "Featured Badge",           free: false, featured: true,  premium: true  },
@@ -308,7 +308,7 @@ export default function Pricing() {
                                 <X className="w-3 h-3 text-gray-400 stroke-[2.5]" />
                               </div>
                             )}
-                            <span>{feature.label}</span>
+                            <span>{feature.label}{typeof val === "string" ? <span className="ml-1 text-xs font-medium text-[var(--color-ocean)]">({val})</span> : null}</span>
                             {feature.highlight && included && (
                               <span className="ml-auto text-xs font-normal text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-1.5 py-0.5 rounded">
                                 Included

@@ -254,6 +254,7 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
       tripadvisor: (biz.socialLinks as Record<string,string>)?.tripadvisor ?? "",
     },
     googleReviewEmbedCode: biz.googleReviewEmbedCode ?? "",
+    videoEmbed: biz.videoEmbed ?? "",
     coverPhoto: (biz as any).coverPhoto ?? "",
   });
 
@@ -294,6 +295,7 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
       hours: Object.keys(hours).length ? hours : null,
       socialLinks: Object.keys(socialLinks).length ? socialLinks : null,
       googleReviewEmbedCode: form.googleReviewEmbedCode || null,
+      videoEmbed: form.videoEmbed || null,
       coverPhoto: form.coverPhoto || null,
     });
   };
@@ -456,6 +458,17 @@ function EditListingDialog({ biz, onClose, onSaved }: { biz: BusinessRow; onClos
               <p className="text-[10px] text-muted-foreground mt-1">Click a photo to set it as the cover image.</p>
             </div>
           )}
+
+          {/* Video Embed */}
+          <div>
+            <Label>Video Embed URL <span className="text-muted-foreground text-xs">(YouTube or Vimeo — Island Premier only)</span></Label>
+            <Input
+              value={form.videoEmbed}
+              onChange={e => set("videoEmbed", e.target.value)}
+              className="mt-1"
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
+          </div>
 
           {/* Google Review Embed */}
           <div>

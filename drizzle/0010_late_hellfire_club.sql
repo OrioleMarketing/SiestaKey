@@ -1,0 +1,1 @@
+ALTER TABLE `businesses` ADD `videoEmbed` varchar(500);
