@@ -180,7 +180,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        await updateSubmissionStatus(input.id, input.status);
+        await updateSubmissionStatus(input.id, input.status, input.rejectionReason, input.rejectionNotes);
 
         const db = await getDb();
 

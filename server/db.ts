@@ -421,9 +421,20 @@ export async function getAllSubmissions(): Promise<ListingSubmission[]> {
 
 export async function updateSubmissionStatus(
   id: number,
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "approved" | "rejected",
+  rejectionReason?: string,
+  rejectionNotes?: string
 ): Promise<void> {
   const db = await getDb();
   if (!db) return;
-  await db.update(listingSubmissions).set({ status }).where(eq(listingSubmissions.id, id));
+  const update: Record<string, unknown> = { status };
+  if (status === "rejected") {
+    update.rejectionReason = rejectionReason ?? null;
+    update.rejectionNotes = rejectionNotes ?? null;
+  } else {
+    // Clear rejection fields if re-approving or resetting
+    update.rejectionReason = null;
+    update.rejectionNotes = null;
+  }
+  await db.update(listingSubmissions).set(update).where(eq(listingSubmissions.id, id));
 }

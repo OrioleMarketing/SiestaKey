@@ -980,6 +980,18 @@ function SubmissionsTab() {
                       {s.description}
                     </div>
                   )}
+                  {s.status === "rejected" && (s as any).rejectionReason && (
+                    <div className="mt-2 flex items-start gap-2 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2 max-w-xl">
+                      <XCircle className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-semibold text-red-700">Rejection reason: </span>
+                        <span className="text-red-700">{(s as any).rejectionReason}</span>
+                        {(s as any).rejectionNotes && (
+                          <p className="mt-1 text-red-600/80">{(s as any).rejectionNotes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="text-xs text-muted-foreground/70 mt-1 flex items-center gap-3 flex-wrap">
                     <span>Submitted {new Date(s.createdAt).toLocaleDateString()}</span>
                     {s.status === "approved" && s.createdBusinessId && (
