@@ -259,6 +259,10 @@ export const appRouter = router({
                 tags: ["Listing Approved", "Siesta Key Directory"],
                 customFields: [
                   { key: "listing_url", field_value: profileUrl },
+                  { key: "listing_plan", field_value:
+                    sub.tier === "gulf_breeze" ? "Gulf Breeze" :
+                    sub.tier === "island_premier" ? "Island Premier" :
+                    "Sandy Shores (Free)" },
                 ],
               });
               if (contactId) {
@@ -316,6 +320,10 @@ export const appRouter = router({
                 customFields: [
                   { key: "submission_rejection_reason", field_value: input.rejectionReason ?? "" },
                   { key: "submission_rejection_notes", field_value: input.rejectionNotes ?? "" },
+                  { key: "listing_plan", field_value:
+                    sub.tier === "gulf_breeze" ? "Gulf Breeze" :
+                    sub.tier === "island_premier" ? "Island Premier" :
+                    "Sandy Shores (Free)" },
                 ],
               });
               if (contactId) {
@@ -851,6 +859,12 @@ export const appRouter = router({
             ? ["Island Premier Plan", "Paid Submission", "New Business Request", "Siesta Key Directory"]
             : ["Free Listing", "New Business Request", "Siesta Key Directory"];
 
+          const tierLabel = input.tier === "gulf_breeze"
+            ? "Gulf Breeze"
+            : input.tier === "island_premier"
+            ? "Island Premier"
+            : "Sandy Shores (Free)";
+
           const contactId = await ghlUpsertContact({
             firstName,
             lastName,
@@ -859,6 +873,9 @@ export const appRouter = router({
             companyName: input.businessName,
             tags: tierTags,
             source: "Shop in Siesta Key - Add Listing Form",
+            customFields: [
+              { key: "listing_plan", field_value: tierLabel },
+            ],
           });
 
           if (contactId) {
