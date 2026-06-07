@@ -1045,6 +1045,23 @@ function SubmissionsTab() {
                   <XCircle className="w-3.5 h-3.5 mr-1" />
                   Reject
                 </Button>
+                {s.status === "rejected" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-red-700 h-8 text-xs px-2"
+                    disabled={updateStatus.isPending}
+                    onClick={() => {
+                      setSubRejectTarget({ id: s.id, businessName: s.businessName });
+                      setSubRejectReason("");
+                      setSubRejectNotes("");
+                      setSubRejectDialogOpen(true);
+                    }}
+                  >
+                    <Pencil className="w-3 h-3 mr-1" />
+                    Edit reason
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
