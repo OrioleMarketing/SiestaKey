@@ -57,7 +57,7 @@ export default function WeatherBar() {
       {/* Compact bar */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-2 hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-center gap-6 px-4 py-2 hover:bg-white/5 transition-colors relative"
         aria-expanded={expanded}
         aria-label="Toggle weather forecast"
       >
@@ -101,8 +101,8 @@ export default function WeatherBar() {
           </span>
         </div>
 
-        {/* Expand toggle */}
-        <div className="flex items-center gap-1 text-white/40 text-xs shrink-0 ml-2">
+        {/* Expand toggle — pinned to the right so it doesn't offset the centered content */}
+        <div className="absolute right-4 flex items-center gap-1 text-white/40 text-xs">
           <span className="hidden sm:inline">5-day forecast</span>
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </div>
