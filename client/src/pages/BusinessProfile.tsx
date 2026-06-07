@@ -392,7 +392,7 @@ export default function BusinessProfile() {
 
             {/* Quick actions */}
             <div className="flex gap-2 shrink-0 flex-wrap">
-              {business.website && isPaid && (
+              {business.website && (
                 <a
                   href={business.website}
                   target="_blank"
@@ -458,8 +458,8 @@ export default function BusinessProfile() {
                 </div>
               )}
 
-              {/* Hours — Gulf Breeze + Island Premier */}
-              {isPaid && Object.keys(hours).length > 0 && (
+              {/* Hours — all tiers (including free) */}
+              {Object.keys(hours).length > 0 && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h2 className="font-serif text-xl font-semibold mb-4 text-[var(--color-charcoal)] flex items-center gap-2">
                     <Clock className="w-5 h-5 text-[var(--color-ocean)]" /> Hours of Operation
@@ -528,8 +528,8 @@ export default function BusinessProfile() {
                 </div>
               )}
 
-              {/* Map — Gulf Breeze + Island Premier */}
-              {isPaid && business.lat && business.lng && (
+              {/* Map — all tiers (Google Maps link shown for free; embedded map for paid) */}
+              {business.lat && business.lng && (
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h2 className="font-serif text-xl font-semibold text-[var(--color-charcoal)]">Location</h2>
@@ -577,7 +577,7 @@ export default function BusinessProfile() {
                     </div>
                     <h3 className="font-serif font-bold text-lg mb-2">Unlock Your Full Profile</h3>
                     <p className="text-sm text-white/75 mb-4">
-                      Add your description, hours, photos, map, social links, and Google Reviews with a Gulf Breeze or Island Premier listing.
+                      Get a photo gallery, top search placement, featured badge, Google Reviews display, and homepage spotlight with a Gulf Breeze or Island Premier listing.
                     </p>
                     <Link href="/pricing" className="btn-coral w-full justify-center text-sm">
                       <Crown className="w-4 h-4" /> View Plans
@@ -638,8 +638,8 @@ export default function BusinessProfile() {
                     </div>
                   )}
 
-                  {/* Email — Gulf Breeze + Island Premier */}
-                  {isPaid && business.email && (
+                  {/* Email — all tiers (hide if placeholder "N/A" or not a real email) */}
+                  {business.email && business.email !== "N/A" && business.email.includes("@") && (
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[var(--color-ocean-pale)] flex items-center justify-center shrink-0">
                         <Mail className="w-4 h-4 text-[var(--color-ocean)]" />
@@ -653,8 +653,8 @@ export default function BusinessProfile() {
                     </div>
                   )}
 
-                  {/* Website — Gulf Breeze + Island Premier */}
-                  {isPaid && business.website && (
+                  {/* Website — all tiers */}
+                  {business.website && (
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[var(--color-ocean-pale)] flex items-center justify-center shrink-0">
                         <Globe className="w-4 h-4 text-[var(--color-ocean)]" />
@@ -674,13 +674,14 @@ export default function BusinessProfile() {
                   )}
                 </div>
 
-                {/* Social links — Gulf Breeze + Island Premier */}
-                {isPaid && Object.keys(socialLinks).length > 0 && (
+                {/* Social links — all tiers */}
+                {Object.keys(socialLinks).length > 0 && (
                   <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                     <div className="text-xs text-[var(--color-muted-foreground)] mb-2">Follow Us</div>
                     <div className="flex gap-2 flex-wrap">
                       {Object.entries(socialLinks).map(([platform, url]) => {
-                        if (!url) return null;
+                        // Skip empty, placeholder, or non-URL values (e.g. hours text accidentally stored here)
+                        if (!url || !url.startsWith("http") && !url.startsWith("@") && !url.startsWith("facebook") && !url.startsWith("instagram") && !url.startsWith("twitter") && !url.startsWith("linkedin") && !url.startsWith("youtube") && !url.startsWith("tiktok")) return null;
                         const Icon = SOCIAL_ICONS[platform.toLowerCase()] ?? Globe;
                         return (
                           <a
@@ -737,7 +738,7 @@ export default function BusinessProfile() {
                     </div>
                     <h3 className="font-serif font-bold text-lg mb-2">Get Featured</h3>
                     <p className="text-sm text-white/75 mb-4">
-                      Appear at the top of search results. Add hours, photos, map, and Google Reviews.
+                      Appear at the top of search results. Add a photo gallery, featured badge, Google Reviews display, and homepage spotlight.
                     </p>
                     <Link href="/pricing" className="btn-coral w-full justify-center text-sm">
                       <Sparkles className="w-4 h-4" /> View Plans

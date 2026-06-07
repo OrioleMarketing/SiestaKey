@@ -272,3 +272,14 @@
 - [x] Add weather.getCurrent tRPC procedure fetching Open-Meteo API for Siesta Key coords with 30-min server-side cache
 - [x] Build WeatherBar component showing current temp, condition, feels-like, wind, UV index, and 5-day forecast strip
 - [x] Insert WeatherBar below Navbar on homepage
+
+## Free Listing Feature Parity (Pricing Page Alignment)
+- [x] Unlock website link display for free listings (currently gated behind isPaid)
+- [x] Unlock email address display for free listings (currently gated behind isPaid)
+- [x] Unlock social media links display for free listings (currently gated behind isPaid)
+- [x] Unlock business hours display for free listings (currently gated behind isPaid)
+- [x] Unlock Google Maps pin/link for free listings (currently gated behind isPaid)
+- [x] Ensure business description is visible on free listings
+- [x] Ensure cover image is visible on free listings
+- [x] Add email/N/A guard and social link URL validation to prevent bad data showing
+- [x] Update upgrade CTA copy to reflect what's actually gated (photo gallery, featured badge, Google Reviews, homepage spotlight)
