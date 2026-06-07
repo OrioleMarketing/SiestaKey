@@ -294,20 +294,9 @@ export default function Home() {
             const sponsoredOnly = featured.filter((b: any) => b.isSponsored).slice(0, 9);
             return (
               <>
-                {/* Featured (non-sponsored) grid */}
-                {featuredOnly.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {featuredOnly.map((biz: any, i: number) => (
-                      <div key={biz.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
-                        <BusinessCard business={biz} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Sponsored section */}
+                {/* Sponsored section — shown first */}
                 {sponsoredOnly.length > 0 && (
-                  <div className="mt-14">
+                  <div className="mb-14">
                     <div className="flex items-end justify-between mb-8">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -323,6 +312,27 @@ export default function Home() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {sponsoredOnly.map((biz: any, i: number) => (
+                        <div key={biz.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                          <BusinessCard business={biz} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Featured (non-sponsored) grid — shown after sponsors */}
+                {featuredOnly.length > 0 && (
+                  <div>
+                    {sponsoredOnly.length > 0 && (
+                      <div className="flex items-center gap-2 mb-6">
+                        <Star className="w-4 h-4 text-[var(--color-ocean)]" />
+                        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ocean)]">
+                          Gulf Breeze Listings
+                        </span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {featuredOnly.map((biz: any, i: number) => (
                         <div key={biz.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
                           <BusinessCard business={biz} />
                         </div>
