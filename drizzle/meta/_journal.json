@@ -78,6 +78,13 @@
       "when": 1780866643287,
       "tag": "0010_late_hellfire_club",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1780867707539,
+      "tag": "0011_public_the_leader",
+      "breakpoints": true
     }
   ]
 }

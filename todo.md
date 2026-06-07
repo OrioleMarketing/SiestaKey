@@ -283,3 +283,15 @@
 - [x] Ensure cover image is visible on free listings
 - [x] Add email/N/A guard and social link URL validation to prevent bad data showing
 - [x] Update upgrade CTA copy to reflect what's actually gated (photo gallery, featured badge, Google Reviews, homepage spotlight)
+
+## Expanded Submit Listing Form (Tier-Conditional Fields)
+- [x] Update listing_submissions table schema to store hours, socialLinks, coverPhoto, photos, googleReviewEmbedCode, videoEmbed
+- [x] Update submissions.submit tRPC procedure to accept and store all new fields
+- [x] Add Business Hours section to form (all tiers) — 7-day open/close time grid
+- [x] Add Social Media Links section (Gulf Breeze+) — Facebook, Instagram, TripAdvisor, Yelp
+- [x] Add Cover Image upload (Gulf Breeze+) — S3 upload, preview thumbnail
+- [x] Add Photo Gallery upload (Gulf Breeze+: max 5, Island Premier: max 10) — S3 multi-upload
+- [x] Add Google Review Embed code field (Gulf Breeze+)
+- [x] Add Video Embed URL field (Island Premier only)
+- [x] Wire uploaded file URLs into the submission payload
+- [x] On admin approval, copy all submitted fields into the businesses table

@@ -124,6 +124,13 @@ export const listingSubmissions = mysqlTable("listing_submissions", {
   stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 200 }),
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 200 }),
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 200 }),
+  // Rich listing data collected at submission time
+  hours: json("hours").$type<Record<string, string>>().default({}),
+  socialLinks: json("socialLinks").$type<Record<string, string>>().default({}),
+  coverPhoto: varchar("coverPhoto", { length: 500 }),
+  photos: json("photos").$type<string[]>().default([]),
+  googleReviewEmbedCode: text("googleReviewEmbedCode"),
+  videoEmbed: varchar("videoEmbed", { length: 500 }),
   // ID and slug of the business created on approval
   createdBusinessId: int("createdBusinessId"),
   createdBusinessSlug: varchar("createdBusinessSlug", { length: 150 }),

@@ -290,6 +290,12 @@ export async function createListingSubmission(data: {
   address?: string;
   description?: string;
   tier?: "free" | "gulf_breeze" | "island_premier";
+  hours?: Record<string, string>;
+  socialLinks?: Record<string, string>;
+  coverPhoto?: string;
+  photos?: string[];
+  googleReviewEmbedCode?: string;
+  videoEmbed?: string;
 }): Promise<number> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -303,6 +309,12 @@ export async function createListingSubmission(data: {
     address: data.address ?? null,
     description: data.description ?? null,
     tier: data.tier ?? "free",
+    hours: data.hours ?? null,
+    socialLinks: data.socialLinks ?? null,
+    coverPhoto: data.coverPhoto ?? null,
+    photos: data.photos ?? null,
+    googleReviewEmbedCode: data.googleReviewEmbedCode ?? null,
+    videoEmbed: data.videoEmbed ?? null,
     status: "pending",
     ghlWebhookSent: false,
   });

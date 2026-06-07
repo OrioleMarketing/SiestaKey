@@ -222,6 +222,13 @@ export const appRouter = router({
               phone: sub.phone ?? null,
               website: sub.website ?? null,
               email: sub.email ?? null,
+              // Copy all rich data collected at submission time
+              hours: (sub as any).hours ?? null,
+              socialLinks: (sub as any).socialLinks ?? null,
+              coverPhoto: (sub as any).coverPhoto ?? null,
+              photos: (sub as any).photos ?? [],
+              googleReviewEmbedCode: (sub as any).googleReviewEmbedCode ?? null,
+              videoEmbed: (sub as any).videoEmbed ?? null,
               isActive: true,
               isFeatured: bizTier === "featured" || bizTier === "sponsored",
               isSponsored: bizTier === "sponsored",
@@ -811,6 +818,15 @@ export const appRouter = router({
           address: z.string().optional(),
           description: z.string().optional(),
           tier: z.enum(["free", "gulf_breeze", "island_premier"]).default("free"),
+          // All tiers
+          hours: z.record(z.string(), z.string()).optional(),
+          // Gulf Breeze+
+          socialLinks: z.record(z.string(), z.string()).optional(),
+          coverPhoto: z.string().optional(),
+          photos: z.array(z.string()).optional(),
+          googleReviewEmbedCode: z.string().optional(),
+          // Island Premier only
+          videoEmbed: z.string().url().optional().or(z.literal("")),
         })
       )
       .mutation(async ({ input }) => {
