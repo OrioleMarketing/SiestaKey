@@ -175,6 +175,8 @@ export const appRouter = router({
           id: z.number(),
           status: z.enum(["pending", "approved", "rejected"]),
           origin: z.string().optional(), // frontend passes window.location.origin for approval email links
+          rejectionReason: z.string().max(300).optional(),
+          rejectionNotes: z.string().max(2000).optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -311,6 +313,10 @@ export const appRouter = router({
                 phone: sub.phone ?? undefined,
                 companyName: sub.businessName,
                 tags: ["Listing Rejected", "Siesta Key Directory"],
+                customFields: [
+                  { key: "submission_rejection_reason", field_value: input.rejectionReason ?? "" },
+                  { key: "submission_rejection_notes", field_value: input.rejectionNotes ?? "" },
+                ],
               });
               if (contactId) {
                 await ghlTriggerWorkflow(contactId, GHL_WORKFLOWS.LISTING_REJECTED);

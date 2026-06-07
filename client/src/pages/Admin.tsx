@@ -882,6 +882,12 @@ function SubmissionsTab() {
 
   const [showResolved, setShowResolved] = useState(false);
 
+  // Rejection dialog state
+  const [subRejectDialogOpen, setSubRejectDialogOpen] = useState(false);
+  const [subRejectTarget, setSubRejectTarget] = useState<{ id: number; businessName: string } | null>(null);
+  const [subRejectReason, setSubRejectReason] = useState("");
+  const [subRejectNotes, setSubRejectNotes] = useState("");
+
   const TIER_LABELS: Record<string, string> = {
     free: "Free",
     gulf_breeze: "Gulf Breeze",
@@ -1029,7 +1035,12 @@ function SubmissionsTab() {
                   variant="outline"
                   className="text-red-700 border-red-200 hover:bg-red-50 h-8 text-xs"
                   disabled={s.status === "rejected" || updateStatus.isPending}
-                  onClick={() => updateStatus.mutate({ id: s.id, status: "rejected", origin: window.location.origin })}
+                  onClick={() => {
+                    setSubRejectTarget({ id: s.id, businessName: s.businessName });
+                    setSubRejectReason("");
+                    setSubRejectNotes("");
+                    setSubRejectDialogOpen(true);
+                  }}
                 >
                   <XCircle className="w-3.5 h-3.5 mr-1" />
                   Reject
@@ -1047,6 +1058,73 @@ function SubmissionsTab() {
           </button>
         </div>
       )}
+
+      {/* Submission Rejection Reason Dialog */}
+      <Dialog open={subRejectDialogOpen} onOpenChange={(v) => { if (!v) setSubRejectDialogOpen(false); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              Reject Submission — {subRejectTarget?.businessName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="sub-reject-reason" className="text-sm font-medium">
+                Rejection Reason <span className="text-red-500">*</span>
+              </Label>
+              <Select value={subRejectReason} onValueChange={setSubRejectReason}>
+                <SelectTrigger id="sub-reject-reason" className="mt-1">
+                  <SelectValue placeholder="Select a reason…" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {SUBMISSION_REJECTION_REASONS.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="sub-reject-notes" className="text-sm font-medium">
+                Additional Notes <span className="text-xs text-muted-foreground font-normal">(optional — included in rejection email)</span>
+              </Label>
+              <Textarea
+                id="sub-reject-notes"
+                value={subRejectNotes}
+                onChange={(e) => setSubRejectNotes(e.target.value)}
+                placeholder="Add any specific details or instructions for the submitter…"
+                rows={4}
+                className="mt-1"
+              />
+            </div>
+            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-xs text-red-700">
+              The submitter will be notified via GHL with the selected reason and notes.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setSubRejectDialogOpen(false)} disabled={updateStatus.isPending}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={!subRejectReason || updateStatus.isPending}
+              onClick={() => {
+                if (!subRejectTarget) return;
+                updateStatus.mutate(
+                  { id: subRejectTarget.id, status: "rejected", origin: window.location.origin, rejectionReason: subRejectReason, rejectionNotes: subRejectNotes || undefined },
+                  {
+                    onSuccess: () => {
+                      setSubRejectDialogOpen(false);
+                    },
+                  }
+                );
+              }}
+            >
+              {updateStatus.isPending ? "Rejecting…" : "Confirm Rejection"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1068,6 +1146,21 @@ const REJECTION_REASONS = [
   "Suspected competitor attempting to claim a rival's listing",
   "Insufficient information provided to verify ownership",
   "Claimant did not respond to verification request in time",
+  "Other (see notes below)",
+];
+
+const SUBMISSION_REJECTION_REASONS = [
+  "Business is not located in the Siesta Key service area",
+  "Business category is not eligible for directory listing",
+  "Business name or information appears to be inaccurate",
+  "Business appears to be permanently closed",
+  "Duplicate listing already exists in the directory",
+  "Insufficient information provided to verify the business",
+  "Website URL is invalid or does not match the business",
+  "Address provided is not a valid Siesta Key business address",
+  "Suspected spam or fraudulent submission",
+  "Business does not meet directory content guidelines",
+  "Submitted photos do not meet quality standards",
   "Other (see notes below)",
 ];
 
