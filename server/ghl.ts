@@ -40,6 +40,22 @@ export async function ghlFindContactByEmail(email: string): Promise<{ id: string
 }
 
 /**
+ * Look up a contact by phone number in the GHL location.
+ * Normalizes the phone to digits-only before searching.
+ * Returns the first match or null.
+ */
+export async function ghlFindContactByPhone(phone: string): Promise<{ id: string } | null> {
+  const locationId = process.env.GHL_LOCATION_ID;
+  // Normalize: strip everything except digits and leading +
+  const normalized = phone.replace(/[^\d+]/g, "");
+  const url = `${GHL_BASE}/contacts/?locationId=${locationId}&phone=${encodeURIComponent(normalized)}&limit=1`;
+  const res = await fetch(url, { headers: ghlHeaders() });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { contacts?: { id: string }[] };
+  return data.contacts?.[0] ?? null;
+}
+
+/**
  * Create a new contact in GHL.
  * Returns the created contact object.
  */
@@ -80,28 +96,40 @@ export async function ghlUpdateContact(
 }
 
 /**
- * Upsert a contact: find by email, update if found, create if not.
+ * Upsert a contact: find by email first, then phone as fallback, update if found, create if not.
  * Returns the contact id.
  */
 export async function ghlUpsertContact(input: GHLContactInput): Promise<string | null> {
+  let existing: { id: string } | null = null;
+
+  // 1. Try to find by email (most reliable deduplication key)
   if (input.email) {
-    const existing = await ghlFindContactByEmail(input.email);
-    if (existing) {
-      // Update tags on existing contact
-      if (input.tags?.length) {
-        await ghlAddTags(existing.id, input.tags);
-      }
-      // Update custom fields and other fields on existing contact
-      const updatePayload: Partial<GHLContactInput> = {};
-      if (input.customFields?.length) updatePayload.customFields = input.customFields;
-      if (input.companyName) updatePayload.companyName = input.companyName;
-      if (input.phone) updatePayload.phone = input.phone;
-      if (Object.keys(updatePayload).length > 0) {
-        await ghlUpdateContact(existing.id, updatePayload);
-      }
-      return existing.id;
-    }
+    existing = await ghlFindContactByEmail(input.email);
   }
+
+  // 2. Fallback: try to find by phone if no email match was found
+  if (!existing && input.phone) {
+    existing = await ghlFindContactByPhone(input.phone);
+  }
+
+  if (existing) {
+    // Update the existing contact with any new data
+    if (input.tags?.length) {
+      await ghlAddTags(existing.id, input.tags);
+    }
+    const updatePayload: Partial<GHLContactInput> = {};
+    if (input.customFields?.length) updatePayload.customFields = input.customFields;
+    if (input.companyName) updatePayload.companyName = input.companyName;
+    if (input.phone) updatePayload.phone = input.phone;
+    // If we found by phone but now have an email, add it to the contact
+    if (input.email) updatePayload.email = input.email;
+    if (Object.keys(updatePayload).length > 0) {
+      await ghlUpdateContact(existing.id, updatePayload);
+    }
+    return existing.id;
+  }
+
+  // 3. No match found — create a new contact
   const created = await ghlCreateContact(input);
   return created?.id ?? null;
 }
