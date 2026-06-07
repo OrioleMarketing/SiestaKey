@@ -4,7 +4,6 @@ import { Search, MapPin, Star, ArrowRight, Waves, UtensilsCrossed, ShoppingBag, 
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import WeatherBar from "@/components/WeatherBar";
 import BusinessCard from "@/components/BusinessCard";
 import SEO from "@/components/SEO";
 
@@ -209,9 +208,6 @@ export default function Home() {
           </svg>
         </div>
       </section>
-
-      {/* ── Weather Bar ──────────────────────────────────────────────────────── */}
-      <WeatherBar />
 
       {/* ── Categories ───────────────────────────────────────────────────────── */}
       <section className="py-16 bg-[var(--color-white-sand)]">

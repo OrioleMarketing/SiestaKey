@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Menu, X, LogIn, User } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import WeatherBar from "@/components/WeatherBar";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,6 +41,8 @@ export default function Navbar() {
           : "bg-white/97 backdrop-blur-md shadow-sm border-b border-[var(--color-border)]"
       }`}
     >
+      {/* Weather strip — always visible at the very top of the header */}
+      <WeatherBar />
       <div className="container">
         <nav className="flex items-center justify-between h-16 md:h-18">
           {/* Logo — white-text variant on transparent hero, original when scrolled */}
