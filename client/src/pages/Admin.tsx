@@ -634,21 +634,21 @@ function BusinessesTab() {
                   <span className="text-xs text-muted-foreground">{CATEGORY_NAMES[b.categoryId] ?? "—"}</span>
                 </td>
                 <td className="px-4 py-3">
-                  <div title="Admin override — changes tier in DB only, no payment triggered">
+                  <div title="Admin override — changes tier in DB only, no Stripe charge triggered">
                     <Select
                       value={b.tier}
                       onValueChange={(v) => setTier(b.id, v as "free" | "featured" | "sponsored")}
                     >
-                      <SelectTrigger className="w-36 h-7 text-xs">
+                      <SelectTrigger className="w-44 h-7 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="free">Free (no charge)</SelectItem>
-                        <SelectItem value="featured">Gulf Breeze (no charge)</SelectItem>
-                        <SelectItem value="sponsored">Island Premier (no charge)</SelectItem>
+                        <SelectItem value="free">Sandy Shores — Free</SelectItem>
+                        <SelectItem value="featured">Gulf Breeze — Paid ★</SelectItem>
+                        <SelectItem value="sponsored">Island Premier — Paid ★★</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Admin override</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Admin override (no Stripe charge)</p>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center">
