@@ -85,6 +85,13 @@
       "when": 1780867707539,
       "tag": "0011_public_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1780929609972,
+      "tag": "0012_quiet_jackal",
+      "breakpoints": true
     }
   ]
 }

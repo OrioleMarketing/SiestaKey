@@ -25,6 +25,10 @@ import {
   updateSubmissionStatus,
   updateSubmissionStripeIds,
   getDb,
+  getEventsByBusinessId,
+  getAllEventsAdmin,
+  upsertEvent,
+  deleteEvent,
 } from "./db";
 import {
   getBlogPosts,
@@ -1223,6 +1227,74 @@ export const appRouter = router({
       await deleteBlogPost(input.id);
       return { success: true };
     }),
+  }),
+
+  // --- Events & Announcements ---
+  events: router({
+    // Public: list published events for a specific business (Island Premier only)
+    list: publicProcedure
+      .input(z.object({ businessId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        return getEventsByBusinessId(input.businessId);
+      }),
+
+    // Admin: list all events across all businesses
+    listAll: adminProcedure.query(async () => {
+      return getAllEventsAdmin();
+    }),
+
+    // Admin: create or update an event
+    upsert: adminProcedure
+      .input(
+        z.object({
+          id: z.number().int().positive().optional(),
+          businessId: z.number().int().positive(),
+          type: z.enum(["event", "announcement"]),
+          title: z.string().min(1).max(300),
+          description: z.string().max(2000).optional(),
+          startDate: z.string().max(30).optional(),
+          endDate: z.string().max(30).optional(),
+          location: z.string().max(300).optional(),
+          imageUrl: z.string().url().max(500).optional().or(z.literal("")),
+          isPublished: z.boolean().default(true),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+        // Verify the business is Island Premier tier
+        const [biz] = await db
+          .select({ tier: businesses.tier, name: businesses.name })
+          .from(businesses)
+          .where(eq(businesses.id, input.businessId))
+          .limit(1);
+        if (!biz) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
+        if (biz.tier !== "sponsored") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Events & Announcements are only available for Island Premier listings. "${biz.name}" is on the ${biz.tier} plan.`,
+          });
+        }
+
+        const id = await upsertEvent({
+          ...input,
+          description: input.description ?? null,
+          startDate: input.startDate ?? null,
+          endDate: input.endDate ?? null,
+          location: input.location ?? null,
+          imageUrl: input.imageUrl || null,
+        });
+        return { success: true, id };
+      }),
+
+    // Admin: delete an event
+    delete: adminProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        await deleteEvent(input.id);
+        return { success: true };
+      }),
   }),
 
   // --- Weather ---

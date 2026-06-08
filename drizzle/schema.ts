@@ -160,3 +160,24 @@ export const blogPosts = mysqlTable("blog_posts", {
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+// ─── Business Events & Announcements (Island Premier only) ──────────────────────────────────
+export const businessEvents = mysqlTable("business_events", {
+  id: int("id").autoincrement().primaryKey(),
+  businessId: int("businessId").notNull(),
+  // "event" has a start date/time; "announcement" is timeless
+  type: mysqlEnum("type", ["event", "announcement"]).default("event").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // ISO date strings stored as varchar for simplicity (YYYY-MM-DD or YYYY-MM-DDTHH:mm)
+  startDate: varchar("startDate", { length: 30 }),
+  endDate: varchar("endDate", { length: 30 }),
+  location: varchar("location", { length: 300 }),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  isPublished: boolean("isPublished").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BusinessEvent = typeof businessEvents.$inferSelect;
+export type InsertBusinessEvent = typeof businessEvents.$inferInsert;

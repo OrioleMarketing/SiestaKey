@@ -295,3 +295,13 @@
 - [x] Add Video Embed URL field (Island Premier only)
 - [x] Wire uploaded file URLs into the submission payload
 - [x] On admin approval, copy all submitted fields into the businesses table
+
+## Events & Announcements (Island Premier only)
+
+- [x] Add `business_events` table to schema: id, businessId (FK), type (event|announcement), title, description, startDate, endDate (nullable), location (nullable), imageUrl (nullable), isPublished, createdAt
+- [x] Generate and apply Drizzle migration SQL
+- [x] tRPC procedures: events.list (public, by businessId), events.upsert (admin), events.delete (admin), events.listAll (admin, all businesses)
+- [x] Admin panel — Events tab: list all events across businesses, inline edit/delete, add new event for any business
+- [x] Business profile page — "Events & Announcements" section (Island Premier only): upcoming events card grid, past events collapsed, announcement badge style
+- [x] Guard upsert/delete so only Island Premier businesses can have events
+- [x] Vitest coverage for events procedures

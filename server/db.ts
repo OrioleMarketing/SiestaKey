@@ -2,10 +2,13 @@ import { and, asc, desc, eq, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   Business,
+  BusinessEvent,
+  InsertBusinessEvent,
   Category,
   ClaimLead,
   InsertUser,
   ListingSubmission,
+  businessEvents,
   businesses,
   categories,
   claimLeads,
@@ -437,4 +440,62 @@ export async function updateSubmissionStatus(
     update.rejectionNotes = null;
   }
   await db.update(listingSubmissions).set(update).where(eq(listingSubmissions.id, id));
+}
+
+// ─── Business Events ──────────────────────────────────────────────────────────────────────────────
+
+export async function getEventsByBusinessId(businessId: number): Promise<BusinessEvent[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(businessEvents)
+    .where(and(eq(businessEvents.businessId, businessId), eq(businessEvents.isPublished, true)))
+    .orderBy(asc(businessEvents.startDate), desc(businessEvents.createdAt));
+}
+
+export async function getAllEventsAdmin(): Promise<(BusinessEvent & { businessName: string })[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({
+      id: businessEvents.id,
+      businessId: businessEvents.businessId,
+      type: businessEvents.type,
+      title: businessEvents.title,
+      description: businessEvents.description,
+      startDate: businessEvents.startDate,
+      endDate: businessEvents.endDate,
+      location: businessEvents.location,
+      imageUrl: businessEvents.imageUrl,
+      isPublished: businessEvents.isPublished,
+      createdAt: businessEvents.createdAt,
+      updatedAt: businessEvents.updatedAt,
+      businessName: businesses.name,
+    })
+    .from(businessEvents)
+    .leftJoin(businesses, eq(businessEvents.businessId, businesses.id))
+    .orderBy(desc(businessEvents.createdAt));
+  return rows as (BusinessEvent & { businessName: string })[];
+}
+
+export async function upsertEvent(
+  data: Omit<InsertBusinessEvent, "createdAt" | "updatedAt"> & { id?: number }
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  if (data.id) {
+    const { id, ...rest } = data;
+    await db.update(businessEvents).set(rest).where(eq(businessEvents.id, id));
+    return id;
+  }
+  const { id: _id, ...insertData } = data;
+  const [result] = await db.insert(businessEvents).values(insertData);
+  return (result as any).insertId as number;
+}
+
+export async function deleteEvent(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(businessEvents).where(eq(businessEvents.id, id));
 }

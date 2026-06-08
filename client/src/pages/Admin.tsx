@@ -17,12 +17,14 @@ import {
   AlertCircle,
   BarChart3,
   Building2,
+  Calendar,
   CheckCircle2,
   ClipboardList,
   ExternalLink,
   FileSpreadsheet,
   Lock,
   LogIn,
+  Megaphone,
   MessageSquare,
   Pencil,
   Plus,
@@ -1469,6 +1471,380 @@ function ClaimsTab() {
   );
 }
 
+// ─── Events Tab ─────────────────────────────────────────────────────────────────
+type EventRow = {
+  id: number;
+  businessId: number;
+  businessName: string;
+  type: "event" | "announcement";
+  title: string;
+  description: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  location: string | null;
+  imageUrl: string | null;
+  isPublished: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const EMPTY_EVENT_FORM = {
+  id: undefined as number | undefined,
+  businessId: 0,
+  type: "event" as "event" | "announcement",
+  title: "",
+  description: "",
+  startDate: "",
+  endDate: "",
+  location: "",
+  imageUrl: "",
+  isPublished: true,
+};
+
+function EventsTab() {
+  const utils = trpc.useUtils();
+  const { data: events, isLoading } = trpc.events.listAll.useQuery();
+  const { data: allBusinesses } = trpc.admin.listBusinesses.useQuery();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<EventRow | null>(null);
+  const [form, setForm] = useState({ ...EMPTY_EVENT_FORM });
+
+  // Only Island Premier (sponsored) businesses can have events
+  const islandPremierBizList = (allBusinesses ?? []).filter((b: any) => b.tier === "sponsored");
+
+  const upsert = trpc.events.upsert.useMutation({
+    onSuccess: () => {
+      utils.events.listAll.invalidate();
+      toast.success(form.id ? "Event updated" : "Event created");
+      setDialogOpen(false);
+      setForm({ ...EMPTY_EVENT_FORM });
+    },
+    onError: (e) => toast.error(`Failed to save event: ${e.message}`),
+  });
+
+  const deleteMutation = trpc.events.delete.useMutation({
+    onSuccess: () => {
+      utils.events.listAll.invalidate();
+      toast.success("Event deleted");
+      setDeleteTarget(null);
+    },
+    onError: (e) => toast.error(`Delete failed: ${e.message}`),
+  });
+
+  const openCreate = () => {
+    setForm({
+      ...EMPTY_EVENT_FORM,
+      businessId: islandPremierBizList[0]?.id ?? 0,
+    });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (ev: EventRow) => {
+    setForm({
+      id: ev.id,
+      businessId: ev.businessId,
+      type: ev.type,
+      title: ev.title,
+      description: ev.description ?? "",
+      startDate: ev.startDate ?? "",
+      endDate: ev.endDate ?? "",
+      location: ev.location ?? "",
+      imageUrl: ev.imageUrl ?? "",
+      isPublished: ev.isPublished,
+    });
+    setDialogOpen(true);
+  };
+
+  const set = (field: string, value: string | number | boolean) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {events?.length ?? 0} event{(events?.length ?? 0) !== 1 ? "s" : ""} across all Island Premier listings
+        </p>
+        <Button
+          className="btn-ocean gap-2"
+          onClick={openCreate}
+          disabled={islandPremierBizList.length === 0}
+        >
+          <Plus className="w-4 h-4" /> Add Event
+        </Button>
+      </div>
+
+      {islandPremierBizList.length === 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          No Island Premier listings found. Events & Announcements are exclusive to the Island Premier tier.
+        </div>
+      )}
+
+      {/* Events table */}
+      {(events?.length ?? 0) > 0 ? (
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Business</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Title</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {(events as EventRow[]).map((ev) => (
+                <tr key={ev.id} className="hover:bg-muted/20 transition-colors">
+                  <td className="px-4 py-3">
+                    <span className="font-medium text-charcoal">{ev.businessName}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {ev.type === "announcement" ? (
+                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 gap-1">
+                        <Megaphone className="w-3 h-3" /> Announcement
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-ocean/10 text-ocean border-ocean/20 gap-1">
+                        <Calendar className="w-3 h-3" /> Event
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="font-medium">{ev.title}</span>
+                    {ev.location && <div className="text-xs text-muted-foreground mt-0.5">{ev.location}</div>}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {ev.startDate ? (
+                      <span>{new Date(ev.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge className={ev.isPublished ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-500 border-gray-200"}>
+                      {ev.isPublished ? "Published" : "Draft"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => openEdit(ev)}
+                        className="p-1.5 rounded-lg hover:bg-ocean/10 text-ocean transition-colors"
+                        title="Edit event"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(ev)}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                        title="Delete event"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-12 text-muted-foreground">
+          <Calendar className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
+          No events yet. Click "Add Event" to create the first one.
+        </div>
+      )}
+
+      {/* Create / Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(v) => { if (!v) { setDialogOpen(false); setForm({ ...EMPTY_EVENT_FORM }); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg">
+              {form.id ? "Edit Event / Announcement" : "Add Event / Announcement"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Business selector */}
+            <div>
+              <Label htmlFor="ev-biz">Business (Island Premier only) *</Label>
+              <Select
+                value={String(form.businessId || "")}
+                onValueChange={(v) => set("businessId", Number(v))}
+              >
+                <SelectTrigger id="ev-biz" className="mt-1">
+                  <SelectValue placeholder="Select a business…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {islandPremierBizList.map((b: any) => (
+                    <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Type */}
+            <div>
+              <Label htmlFor="ev-type">Type *</Label>
+              <Select value={form.type} onValueChange={(v) => set("type", v as "event" | "announcement")}>
+                <SelectTrigger id="ev-type" className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="event">📅 Event (has a date)</SelectItem>
+                  <SelectItem value="announcement">📣 Announcement (timeless)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Title */}
+            <div>
+              <Label htmlFor="ev-title">Title *</Label>
+              <Input
+                id="ev-title"
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                placeholder="e.g. Summer Beach Party"
+                maxLength={300}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <Label htmlFor="ev-desc">Description</Label>
+              <Textarea
+                id="ev-desc"
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                placeholder="Details about the event or announcement…"
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Dates — only for events */}
+            {form.type === "event" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="ev-start">Start Date / Time</Label>
+                  <Input
+                    id="ev-start"
+                    type="datetime-local"
+                    value={form.startDate}
+                    onChange={(e) => set("startDate", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ev-end">End Date / Time</Label>
+                  <Input
+                    id="ev-end"
+                    type="datetime-local"
+                    value={form.endDate}
+                    onChange={(e) => set("endDate", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Location */}
+            <div>
+              <Label htmlFor="ev-loc">Location</Label>
+              <Input
+                id="ev-loc"
+                value={form.location}
+                onChange={(e) => set("location", e.target.value)}
+                placeholder="e.g. Siesta Key Beach Pavilion"
+                className="mt-1"
+              />
+            </div>
+
+            {/* Image URL */}
+            <div>
+              <Label htmlFor="ev-img">Image URL <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+              <Input
+                id="ev-img"
+                value={form.imageUrl}
+                onChange={(e) => set("imageUrl", e.target.value)}
+                placeholder="https://…"
+                className="mt-1"
+              />
+            </div>
+
+            {/* Published toggle */}
+            <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+              <input
+                id="ev-published"
+                type="checkbox"
+                checked={form.isPublished}
+                onChange={(e) => set("isPublished", e.target.checked)}
+                className="w-4 h-4 accent-ocean"
+              />
+              <Label htmlFor="ev-published" className="cursor-pointer">
+                Published <span className="text-xs text-muted-foreground font-normal">(visible on the business profile)</span>
+              </Label>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setDialogOpen(false); setForm({ ...EMPTY_EVENT_FORM }); }} disabled={upsert.isPending}>
+              Cancel
+            </Button>
+            <Button
+              className="btn-ocean"
+              disabled={!form.title.trim() || !form.businessId || upsert.isPending}
+              onClick={() => upsert.mutate({
+                ...form,
+                description: form.description || undefined,
+                startDate: form.startDate || undefined,
+                endDate: form.endDate || undefined,
+                location: form.location || undefined,
+                imageUrl: form.imageUrl || undefined,
+              })}
+            >
+              {upsert.isPending ? "Saving…" : form.id ? "Save Changes" : "Create Event"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{deleteTarget?.title}" will be permanently removed and will no longer appear on the business profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => deleteTarget && deleteMutation.mutate({ id: deleteTarget.id })}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 // ─── Main Admin Page ─────────────────────────────────────────────────────────────
 export default function Admin() {
   const { user, loading } = useAuth();
@@ -1630,6 +2006,13 @@ export default function Admin() {
               <MessageSquare className="w-4 h-4 mr-2 inline" />
               Blog / Guides
             </TabsTrigger>
+            <TabsTrigger
+              value="events"
+              className="rounded-lg data-[state=active]:bg-ocean data-[state=active]:text-white px-4 py-2 text-sm font-medium"
+            >
+              <Calendar className="w-4 h-4 mr-2 inline" />
+              Events
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="businesses">
@@ -1700,6 +2083,19 @@ export default function Admin() {
               </CardHeader>
               <CardContent className="pt-0">
                 <BlogTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="events">
+            <Card className="card-coastal">
+              <CardHeader className="pb-4">
+                <CardTitle className="font-serif text-lg">Events &amp; Announcements</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Manage events and announcements for Island Premier listings. These appear on the business profile page.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <EventsTab />
               </CardContent>
             </Card>
           </TabsContent>

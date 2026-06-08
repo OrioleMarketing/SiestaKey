@@ -3,7 +3,8 @@ import { useParams, Link } from "wouter";
 import {
   MapPin, Phone, Globe, Clock, Star, ArrowLeft, Crown, Sparkles,
   Share2, ExternalLink, ChevronRight, Mail, BadgeCheck,
-  Facebook, Instagram, Twitter, Youtube, Linkedin
+  Facebook, Instagram, Twitter, Youtube, Linkedin,
+  Calendar, Megaphone, MapPin as LocationPin
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -92,6 +93,10 @@ export default function BusinessProfile() {
   const { data: related } = trpc.businesses.related.useQuery(
     { categoryId: business?.categoryId ?? 0, excludeId: business?.id ?? 0 },
     { enabled: !!business }
+  );
+  const { data: events } = trpc.events.list.useQuery(
+    { businessId: business?.id ?? 0 },
+    { enabled: !!business?.id && business?.tier === "sponsored" }
   );
 
   const handleMapReady = (map: google.maps.Map) => {
@@ -559,6 +564,139 @@ export default function BusinessProfile() {
                   />
                 </div>
               )}
+
+              {/* Events & Announcements — Island Premier only */}
+              {isIslandPremier && events && events.length > 0 && (() => {
+                const now = new Date();
+                const announcements = events.filter((e) => e.type === "announcement");
+                const upcoming = events.filter(
+                  (e) => e.type === "event" && (!e.startDate || new Date(e.startDate) >= now)
+                );
+                const past = events.filter(
+                  (e) => e.type === "event" && e.startDate && new Date(e.startDate) < now
+                );
+
+                return (
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="p-5 border-b border-[var(--color-border)] flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-ocean" />
+                      <h2 className="font-serif text-xl font-semibold text-[var(--color-charcoal)]">Events &amp; Announcements</h2>
+                    </div>
+                    <div className="divide-y divide-[var(--color-border)]">
+                      {/* Announcements */}
+                      {announcements.map((ev) => (
+                        <div key={ev.id} className="p-5 flex gap-4">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                            <Megaphone className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">Announcement</span>
+                            </div>
+                            <h3 className="font-semibold text-[var(--color-charcoal)] leading-snug">{ev.title}</h3>
+                            {ev.description && (
+                              <p className="text-sm text-[var(--color-muted-foreground)] mt-1 leading-relaxed">{ev.description}</p>
+                            )}
+                          </div>
+                          {ev.imageUrl && (
+                            <img src={ev.imageUrl} alt={ev.title} className="flex-shrink-0 w-20 h-20 rounded-xl object-cover" />
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Upcoming events */}
+                      {upcoming.map((ev) => (
+                        <div key={ev.id} className="p-5 flex gap-4">
+                          <div className="flex-shrink-0 text-center min-w-[3rem]">
+                            {ev.startDate ? (
+                              <div className="rounded-xl border-2 border-ocean overflow-hidden">
+                                <div className="bg-ocean text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
+                                  {new Date(ev.startDate).toLocaleString("en-US", { month: "short" })}
+                                </div>
+                                <div className="bg-white text-ocean font-bold text-xl leading-none px-2 py-1">
+                                  {new Date(ev.startDate).getDate()}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-xl bg-ocean/10 flex items-center justify-center">
+                                <Calendar className="w-5 h-5 text-ocean" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-[var(--color-charcoal)] leading-snug">{ev.title}</h3>
+                            {ev.startDate && (
+                              <p className="text-xs text-ocean font-medium mt-0.5">
+                                {new Date(ev.startDate).toLocaleString("en-US", {
+                                  weekday: "short", month: "long", day: "numeric",
+                                  hour: "numeric", minute: "2-digit",
+                                })}
+                                {ev.endDate && (
+                                  <> &ndash; {new Date(ev.endDate).toLocaleString("en-US", { hour: "numeric", minute: "2-digit" })}</>
+                                )}
+                              </p>
+                            )}
+                            {ev.location && (
+                              <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5 flex items-center gap-1">
+                                <LocationPin className="w-3 h-3" /> {ev.location}
+                              </p>
+                            )}
+                            {ev.description && (
+                              <p className="text-sm text-[var(--color-muted-foreground)] mt-1 leading-relaxed">{ev.description}</p>
+                            )}
+                          </div>
+                          {ev.imageUrl && (
+                            <img src={ev.imageUrl} alt={ev.title} className="flex-shrink-0 w-20 h-20 rounded-xl object-cover" />
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Past events — collapsed */}
+                      {past.length > 0 && (
+                        <details className="group">
+                          <summary className="p-4 text-sm text-[var(--color-muted-foreground)] cursor-pointer hover:text-[var(--color-charcoal)] flex items-center gap-2 list-none">
+                            <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
+                            {past.length} past event{past.length !== 1 ? "s" : ""}
+                          </summary>
+                          <div className="divide-y divide-[var(--color-border)]">
+                            {past.map((ev) => (
+                              <div key={ev.id} className="p-5 flex gap-4 opacity-60">
+                                <div className="flex-shrink-0 text-center min-w-[3rem]">
+                                  {ev.startDate ? (
+                                    <div className="rounded-xl border-2 border-muted overflow-hidden">
+                                      <div className="bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
+                                        {new Date(ev.startDate).toLocaleString("en-US", { month: "short" })}
+                                      </div>
+                                      <div className="bg-white text-muted-foreground font-bold text-xl leading-none px-2 py-1">
+                                        {new Date(ev.startDate).getDate()}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                                      <Calendar className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-[var(--color-charcoal)] leading-snug">{ev.title}</h3>
+                                  {ev.startDate && (
+                                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                                      {new Date(ev.startDate).toLocaleString("en-US", { weekday: "short", month: "long", day: "numeric" })}
+                                    </p>
+                                  )}
+                                  {ev.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{ev.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Video Embed — Island Premier only */}
               {isIslandPremier && business.videoEmbed && (() => {
