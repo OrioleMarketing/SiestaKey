@@ -28,6 +28,7 @@ export default function Navbar() {
     { href: "/directory/nightlife", label: "Nightlife" },
     { href: "/directory/accommodations", label: "Accommodations" },
     { href: "/guides", label: "Guides" },
+    { href: "/events", label: "Events" },
   ];
 
   // Transparent state: only on homepage before scroll, and not when mobile menu is open

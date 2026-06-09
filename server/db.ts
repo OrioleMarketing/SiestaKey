@@ -169,11 +169,27 @@ export async function getBusinesses(opts: {
       .where(whereClause)
       .orderBy(
         ...(sortBy === "name"
-          ? [asc(businesses.name)]
+          ? [
+              desc(businesses.isSponsored),
+              desc(businesses.isFeatured),
+              desc(businesses.isClaimed),
+              asc(businesses.name),
+            ]
           : sortBy === "category"
-          ? [asc(businesses.categoryId), asc(businesses.name)]
+          ? [
+              asc(businesses.categoryId),
+              desc(businesses.isSponsored),
+              desc(businesses.isFeatured),
+              desc(businesses.isClaimed),
+              asc(businesses.name),
+            ]
           : sortBy === "tags"
-          ? [asc(businesses.name)] // tags are stored as JSON; sort by name as proxy
+          ? [
+              desc(businesses.isSponsored),
+              desc(businesses.isFeatured),
+              desc(businesses.isClaimed),
+              asc(businesses.name),
+            ]
           : [
               desc(businesses.isSponsored),
               desc(businesses.isFeatured),
