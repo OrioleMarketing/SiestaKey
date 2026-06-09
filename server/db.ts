@@ -499,3 +499,40 @@ export async function deleteEvent(id: number): Promise<void> {
   if (!db) return;
   await db.delete(businessEvents).where(eq(businessEvents.id, id));
 }
+
+export async function getUpcomingEvents(limit = 5): Promise<(BusinessEvent & { businessName: string; businessSlug: string })[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date().toISOString();
+  const rows = await db
+    .select({
+      id: businessEvents.id,
+      businessId: businessEvents.businessId,
+      type: businessEvents.type,
+      title: businessEvents.title,
+      description: businessEvents.description,
+      startDate: businessEvents.startDate,
+      endDate: businessEvents.endDate,
+      location: businessEvents.location,
+      imageUrl: businessEvents.imageUrl,
+      isPublished: businessEvents.isPublished,
+      createdAt: businessEvents.createdAt,
+      updatedAt: businessEvents.updatedAt,
+      businessName: businesses.name,
+      businessSlug: businesses.slug,
+    })
+    .from(businessEvents)
+    .leftJoin(businesses, eq(businessEvents.businessId, businesses.id))
+    .where(
+      and(
+        eq(businessEvents.isPublished, true),
+        eq(businessEvents.type, "event"),
+        // startDate >= now OR startDate is null (announcements already filtered by type)
+      )
+    )
+    .orderBy(asc(businessEvents.startDate))
+    .limit(limit);
+  // Filter client-side for startDate >= now (avoids complex SQL date comparison across MySQL versions)
+  const upcoming = rows.filter((r) => !r.startDate || r.startDate >= now);
+  return upcoming.slice(0, limit) as (BusinessEvent & { businessName: string; businessSlug: string })[];
+}

@@ -305,3 +305,11 @@
 - [x] Business profile page — "Events & Announcements" section (Island Premier only): upcoming events card grid, past events collapsed, announcement badge style
 - [x] Guard upsert/delete so only Island Premier businesses can have events
 - [x] Vitest coverage for events procedures
+
+## Fix: Claim Approval Not Setting isClaimed + Events Self-Management + Homepage Events Widget
+
+- [x] Investigate why approved claims (SkyRun, siesta 4 rent, Beach to Bay) are not showing isClaimed=true on their business profiles
+- [x] Fix approveClaim procedure to correctly set isClaimed=true on the matched business when businessId is present — root cause: businessId was null in claim_leads; added name-based fallback matching
+- [x] Retroactively patched isClaimed=true for SkyRun, Siesta 4 Rent, Beach to Bay via SQL
+- [x] Owner Dashboard: Events & Announcements section for Island Premier owners to create/edit/delete their own events
+- [x] Homepage: Upcoming Events widget showing next 5 events across all Island Premier businesses

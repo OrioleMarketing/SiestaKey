@@ -45,7 +45,15 @@ import {
   MessageSquare,
   ImageIcon,
   Star as StarIcon,
+  Calendar,
+  Megaphone,
+  Plus,
+  Pencil,
+  X,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useRef } from "react";
 
 const PLAN_CONFIG = {
@@ -143,6 +151,35 @@ export default function Dashboard() {
     // Reset input so same file can be re-selected
     e.target.value = "";
   };
+
+  // Events state
+  const utils = trpc.useUtils();
+  const { data: myEvents = [] } = trpc.dashboard.getMyEvents.useQuery(undefined, { enabled: !!user });
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<null | {
+    id?: number; type: "event" | "announcement"; title: string;
+    description: string; startDate: string; endDate: string;
+    location: string; imageUrl: string; isPublished: boolean;
+  }>(null);
+  const BLANK_EVENT = { type: "event" as const, title: "", description: "", startDate: "", endDate: "", location: "", imageUrl: "", isPublished: true };
+
+  const upsertEventMutation = trpc.dashboard.upsertMyEvent.useMutation({
+    onSuccess: () => {
+      toast.success(editingEvent?.id ? "Event updated!" : "Event created!");
+      utils.dashboard.getMyEvents.invalidate();
+      setEventDialogOpen(false);
+      setEditingEvent(null);
+    },
+    onError: (err) => toast.error(err.message || "Failed to save event."),
+  });
+
+  const deleteEventMutation = trpc.dashboard.deleteMyEvent.useMutation({
+    onSuccess: () => {
+      toast.success("Event deleted.");
+      utils.dashboard.getMyEvents.invalidate();
+    },
+    onError: (err) => toast.error(err.message || "Failed to delete event."),
+  });
 
   const updateMutation = trpc.dashboard.updateMyListing.useMutation({
     onSuccess: () => {
@@ -686,6 +723,94 @@ export default function Dashboard() {
                   </>
                 )}
 
+                {/* Events & Announcements — Island Premier only */}
+                {planKey === "island_premier" && (
+                  <>
+                    <Separator />
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-amber-500" /> Events &amp; Announcements
+                        </h3>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => { setEditingEvent({ ...BLANK_EVENT }); setEventDialogOpen(true); }}
+                          className="bg-amber-600 hover:bg-amber-700 text-white h-8 px-3 text-xs"
+                        >
+                          <Plus className="h-3.5 w-3.5 mr-1" /> Add Event
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Events and announcements appear on your public profile page. Upcoming events are also featured on the homepage.
+                      </p>
+                      {myEvents.length === 0 ? (
+                        <div className="border-2 border-dashed border-amber-200 rounded-lg p-6 text-center">
+                          <Calendar className="h-8 w-8 text-amber-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-400">No events yet — add your first event or announcement.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {myEvents.map((ev: any) => (
+                            <div key={ev.id} className="flex items-start justify-between gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-white transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  {ev.type === "announcement" ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+                                      <Megaphone className="h-3 w-3" /> Announcement
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-700">
+                                      <Calendar className="h-3 w-3" /> Event
+                                    </span>
+                                  )}
+                                  {!ev.isPublished && (
+                                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-500">Draft</span>
+                                  )}
+                                </div>
+                                <p className="text-sm font-medium text-gray-800 truncate">{ev.title}</p>
+                                {ev.startDate && (
+                                  <p className="text-xs text-gray-500">{new Date(ev.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  onClick={() => {
+                                    setEditingEvent({
+                                      id: ev.id,
+                                      type: ev.type,
+                                      title: ev.title,
+                                      description: ev.description ?? "",
+                                      startDate: ev.startDate ?? "",
+                                      endDate: ev.endDate ?? "",
+                                      location: ev.location ?? "",
+                                      imageUrl: ev.imageUrl ?? "",
+                                      isPublished: ev.isPublished ?? true,
+                                    });
+                                    setEventDialogOpen(true);
+                                  }}
+                                  className="p-1.5 rounded-md text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                                  title="Edit"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => deleteEventMutation.mutate({ id: ev.id })}
+                                  disabled={deleteEventMutation.isPending}
+                                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                  title="Delete"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
                 {/* Save Button */}
                 <div className="flex justify-end pt-2">
                   <Button
@@ -703,6 +828,87 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      {/* Event Create/Edit Dialog */}
+      <Dialog open={eventDialogOpen} onOpenChange={(v) => { if (!v) { setEventDialogOpen(false); setEditingEvent(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-serif">
+              <Calendar className="h-5 w-5 text-amber-500" />
+              {editingEvent?.id ? "Edit Event" : "Add Event or Announcement"}
+            </DialogTitle>
+          </DialogHeader>
+          {editingEvent && (
+            <div className="space-y-4 py-1">
+              <div>
+                <Label className="text-xs font-medium text-gray-600 mb-1 block">Type</Label>
+                <Select value={editingEvent.type} onValueChange={(v) => setEditingEvent({ ...editingEvent, type: v as "event" | "announcement" })}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="event">Event</SelectItem>
+                    <SelectItem value="announcement">Announcement</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ev-title" className="text-xs font-medium text-gray-600 mb-1 block">Title <span className="text-red-500">*</span></Label>
+                <Input id="ev-title" value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} placeholder="e.g. Live Music Friday Night" className="h-9" />
+              </div>
+              <div>
+                <Label htmlFor="ev-desc" className="text-xs font-medium text-gray-600 mb-1 block">Description</Label>
+                <Textarea id="ev-desc" value={editingEvent.description} onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })} placeholder="Details about the event..." rows={3} />
+              </div>
+              {editingEvent.type === "event" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="ev-start" className="text-xs font-medium text-gray-600 mb-1 block">Start Date &amp; Time</Label>
+                    <Input id="ev-start" type="datetime-local" value={editingEvent.startDate} onChange={(e) => setEditingEvent({ ...editingEvent, startDate: e.target.value })} className="h-9" />
+                  </div>
+                  <div>
+                    <Label htmlFor="ev-end" className="text-xs font-medium text-gray-600 mb-1 block">End Date &amp; Time</Label>
+                    <Input id="ev-end" type="datetime-local" value={editingEvent.endDate} onChange={(e) => setEditingEvent({ ...editingEvent, endDate: e.target.value })} className="h-9" />
+                  </div>
+                </div>
+              )}
+              {editingEvent.type === "event" && (
+                <div>
+                  <Label htmlFor="ev-loc" className="text-xs font-medium text-gray-600 mb-1 block">Location</Label>
+                  <Input id="ev-loc" value={editingEvent.location} onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })} placeholder="e.g. Siesta Key Village" className="h-9" />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Switch id="ev-pub" checked={editingEvent.isPublished} onCheckedChange={(v) => setEditingEvent({ ...editingEvent, isPublished: v })} />
+                <Label htmlFor="ev-pub" className="text-sm text-gray-700">Published (visible on profile)</Label>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEventDialogOpen(false); setEditingEvent(null); }}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!editingEvent || !editingEvent.title.trim()) { toast.error("Title is required."); return; }
+                upsertEventMutation.mutate({
+                  id: editingEvent.id,
+                  type: editingEvent.type,
+                  title: editingEvent.title.trim(),
+                  description: editingEvent.description || undefined,
+                  startDate: editingEvent.startDate || undefined,
+                  endDate: editingEvent.endDate || undefined,
+                  location: editingEvent.location || undefined,
+                  imageUrl: editingEvent.imageUrl || undefined,
+                  isPublished: editingEvent.isPublished,
+                });
+              }}
+              disabled={upsertEventMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {upsertEventMutation.isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : (editingEvent?.id ? "Save Changes" : "Create")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Photo removal confirmation dialog */}
       <AlertDialog open={!!confirmRemoveUrl} onOpenChange={(open) => !open && setConfirmRemoveUrl(null)}>

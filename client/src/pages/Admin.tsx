@@ -1355,6 +1355,7 @@ function ClaimsTab() {
                           approveMutation.mutate({
                             claimId: c.id,
                             businessId: c.businessId ?? undefined,
+                            businessName: c.businessName, // fallback name match if businessId is null
                             claimEmail: c.email,
                             contactId: (c as any).ghlContactId ?? undefined,
                           })

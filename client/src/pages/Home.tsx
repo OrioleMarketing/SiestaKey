@@ -35,6 +35,7 @@ export default function Home() {
 
   const { data: categories } = trpc.categories.list.useQuery();
   const { data: featured } = trpc.businesses.featured.useQuery();
+  const { data: upcomingEvents = [] } = trpc.events.upcoming.useQuery({ limit: 5 });
 
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
@@ -355,6 +356,65 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Upcoming Events ──────────────────────────────────────────────────── */}
+      {upcomingEvents.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="container">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="w-5 h-5 text-[var(--color-ocean)]" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ocean)]">Island Premier Events</span>
+                </div>
+                <h2 className="font-serif text-2xl md:text-3xl font-bold text-[var(--color-charcoal)]">
+                  Upcoming Events on Siesta Key
+                </h2>
+              </div>
+              <a href="/directory?tier=featured_sponsored" className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-[var(--color-ocean)] hover:underline">
+                View all listings <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {upcomingEvents.map((ev: any, i: number) => (
+                <a
+                  key={ev.id}
+                  href={`/business/${ev.businessSlug}`}
+                  className="group block rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.07}s` }}
+                >
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-ocean-pale)] shrink-0">
+                        <Calendar className="w-5 h-5 text-[var(--color-ocean)]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[var(--color-ocean)] uppercase tracking-wide truncate">{ev.businessName}</p>
+                        {ev.startDate && (
+                          <p className="text-xs text-gray-400">
+                            {new Date(ev.startDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                            {" "}
+                            {new Date(ev.startDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-[var(--color-charcoal)] group-hover:text-[var(--color-ocean)] transition-colors line-clamp-2 mb-1">{ev.title}</h3>
+                    {ev.location && (
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                        <MapPin className="w-3 h-3 shrink-0" /> {ev.location}
+                      </p>
+                    )}
+                    {ev.description && (
+                      <p className="text-xs text-gray-500 mt-2 line-clamp-2">{ev.description}</p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Premium Banner ────────────────────────────────────────────────────── */}
       <section className="py-16 bg-[var(--color-white-sand)]">

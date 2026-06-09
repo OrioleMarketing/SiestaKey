@@ -29,6 +29,7 @@ import {
   getAllEventsAdmin,
   upsertEvent,
   deleteEvent,
+  getUpcomingEvents,
 } from "./db";
 import {
   getBlogPosts,
@@ -40,7 +41,7 @@ import {
   generateSlug,
 } from "./blogDb";
 import { businesses, claimLeads, listingSubmissions, users } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import {
   GHL_WORKFLOWS,
   ghlAddTags,
@@ -347,6 +348,7 @@ export const appRouter = router({
       .input(z.object({
         claimId: z.number(),
         businessId: z.number().optional(),
+        businessName: z.string().optional(), // fallback for name-based matching
         claimEmail: z.string().email().optional(),
         contactId: z.string().optional(),
       }))
@@ -354,12 +356,22 @@ export const appRouter = router({
         const db = await getDb();
         let businessSlug: string | null = null;
 
-        // 1. Link the business to the user who submitted the claim (by email match)
-        if (input.businessId && db) {
+        // 1. Resolve the target business — prefer explicit businessId, fall back to name match
+        let resolvedBusinessId: number | null = input.businessId ?? null;
+        if (!resolvedBusinessId && input.businessName && db) {
+          const nameMatch = await db
+            .select({ id: businesses.id })
+            .from(businesses)
+            .where(like(businesses.name, `%${input.businessName}%`))
+            .limit(1);
+          resolvedBusinessId = nameMatch[0]?.id ?? null;
+        }
+
+        if (resolvedBusinessId && db) {
           const matchedBiz = await db
             .select({ slug: businesses.slug })
             .from(businesses)
-            .where(eq(businesses.id, input.businessId))
+            .where(eq(businesses.id, resolvedBusinessId))
             .limit(1);
           businessSlug = matchedBiz[0]?.slug ?? null;
 
@@ -373,13 +385,12 @@ export const appRouter = router({
             await db
               .update(businesses)
               .set({ isClaimed: true, claimedByUserId: userId })
-              .where(eq(businesses.id, input.businessId));
+              .where(eq(businesses.id, resolvedBusinessId));
           } else {
-            // No email match needed — just mark as claimed
             await db
               .update(businesses)
               .set({ isClaimed: true })
-              .where(eq(businesses.id, input.businessId));
+              .where(eq(businesses.id, resolvedBusinessId));
           }
         }
 
@@ -1117,6 +1128,67 @@ export const appRouter = router({
         await updateBusinessByUserId(ctx.user.id, { coverPhoto: input.photoUrl });
         return { coverPhoto: input.photoUrl };
       }),
+
+    // List events for the owner's claimed Island Premier listing
+    getMyEvents: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const existing = await getBusinessByUserId(ctx.user.id);
+      if (!existing) return [];
+      if ((existing as any).tier !== "sponsored") return [];
+      return getEventsByBusinessId((existing as any).id);
+    }),
+
+    // Create or update an event for the owner's claimed Island Premier listing
+    upsertMyEvent: protectedProcedure
+      .input(
+        z.object({
+          id: z.number().int().positive().optional(),
+          type: z.enum(["event", "announcement"]),
+          title: z.string().min(1).max(300),
+          description: z.string().max(2000).optional(),
+          startDate: z.string().max(30).optional(),
+          endDate: z.string().max(30).optional(),
+          location: z.string().max(300).optional(),
+          imageUrl: z.string().url().max(500).optional().or(z.literal("")),
+          isPublished: z.boolean().default(true),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getBusinessByUserId(ctx.user.id);
+        if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "No claimed listing found." });
+        if ((existing as any).tier !== "sponsored") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Events & Announcements require an Island Premier plan." });
+        }
+        const id = await upsertEvent({
+          ...input,
+          businessId: (existing as any).id,
+          description: input.description ?? null,
+          startDate: input.startDate ?? null,
+          endDate: input.endDate ?? null,
+          location: input.location ?? null,
+          imageUrl: input.imageUrl || null,
+        });
+        return { success: true, id };
+      }),
+
+    // Delete an event owned by the current user's listing
+    deleteMyEvent: protectedProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const existing = await getBusinessByUserId(ctx.user.id);
+        if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "No claimed listing found." });
+        // Verify the event belongs to this owner's business
+        const { businessEvents } = await import("../drizzle/schema");
+        const [ev] = await db.select({ businessId: businessEvents.businessId }).from(businessEvents).where(eq(businessEvents.id, input.id)).limit(1);
+        if (!ev || ev.businessId !== (existing as any).id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Event not found or does not belong to your listing." });
+        }
+        await deleteEvent(input.id);
+        return { success: true };
+      }),
   }),
 
   users: router({
@@ -1236,6 +1308,13 @@ export const appRouter = router({
       .input(z.object({ businessId: z.number().int().positive() }))
       .query(async ({ input }) => {
         return getEventsByBusinessId(input.businessId);
+      }),
+
+    // Public: upcoming events across all Island Premier businesses (for homepage widget)
+    upcoming: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(10).default(5) }))
+      .query(async ({ input }) => {
+        return getUpcomingEvents(input.limit);
       }),
 
     // Admin: list all events across all businesses
