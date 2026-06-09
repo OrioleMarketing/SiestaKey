@@ -177,6 +177,7 @@ export async function getBusinesses(opts: {
           : [
               desc(businesses.isSponsored),
               desc(businesses.isFeatured),
+              desc(businesses.isClaimed),
               asc(businesses.name),
             ]
         )

@@ -465,7 +465,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { icon: "🏖️", label: "#1 Beach in the US", sub: "TripAdvisor 2023" },
-                  { icon: "🌊", label: "Crystal Clear Waters", sub: "Gulf of Mexico" },
+                  { icon: "🌊", label: "Crystal Clear Waters", sub: "Gulf of America" },
                   { icon: "🍽️", label: "World-Class Dining", sub: "Fresh local seafood" },
                   { icon: "🛍️", label: "Unique Boutiques", sub: "One-of-a-kind shops" },
                 ].map((item) => (
