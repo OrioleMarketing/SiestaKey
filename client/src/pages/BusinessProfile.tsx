@@ -288,14 +288,15 @@ export default function BusinessProfile() {
                 </span>
               )}
             </div>
-            {business.isClaimed && (
-              <div className="absolute top-20 right-4">
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-lg">
-                  <BadgeCheck className="w-3.5 h-3.5" /> CLAIMED
-                </span>
-              </div>
-            )}
           </>
+        )}
+        {/* CLAIMED badge — always shown regardless of cover photo */}
+        {business.isClaimed && (
+          <div className="absolute right-4" style={{ top: coverImage ? "80px" : "16px" }}>
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-lg">
+              <BadgeCheck className="w-3.5 h-3.5" /> CLAIMED
+            </span>
+          </div>
         )}
 
         {/* Back button */}
@@ -368,9 +369,16 @@ export default function BusinessProfile() {
                 ))}
               </div>
 
-              <h1 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)] mb-2">
-                {business.name}
-              </h1>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <h1 className="font-serif text-3xl md:text-4xl font-bold text-[var(--color-charcoal)]">
+                  {business.name}
+                </h1>
+                {business.isClaimed && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 shrink-0">
+                    <BadgeCheck className="w-3.5 h-3.5" /> Verified
+                  </span>
+                )}
+              </div>
 
               {business.rating && business.reviewCount != null && business.reviewCount > 0 && (
                 <StarRating rating={business.rating} count={business.reviewCount} />
