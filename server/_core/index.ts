@@ -10,6 +10,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerStripeWebhook } from "../stripeWebhook";
 import { registerSitemapRoutes } from "../sitemap";
+import { syncChamberEventsHandler } from "../scheduledChamberSync";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -41,6 +42,8 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerSitemapRoutes(app);
+  // Scheduled cron endpoints — must be before tRPC fallthrough
+  app.post("/api/scheduled/sync-chamber-events", syncChamberEventsHandler);
   // tRPC API
   app.use(
     "/api/trpc",

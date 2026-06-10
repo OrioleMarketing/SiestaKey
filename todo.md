@@ -316,7 +316,7 @@
 
 ## Chamber Events Auto-Refresh (Weekly AGENT Cron)
 
-- [ ] Add `/api/scheduled/sync-chamber-events` POST endpoint and handler in server
-- [ ] Handler: authenticate as cron, scrape Chamber events page via fetch, upsert new/updated events, remove stale past events
-- [ ] Register the route in server/_core/index.ts before Vite fallthrough
-- [ ] Save checkpoint, deploy, then create AGENT cron via manus-heartbeat CLI (weekly, Mondays 9am UTC)
+- [x] Add `/api/scheduled/sync-chamber-events` POST endpoint and handler in server
+- [x] Handler: authenticate as cron, accept events array from AGENT, upsert new/updated events, remove stale past events
+- [x] Register the route in server/_core/index.ts before Vite fallthrough
+- [ ] Create AGENT cron via manus-heartbeat CLI (weekly, Mondays 9am UTC) — requires deployed site
