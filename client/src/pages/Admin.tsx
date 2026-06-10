@@ -30,11 +30,12 @@ import {
   Plus,
   Star,
   Trash2,
+  Upload,
   Users,
   XCircle,
 } from "lucide-react";
 import { CsvImportTab } from "./AdminCsvImport";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import PageHero from "@/components/PageHero";
 
@@ -1510,6 +1511,40 @@ function EventsTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EventRow | null>(null);
   const [form, setForm] = useState({ ...EMPTY_EVENT_FORM });
+  const [imageUploading, setImageUploading] = useState(false);
+  const eventImageInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadEventImageMutation = trpc.dashboard.uploadPhoto.useMutation({
+    onSuccess: (data) => {
+      setForm((f) => ({ ...f, imageUrl: data.url }));
+      setImageUploading(false);
+      toast.success("Image uploaded!");
+    },
+    onError: (e) => {
+      setImageUploading(false);
+      toast.error(`Image upload failed: ${e.message}`);
+    },
+  });
+
+  const handleEventImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be under 10MB."); return; }
+    setImageUploading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64Data = dataUrl.split(",")[1];
+      if (!base64Data) { setImageUploading(false); return; }
+      uploadEventImageMutation.mutate({
+        base64Data,
+        mimeType: file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+        fileName: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   // Only Island Premier (sponsored) businesses can have events
   const islandPremierBizList = (allBusinesses ?? []).filter((b: any) => b.tier === "sponsored");
@@ -1774,16 +1809,42 @@ function EventsTab() {
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div>
-              <Label htmlFor="ev-img">Image URL <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
-              <Input
-                id="ev-img"
-                value={form.imageUrl}
-                onChange={(e) => set("imageUrl", e.target.value)}
-                placeholder="https://…"
-                className="mt-1"
+              <Label className="text-sm font-medium">Cover Image <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+              <input
+                ref={eventImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleEventImageUpload}
               />
+              {form.imageUrl ? (
+                <div className="mt-2 relative group w-full h-32 rounded-lg overflow-hidden border border-border">
+                  <img src={form.imageUrl} alt="Event cover" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button size="sm" variant="outline" className="bg-white/90 text-black hover:bg-white" onClick={() => eventImageInputRef.current?.click()} disabled={imageUploading}>
+                      <Upload className="h-3 w-3 mr-1" /> Replace
+                    </Button>
+                    <Button size="sm" variant="outline" className="bg-white/90 text-red-600 hover:bg-white" onClick={() => set("imageUrl", "")}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => eventImageInputRef.current?.click()}
+                  disabled={imageUploading}
+                  className="mt-2 w-full h-24 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  {imageUploading ? (
+                    <><div className="h-5 w-5 border-2 border-current border-t-transparent rounded-full animate-spin" /><span className="text-xs">Uploading…</span></>
+                  ) : (
+                    <><Upload className="h-5 w-5" /><span className="text-xs font-medium">Click to upload image</span><span className="text-xs">JPEG, PNG, WebP, GIF · max 10MB</span></>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Published toggle */}

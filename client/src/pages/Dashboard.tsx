@@ -163,6 +163,41 @@ export default function Dashboard() {
   }>(null);
   const BLANK_EVENT = { type: "event" as const, title: "", description: "", startDate: "", endDate: "", location: "", imageUrl: "", isPublished: true };
 
+  const [eventImageUploading, setEventImageUploading] = useState(false);
+  const eventImageInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadEventImageMutation = trpc.dashboard.uploadPhoto.useMutation({
+    onSuccess: (data) => {
+      setEditingEvent((ev) => ev ? { ...ev, imageUrl: data.url } : ev);
+      setEventImageUploading(false);
+      toast.success("Image uploaded!");
+    },
+    onError: (e) => {
+      setEventImageUploading(false);
+      toast.error(`Image upload failed: ${e.message}`);
+    },
+  });
+
+  const handleEventImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be under 10MB."); return; }
+    setEventImageUploading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64Data = dataUrl.split(",")[1];
+      if (!base64Data) { setEventImageUploading(false); return; }
+      uploadEventImageMutation.mutate({
+        base64Data,
+        mimeType: file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+        fileName: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const upsertEventMutation = trpc.dashboard.upsertMyEvent.useMutation({
     onSuccess: () => {
       toast.success(editingEvent?.id ? "Event updated!" : "Event created!");
@@ -878,6 +913,43 @@ export default function Dashboard() {
                   <Input id="ev-loc" value={editingEvent.location} onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })} placeholder="e.g. Siesta Key Village" className="h-9" />
                 </div>
               )}
+              {/* Cover Image Upload */}
+              <div>
+                <Label className="text-xs font-medium text-gray-600 mb-1 block">Cover Image <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+                <input
+                  ref={eventImageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleEventImageUpload}
+                />
+                {editingEvent.imageUrl ? (
+                  <div className="mt-1 relative group w-full h-28 rounded-lg overflow-hidden border border-border">
+                    <img src={editingEvent.imageUrl} alt="Event cover" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button size="sm" variant="outline" className="bg-white/90 text-black hover:bg-white text-xs" onClick={() => eventImageInputRef.current?.click()} disabled={eventImageUploading}>
+                        <ImagePlus className="h-3 w-3 mr-1" /> Replace
+                      </Button>
+                      <Button size="sm" variant="outline" className="bg-white/90 text-red-600 hover:bg-white text-xs" onClick={() => setEditingEvent({ ...editingEvent, imageUrl: "" })}>
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => eventImageInputRef.current?.click()}
+                    disabled={eventImageUploading}
+                    className="mt-1 w-full h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-amber-500 hover:text-amber-600 transition-colors disabled:opacity-50"
+                  >
+                    {eventImageUploading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /><span className="text-xs">Uploading…</span></>
+                    ) : (
+                      <><ImagePlus className="h-4 w-4" /><span className="text-xs font-medium">Click to upload cover image</span><span className="text-xs">JPEG, PNG, WebP · max 10MB</span></>
+                    )}
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <Switch id="ev-pub" checked={editingEvent.isPublished} onCheckedChange={(v) => setEditingEvent({ ...editingEvent, isPublished: v })} />
                 <Label htmlFor="ev-pub" className="text-sm text-gray-700">Published (visible on profile)</Label>

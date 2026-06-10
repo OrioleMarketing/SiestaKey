@@ -77,6 +77,15 @@ export default function Events() {
                   className="group block rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden animate-fade-in-up"
                   style={{ animationDelay: `${i * 0.05}s` }}
                 >
+                  {ev.imageUrl && (
+                    <div className="w-full h-40 overflow-hidden">
+                      <img
+                        src={ev.imageUrl}
+                        alt={ev.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
                   <div className="p-5">
                     {/* Type badge */}
                     <div className="flex items-center gap-2 mb-3">

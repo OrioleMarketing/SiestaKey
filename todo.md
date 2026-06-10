@@ -319,4 +319,12 @@
 - [x] Add `/api/scheduled/sync-chamber-events` POST endpoint and handler in server
 - [x] Handler: authenticate as cron, accept events array from AGENT, upsert new/updated events, remove stale past events
 - [x] Register the route in server/_core/index.ts before Vite fallthrough
-- [ ] Create AGENT cron via manus-heartbeat CLI (weekly, Mondays 9am UTC) — requires deployed site
+- [x] Create AGENT cron via manus-config schedule CLI (weekly, Mondays 9am UTC) — taskUid: nvd4hqNWxXZm3CuwQKhcgT
+
+## Event Cover Image Upload
+
+- [x] Server: reused existing dashboard.uploadPhoto tRPC mutation (S3 upload, returns URL)
+- [x] Admin Events tab: replaced plain URL text input with click-to-upload UI (preview, replace, remove)
+- [x] Owner Dashboard events form: added click-to-upload image UI with preview, replace, remove
+- [x] /events page: show cover image (160px tall, zoom on hover) at top of each event card when present
+- [x] Business profile events section: already rendered imageUrl thumbnails — verified working with S3 URLs
