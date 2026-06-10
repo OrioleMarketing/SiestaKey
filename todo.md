@@ -313,3 +313,10 @@
 - [x] Retroactively patched isClaimed=true for SkyRun, Siesta 4 Rent, Beach to Bay via SQL
 - [x] Owner Dashboard: Events & Announcements section for Island Premier owners to create/edit/delete their own events
 - [x] Homepage: Upcoming Events widget showing next 5 events across all Island Premier businesses
+
+## Chamber Events Auto-Refresh (Weekly AGENT Cron)
+
+- [ ] Add `/api/scheduled/sync-chamber-events` POST endpoint and handler in server
+- [ ] Handler: authenticate as cron, scrape Chamber events page via fetch, upsert new/updated events, remove stale past events
+- [ ] Register the route in server/_core/index.ts before Vite fallthrough
+- [ ] Save checkpoint, deploy, then create AGENT cron via manus-heartbeat CLI (weekly, Mondays 9am UTC)

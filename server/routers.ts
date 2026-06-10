@@ -1312,7 +1312,7 @@ export const appRouter = router({
 
     // Public: upcoming events across all Island Premier businesses (for homepage widget)
     upcoming: publicProcedure
-      .input(z.object({ limit: z.number().min(1).max(10).default(5) }))
+      .input(z.object({ limit: z.number().min(1).max(50).default(5) }))
       .query(async ({ input }) => {
         return getUpcomingEvents(input.limit);
       }),

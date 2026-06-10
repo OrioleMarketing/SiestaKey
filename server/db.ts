@@ -548,7 +548,7 @@ export async function getUpcomingEvents(limit = 5): Promise<(BusinessEvent & { b
       )
     )
     .orderBy(asc(businessEvents.startDate))
-    .limit(limit);
+    .limit(100); // Fetch more than needed; client-side filter below trims to `limit`
   // Filter client-side for startDate >= now (avoids complex SQL date comparison across MySQL versions)
   const upcoming = rows.filter((r) => !r.startDate || r.startDate >= now);
   return upcoming.slice(0, limit) as (BusinessEvent & { businessName: string; businessSlug: string })[];
