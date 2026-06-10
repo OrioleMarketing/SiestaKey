@@ -13,6 +13,7 @@ const STATIC_PAGES = [
   { loc: "/claim", changefreq: "monthly", priority: "0.6" },
   { loc: "/contact", changefreq: "monthly", priority: "0.5" },
   { loc: "/guides", changefreq: "weekly", priority: "0.8" },
+  { loc: "/events", changefreq: "daily", priority: "0.8" },
 ];
 
 // Category slugs for directory sub-pages
