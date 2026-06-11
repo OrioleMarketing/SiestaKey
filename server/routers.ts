@@ -145,7 +145,7 @@ export const appRouter = router({
           reviewCount: z.number().int().nullish(),
           googleReviewEmbedCode: z.string().nullish(),
           videoEmbed: z.string().max(500).nullish(),
-          coverPhoto: z.union([z.literal(""), z.string().url(), z.null(), z.undefined()]).optional().transform(v => (v === "" || v === undefined) ? null : v),
+          coverPhoto: z.string().optional().nullable().transform(v => (v === "" || v === undefined) ? null : v ?? null),
           hours: z.record(z.string(), z.string()).nullish(),
           socialLinks: z.record(z.string(), z.string()).nullish(),
           tags: z.array(z.string()).nullish(),
