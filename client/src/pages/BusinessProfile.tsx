@@ -4,7 +4,7 @@ import {
   MapPin, Phone, Globe, Clock, Star, ArrowLeft, Crown, Sparkles,
   Share2, ExternalLink, ChevronRight, Mail, BadgeCheck,
   Facebook, Instagram, Twitter, Youtube, Linkedin,
-  Calendar, Megaphone, MapPin as LocationPin
+  Calendar, Megaphone, MapPin as LocationPin, Camera
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -18,6 +18,14 @@ import SEO from "@/components/SEO";
 
 const LIFEGUARD_DEFAULT = "/manus-storage/LifeguardStand_453b6dda.png";
 const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+
+// AI-generated covers are hosted on this CloudFront distribution
+const AI_COVER_CDN = "d2xsxph8kpxj0f.cloudfront.net";
+
+function isAiGeneratedCover(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.includes(AI_COVER_CDN) || url.includes("SiestaKey_panorama") || url.includes("LifeguardStand");
+}
 
 function StarRating({ rating, count }: { rating: string; count: number }) {
   const r = parseFloat(rating);
@@ -329,21 +337,35 @@ export default function BusinessProfile() {
       </div>
 
       {/* ── Update Photos CTA ─────────────────────────────────────────────────── */}
-      {business?.isClaimed && !(business as any).coverPhoto && photos.length === 0 && user && (business as any).claimedByUserId === user.id && (
-        <div className="bg-[var(--color-ocean-pale)] border-b border-[var(--color-ocean)]/20">
-          <div className="container max-w-5xl py-2.5 flex items-center justify-between gap-3">
-            <p className="text-sm text-[var(--color-ocean-deep)] font-medium">
-              This listing is using a default cover image. Upload your own photos to make it stand out.
-            </p>
-            <a
-              href="/dashboard"
-              className="shrink-0 text-sm font-semibold text-white bg-[var(--color-ocean)] hover:bg-[var(--color-ocean-deep)] px-3 py-1.5 rounded-full transition-colors"
-            >
-              Update Photos
-            </a>
+      {(() => {
+        const cover = (business as any)?.coverPhoto as string | null;
+        const hasAiCover = isAiGeneratedCover(cover) || (!cover && photos.length === 0);
+        const isOwner = user && (business as any).claimedByUserId === user?.id;
+        const isAdmin = user?.role === "admin";
+        if (!business?.isClaimed || !hasAiCover) return null;
+        return (
+          <div className="bg-amber-50 border-b border-amber-200">
+            <div className="container max-w-5xl py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Camera className="w-4 h-4 text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-800 font-medium">
+                  {isOwner || isAdmin
+                    ? "This listing is using an AI-generated cover photo. Upload your own real photography to make it stand out."
+                    : "This business hasn't uploaded a cover photo yet — the image above is AI-generated."}
+                </p>
+              </div>
+              {(isOwner || isAdmin) && (
+                <a
+                  href="/dashboard"
+                  className="shrink-0 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
+                >
+                  Upload Real Photo
+                </a>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Business Name + Meta ──────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[var(--color-border)] shadow-sm">
