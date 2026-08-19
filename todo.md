@@ -328,3 +328,7 @@
 - [x] Owner Dashboard events form: added click-to-upload image UI with preview, replace, remove
 - [x] /events page: show cover image (160px tall, zoom on hover) at top of each event card when present
 - [x] Business profile events section: already rendered imageUrl thumbnails — verified working with S3 URLs
+
+## Repository Publication
+
+- [x] Push the current project state to the GitHub repository OrioleMarketing/SiestaKey
