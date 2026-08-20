@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, Search, BookOpen } from "lucide-react";
 
-const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+const PANORAMA_DEFAULT = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey_panorama_734eb779.webp";
 
 const CATEGORIES = ["All", "Guide", "Dining", "Activities", "Shopping", "Beach Tips", "Events"];
 

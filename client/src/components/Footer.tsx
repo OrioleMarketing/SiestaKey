@@ -17,7 +17,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="mb-4">
               <img
-                src="/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
+                src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
                 alt="Shop in Siesta Key"
                 className="h-14 w-auto object-contain"
               />
@@ -115,7 +115,7 @@ export default function Footer() {
                 className="opacity-70 hover:opacity-100 transition-opacity"
               >
                 <img
-                  src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                  src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
                   alt="Siesta Key Chamber of Commerce"
                   className="h-12 w-auto object-contain"
                 />

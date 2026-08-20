@@ -703,7 +703,7 @@ function BusinessesTab() {
                     title={(b as any).isChamberMember ? "Remove Chamber Member" : "Mark as Chamber Member"}
                   >
                     <img
-                      src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+                      src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
                       alt="Chamber"
                       className="w-5 h-5 rounded-full object-cover"
                     />

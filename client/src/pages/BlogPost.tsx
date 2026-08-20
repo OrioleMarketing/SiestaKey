@@ -10,7 +10,7 @@ import { Calendar, Clock, ArrowLeft, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
-const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+const PANORAMA_DEFAULT = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey_panorama_734eb779.webp";
 const BASE_URL = "https://shopinsiestakey.com";
 
 function readingTime(content: string): number {

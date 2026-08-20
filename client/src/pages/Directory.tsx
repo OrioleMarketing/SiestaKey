@@ -283,7 +283,7 @@ export default function Directory() {
               }`}
             >
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+                src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
                 alt=""
                 className="w-3.5 h-3.5 rounded-full object-cover"
               />

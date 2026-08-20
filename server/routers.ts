@@ -473,7 +473,7 @@ export const appRouter = router({
           .where(eq(businesses.slug, baseSlug))
           .limit(1);
         const slug = existing.length > 0 ? `${baseSlug}-${Date.now()}` : baseSlug;
-        const DEFAULT_COVER = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+        const DEFAULT_COVER = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey_panorama_734eb779.webp";
         await db.insert(businesses).values({
           slug,
           name: input.name,

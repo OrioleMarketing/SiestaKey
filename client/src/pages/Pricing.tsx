@@ -165,7 +165,7 @@ export default function Pricing() {
       <section
         className="relative pt-28 pb-16 flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: `url(/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
+          backgroundImage: `url(https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
           backgroundSize: "cover",
           backgroundPosition: "center 40%",
         }}
@@ -604,7 +604,7 @@ export default function Pricing() {
               className="flex items-center gap-2 group opacity-70 hover:opacity-100 transition-opacity"
             >
               <img
-                src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
                 alt="Siesta Key Chamber of Commerce"
                 className="h-8 w-auto object-contain"
               />

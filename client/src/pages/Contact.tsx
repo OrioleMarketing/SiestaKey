@@ -121,7 +121,7 @@ export default function Contact() {
                     className="flex items-center gap-3 group"
                   >
                     <img
-                      src="/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
+                      src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKeyChamber-logo_6b0fdfdd.svg"
                       alt="Siesta Key Chamber of Commerce"
                       className="h-8 w-auto object-contain opacity-70 group-hover:opacity-100 transition-opacity"
                     />

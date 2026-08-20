@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "Shop in Siesta Key";
 export const BASE_URL = "https://shopinsiestakey.com";
-const DEFAULT_IMAGE = `${BASE_URL}/manus-storage/SiestaKey-hero_60f0f3c1.webp`;
+const DEFAULT_IMAGE = `${BASE_URL}https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey-hero_60f0f3c1.webp`;
 const DEFAULT_DESCRIPTION =
   "Your premier guide to dining, shopping, activities, nightlife, and accommodations on Siesta Key — Florida's #1 beach destination.";
 

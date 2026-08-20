@@ -13,7 +13,7 @@ export default function PageHero({ title, subtitle, breadcrumb }: PageHeroProps)
     <section
       className="relative pt-24 pb-14 flex items-end overflow-hidden"
       style={{
-        backgroundImage: `url(/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
+        backgroundImage: `url(https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
         backgroundSize: "cover",
         backgroundPosition: "center 40%",
         minHeight: "220px",

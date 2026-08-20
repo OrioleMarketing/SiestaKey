@@ -104,7 +104,7 @@ export default function Home() {
       <section
         className="relative min-h-[92vh] flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: `url(/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
+          backgroundImage: `url(https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey-hero_60f0f3c1.webp)`,
           backgroundSize: "cover",
           backgroundPosition: "center 30%",
         }}
@@ -481,7 +481,7 @@ export default function Home() {
             </div>
             <div className="relative">
               <img
-                src="/manus-storage/siesta-key-beach_bf6ee230.jpg"
+                src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/siesta-key-beach_bf6ee230.jpg"
                 alt="Siesta Key Beach"
                 className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
               />
@@ -528,7 +528,7 @@ export default function Home() {
 }
 
 // ─── Guides Teaser ──────────────────────────────────────────────────────────
-const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+const PANORAMA_DEFAULT = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey_panorama_734eb779.webp";
 
 function GuidesTeaser() {
   const { data: posts } = trpc.blog.list.useQuery({ publishedOnly: true, limit: 3 });

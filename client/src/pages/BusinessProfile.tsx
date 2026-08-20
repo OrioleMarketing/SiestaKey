@@ -16,15 +16,22 @@ import BusinessCard from "@/components/BusinessCard";
 import { MapView } from "@/components/Map";
 import SEO from "@/components/SEO";
 
-const LIFEGUARD_DEFAULT = "/manus-storage/LifeguardStand_453b6dda.png";
-const PANORAMA_DEFAULT = "/manus-storage/SiestaKey_panorama_734eb779.webp";
+const LIFEGUARD_DEFAULT = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/LifeguardStand_453b6dda.png";
+const PANORAMA_DEFAULT = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey_panorama_734eb779.webp";
 
-// AI-generated covers are hosted on this CloudFront distribution
+// AI-generated covers were originally hosted on the Manus CloudFront
+// distribution and now live in our own S3 bucket. Both markers are kept so
+// listings whose stored cover URL has not yet been migrated still match.
 const AI_COVER_CDN = "d2xsxph8kpxj0f.cloudfront.net";
-
+const AI_COVER_S3 = "siestakey.s3.us-east-2.amazonaws.com/manus-storage/";
 function isAiGeneratedCover(url: string | null | undefined): boolean {
   if (!url) return false;
-  return url.includes(AI_COVER_CDN) || url.includes("SiestaKey_panorama") || url.includes("LifeguardStand");
+  return (
+    url.includes(AI_COVER_CDN) ||
+    url.includes(AI_COVER_S3) ||
+    url.includes("SiestaKey_panorama") ||
+    url.includes("LifeguardStand")
+  );
 }
 
 function StarRating({ rating, count }: { rating: string; count: number }) {
@@ -325,7 +332,7 @@ export default function BusinessProfile() {
         {coverImage && (business as any).isChamberMember && (
           <div className="absolute bottom-4 right-4 group/chamber">
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+              src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
               alt="Chamber Member"
               className="w-14 h-14 rounded-full shadow-xl border-2 border-white/70"
             />

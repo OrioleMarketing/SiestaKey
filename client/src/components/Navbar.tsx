@@ -51,8 +51,8 @@ export default function Navbar() {
             <img
               src={
                 transparent
-                  ? "/manus-storage/Shop-Logo-White-Transparent_c745ca81.png"
-                  : "/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
+                  ? "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/Shop-Logo-White-Transparent_c745ca81.png"
+                  : "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/Shop-Logo-Transparent_a1a04d98.png"
               }
               alt="Shop in Siesta Key"
               className="h-14 md:h-20 w-auto object-contain transition-all duration-300"

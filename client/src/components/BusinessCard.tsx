@@ -43,7 +43,7 @@ function StarRating({ rating, count }: { rating: string; count: number }) {
   );
 }
 
-const LIFEGUARD_DEFAULT = "/manus-storage/LifeguardStand_453b6dda.png";
+const LIFEGUARD_DEFAULT = "https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/LifeguardStand_453b6dda.png";
 
 export default function BusinessCard({ business, categoryName }: BusinessCardProps) {
   const tags = Array.isArray(business.tags) ? business.tags : [];
@@ -89,7 +89,7 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
             {(business as any).isChamberMember && (
               <div className="absolute bottom-2 left-2 group/chamber">
                 <img
-                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663047046836/LgGdfsvMFzrUmENex4CRQA/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
+                  src="https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/chamber_badge-cnLf2FfXDVDZgysSz9HxLV.webp"
                   alt="Chamber Member"
                   className="w-10 h-10 rounded-full shadow-lg border-2 border-white/60"
                 />

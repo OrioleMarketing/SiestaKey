@@ -24,7 +24,7 @@ export default function Events() {
       {/* Hero banner */}
       <div
         className="relative h-48 md:h-60 bg-cover bg-center flex items-end"
-        style={{ backgroundImage: "url('/manus-storage/SiestaKey_panorama_734eb779.webp')" }}
+        style={{ backgroundImage: "url('https://siestakey.s3.us-east-2.amazonaws.com/manus-storage/SiestaKey_panorama_734eb779.webp')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-charcoal)]/80 to-transparent" />
         <div className="container relative z-10 pb-8">
