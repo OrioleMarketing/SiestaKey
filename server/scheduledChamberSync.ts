@@ -5,10 +5,10 @@
  * parses the events, and POSTs a JSON array here. This handler upserts new
  * events and removes stale past events for the Chamber business.
  *
- * Auth: sdk.authenticateRequest → user.isCron === true
+ * Auth: Authorization: Bearer <SCHEDULED_TASK_SECRET>
  */
+import { timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
-import { sdk } from "./_core/sdk";
 import { getDb } from "./db";
 import { businessEvents, businesses } from "../drizzle/schema";
 import { eq, and, lt } from "drizzle-orm";
@@ -28,10 +28,14 @@ export async function syncChamberEventsHandler(
   res: Response
 ): Promise<void> {
   try {
-    // 1. Authenticate — must be a cron call
-    const user = await sdk.authenticateRequest(req);
-    if (!user.isCron) {
-      res.status(403).json({ error: "cron-only endpoint" });
+    const expectedSecret = process.env.SCHEDULED_TASK_SECRET ?? "";
+    const authorization = req.get("authorization") ?? "";
+    const suppliedSecret = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+    const expected = Buffer.from(expectedSecret);
+    const supplied = Buffer.from(suppliedSecret);
+    const authorized = expected.length > 0 && expected.length === supplied.length && timingSafeEqual(expected, supplied);
+    if (!authorized) {
+      res.status(403).json({ error: "scheduled-task authorization failed" });
       return;
     }
 

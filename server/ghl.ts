@@ -6,9 +6,15 @@
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const GHL_VERSION = "2021-07-28";
 
+function ghlAccessToken() {
+  return process.env.GHL_PIT_KEY || process.env.GHL_API_KEY || "";
+}
+
 function ghlHeaders() {
+  const token = ghlAccessToken();
+  if (!token) throw new Error("GoHighLevel email is not configured.");
   return {
-    Authorization: `Bearer ${process.env.GHL_API_KEY}`,
+    Authorization: `Bearer ${token}`,
     Version: GHL_VERSION,
     "Content-Type": "application/json",
   };
@@ -180,3 +186,39 @@ export const GHL_WORKFLOWS = {
   NEW_USER_CREATED:        "f1674a69-441f-4d88-824e-88bd21f55f70",
   RESET_PASSWORD:          "22bbcc3e-7d7a-4671-99f6-c98c07fa627d",
 } as const;
+
+export async function sendGhlEmail(input: {
+  toEmail: string;
+  toName?: string | null;
+  subject: string;
+  htmlBody: string;
+}) {
+  const contactId = await ghlUpsertContact({
+    email: input.toEmail,
+    name: input.toName ?? undefined,
+    source: "Shop in Siesta Key website",
+  });
+  if (!contactId) throw new Error("GoHighLevel contact could not be created or found.");
+
+  const response = await fetch(`${GHL_BASE}/conversations/messages`, {
+    method: "POST",
+    headers: ghlHeaders(),
+    body: JSON.stringify({
+      type: "Email",
+      contactId,
+      emailFrom: "noreply@shopinsiestakey.com",
+      emailTo: input.toEmail,
+      subject: input.subject,
+      html: input.htmlBody,
+      status: "pending",
+    }),
+  });
+
+  if (!response.ok) {
+    const providerMessage = await response.text();
+    console.error("[GHL] send email failed:", response.status, providerMessage);
+    throw new Error("GoHighLevel rejected the magic-link email.");
+  }
+
+  return response.json() as Promise<{ messageId?: string; emailMessageId?: string; conversationId?: string }>;
+}

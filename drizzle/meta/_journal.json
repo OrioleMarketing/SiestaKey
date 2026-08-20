@@ -92,6 +92,13 @@
       "when": 1780929609972,
       "tag": "0012_quiet_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1787242890024,
+      "tag": "0013_replace_manus_oauth",
+      "breakpoints": true
     }
   ]
 }

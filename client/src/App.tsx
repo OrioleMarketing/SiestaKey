@@ -18,11 +18,14 @@ import Contact from "./pages/Contact";
 import BlogIndex from "./pages/BlogIndex";
 import BlogPost from "./pages/BlogPost";
 import Events from "./pages/Events";
+import AuthPage from "./pages/Auth";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={AuthPage} />
+      <Route path="/register" component={AuthPage} />
       <Route path="/directory" component={Directory} />
       <Route path="/directory/:category" component={Directory} />
       <Route path="/business/:slug" component={BusinessProfile} />

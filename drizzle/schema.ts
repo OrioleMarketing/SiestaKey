@@ -1,32 +1,55 @@
 import {
   boolean,
+  index,
   int,
   mysqlEnum,
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
   json,
 } from "drizzle-orm/mysql-core";
 
-export const users = mysqlTable("users", {
-  id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
-  name: text("name"),
-  email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
-  stripeCustomerId: varchar("stripeCustomerId", { length: 100 }),
-  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 100 }),
-  subscriptionPlan: mysqlEnum("subscriptionPlan", ["free", "gulf_breeze", "island_premier"]).default("free"),
-  subscriptionStatus: varchar("subscriptionStatus", { length: 50 }).default("inactive"),
-});
+export const users = mysqlTable(
+  "users",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: text("name"),
+    email: varchar("email", { length: 320 }),
+    passwordHash: varchar("password_hash", { length: 255 }),
+    role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+    lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+    stripeCustomerId: varchar("stripeCustomerId", { length: 100 }),
+    stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 100 }),
+    subscriptionPlan: mysqlEnum("subscriptionPlan", ["free", "gulf_breeze", "island_premier"]).default("free"),
+    subscriptionStatus: varchar("subscriptionStatus", { length: 50 }).default("inactive"),
+  },
+  table => [uniqueIndex("users_email_unique").on(table.email)],
+);
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+export const magicLinks = mysqlTable(
+  "magic_links",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    email: varchar("email", { length: 320 }).notNull(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  table => [
+    uniqueIndex("magic_links_token_hash_unique").on(table.tokenHash),
+    index("magic_links_email_created_idx").on(table.email, table.createdAt),
+  ],
+);
+
+export type MagicLink = typeof magicLinks.$inferSelect;
 
 // ─── Categories ────────────────────────────────────────────────────────────────
 export const categories = mysqlTable("categories", {

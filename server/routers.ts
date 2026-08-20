@@ -15,6 +15,7 @@ import {
   getBusinessBySlug,
   getBusinesses,
   getBusinessByUserId,
+  getUserByEmail,
   updateBusinessByUserId,
   getFeaturedBusinesses,
   getRelatedBusinesses,
@@ -51,6 +52,16 @@ import {
 import { createCheckoutSession, cancelAndRefundSubmission } from "./stripeWebhook";
 import { storagePut } from "./storage";
 import { type PlanKey, type BillingInterval } from "./stripeProducts";
+import {
+  authenticateWithPassword,
+  clearAuthRateLimit,
+  clearSessionCookie,
+  createMagicLink,
+  enforceAuthRateLimit,
+  registerWithPassword,
+  setSessionCookie,
+} from "./auth";
+import { sendMagicLinkEmail } from "./authEmail";
 
 // --- Weather types & cache ---
 interface WeatherForecastDay {
@@ -724,10 +735,83 @@ export const appRouter = router({
   }),
 
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: publicProcedure.query(opts => opts.ctx.user),
+    register: publicProcedure
+      .input(z.object({
+        name: z.string().trim().min(2).max(180),
+        email: z.string().trim().email().max(320),
+        password: z.string().min(12).max(256),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          enforceAuthRateLimit(ctx.req, "register", input.email);
+          const user = await registerWithPassword(input);
+          await setSessionCookie(ctx.req, ctx.res, user.id);
+          clearAuthRateLimit(ctx.req, "register", input.email);
+          try {
+            await ghlUpsertContact({ email: user.email ?? input.email, name: user.name ?? input.name, source: "Shop in Siesta Key registration" });
+          } catch (error) {
+            console.error("[Auth] GHL registration sync failed:", error);
+          }
+          return { success: true, user } as const;
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith("Too many")) {
+            throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: error.message });
+          }
+          if (error instanceof Error && error.message.includes("already exists")) {
+            throw new TRPCError({ code: "CONFLICT", message: error.message });
+          }
+          throw new TRPCError({ code: "BAD_REQUEST", message: "The account could not be created." });
+        }
+      }),
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().trim().email().max(320),
+        password: z.string().min(1).max(256),
+        rememberMe: z.boolean().optional().default(false),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          enforceAuthRateLimit(ctx.req, "login", input.email);
+          const user = await authenticateWithPassword(input.email, input.password);
+          if (!user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password." });
+          await setSessionCookie(ctx.req, ctx.res, user.id, input.rememberMe);
+          clearAuthRateLimit(ctx.req, "login", input.email);
+          return { success: true, user } as const;
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          if (error instanceof Error && error.message.startsWith("Too many")) {
+            throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: error.message });
+          }
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password." });
+        }
+      }),
+    requestMagicLink: publicProcedure
+      .input(z.object({ email: z.string().trim().email().max(320) }))
+      .mutation(async ({ input, ctx }) => {
+        const genericResult = { success: true, message: "If an account exists for that email, a sign-in link is on its way." } as const;
+        try {
+          enforceAuthRateLimit(ctx.req, "magic-link", input.email);
+          const user = await getUserByEmail(input.email);
+          if (!user?.email) return genericResult;
+          const magicLink = await createMagicLink(user.email);
+          const forwardedProto = ctx.req.headers["x-forwarded-proto"];
+          const protocol = typeof forwardedProto === "string" ? forwardedProto.split(",")[0] : ctx.req.protocol;
+          const host = ctx.req.get("host");
+          if (!host) throw new Error("Authentication origin is unavailable.");
+          const verifyUrl = `${protocol}://${host}/api/auth/magic-link/verify?token=${encodeURIComponent(magicLink.token)}`;
+          await sendMagicLinkEmail({ email: user.email, name: user.name, magicLinkUrl: verifyUrl });
+          return genericResult;
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith("Too many")) {
+            throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: error.message });
+          }
+          console.error("[Auth] Magic-link request failed:", error);
+          return genericResult;
+        }
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      clearSessionCookie(ctx.req, ctx.res);
       return { success: true } as const;
     }),
   }),
