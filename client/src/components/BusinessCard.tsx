@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { MapPin, Phone, Star, ExternalLink, Crown, Sparkles, BadgeCheck } from "lucide-react";
 
@@ -54,18 +55,29 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
     : photos.length > 0
       ? photos[0]
       : LIFEGUARD_DEFAULT;
+  const [imageSrc, setImageSrc] = useState(coverImage);
+
+  useEffect(() => {
+    setImageSrc(coverImage);
+  }, [coverImage]);
+
+  const handleImageError = () => {
+    if (imageSrc !== LIFEGUARD_DEFAULT) {
+      setImageSrc(LIFEGUARD_DEFAULT);
+    }
+  };
 
   return (
     <Link href={`/business/${business.slug}`} className="block group">
       <div className={`card-coastal h-full flex flex-col ${business.isSponsored ? "ring-2 ring-[var(--color-gold)]/30" : ""}`}>
         {/* Cover image with badge overlays */}
-        {coverImage && (
+        {imageSrc && (
           <div className="relative overflow-hidden">
             <img
-              src={coverImage}
+              src={imageSrc}
               alt={business.name}
               className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              onError={handleImageError}
             />
             <div className="absolute top-2 left-2 flex gap-1.5">
               {business.isSponsored && (
@@ -102,7 +114,7 @@ export default function BusinessCard({ business, categoryName }: BusinessCardPro
         )}
 
         {/* Color header band — only when no cover image */}
-        {!coverImage && (
+        {!imageSrc && (
           <div
             className={`h-2 w-full ${
               business.isSponsored
